@@ -1,65 +1,122 @@
-import Image from "next/image";
+import Link from "next/link";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+
+const toolCards = [
+  {
+    category: "Settlement Analysis",
+    tools: [
+      {
+        href: "/tools/settlement-range",
+        title: "Settlement Range Calculator",
+        description:
+          "Estimate a realistic settlement range using claim values, risk factors, and litigation costs.",
+      },
+      {
+        href: "/tools/batna-analysis",
+        title: "BATNA Analysis",
+        description:
+          "Evaluate your Best Alternative to a Negotiated Agreement and strengthen your position.",
+      },
+      {
+        href: "/tools/risk-assessment",
+        title: "Risk Assessment",
+        description:
+          "Quantify litigation risk across multiple outcome scenarios with weighted probabilities.",
+      },
+    ],
+  },
+  {
+    category: "Negotiation Tools",
+    tools: [
+      {
+        href: "/tools/bracket-generator",
+        title: "Bracket Generator",
+        description:
+          "Generate bracketed offer ranges to propose structured negotiation moves.",
+      },
+      {
+        href: "/tools/move-tracker",
+        title: "Move Tracker",
+        description:
+          "Track offer and counteroffer patterns to identify momentum and convergence trends.",
+      },
+      {
+        href: "/tools/zone-of-possible-agreement",
+        title: "ZOPA Calculator",
+        description:
+          "Identify the zone of possible agreement based on each party's reservation values.",
+      },
+    ],
+  },
+  {
+    category: "Employment",
+    tools: [
+      {
+        href: "/tools/damages-calculator",
+        title: "Damages Calculator",
+        description:
+          "Calculate potential employment damages including lost wages, benefits, and emotional distress.",
+      },
+      {
+        href: "/tools/severance-estimator",
+        title: "Severance Estimator",
+        description:
+          "Estimate reasonable severance packages based on tenure, role, and industry benchmarks.",
+      },
+    ],
+  },
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="bg-brand-bg">
+      {/* Hero */}
+      <section className="py-20 sm:py-28">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-brand-primary">
+            Mediation tools built by a mediator.
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mt-5 max-w-2xl mx-auto text-lg text-brand-muted">
+            Practical calculators and utilities for lawyers, mediators, and
+            parties in dispute resolution. Free, fast, and private — nothing
+            leaves your browser.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* Tool Cards */}
+      <section className="pb-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {toolCards.map((group) => (
+            <div key={group.category} className="mb-12 last:mb-0">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-brand-muted mb-4">
+                {group.category}
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {group.tools.map((tool) => (
+                  <Link key={tool.href} href={tool.href} className="group">
+                    <Card className="h-full bg-brand-card border-brand-border hover:border-brand-accent hover:shadow-md transition-all duration-200">
+                      <CardHeader>
+                        <CardTitle className="text-brand-primary group-hover:text-brand-accent transition-colors">
+                          {tool.title}
+                        </CardTitle>
+                        <CardDescription className="text-brand-muted">
+                          {tool.description}
+                        </CardDescription>
+                      </CardHeader>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
-      </main>
+      </section>
     </div>
   );
 }
