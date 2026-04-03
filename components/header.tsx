@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu, ChevronDown } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -10,38 +10,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 
-const navGroups = [
-  {
-    label: "Settlement Analysis",
-    links: [
-      { href: "/tools/settlement-range", label: "Settlement Range Calculator" },
-      { href: "/tools/batna-analysis", label: "BATNA Analysis" },
-      { href: "/tools/risk-assessment", label: "Risk Assessment" },
-    ],
-  },
-  {
-    label: "Negotiation Tools",
-    links: [
-      { href: "/tools/bracket-generator", label: "Bracket Generator" },
-      { href: "/tools/move-tracker", label: "Move Tracker" },
-      { href: "/tools/zone-of-possible-agreement", label: "ZOPA Calculator" },
-    ],
-  },
-  {
-    label: "Employment",
-    links: [
-      { href: "/tools/damages-calculator", label: "Damages Calculator" },
-      { href: "/tools/severance-estimator", label: "Severance Estimator" },
-    ],
-  },
-  {
-    label: "About",
-    links: [
-      { href: "/about", label: "About Steve Dunn" },
-      { href: "/contact", label: "Contact" },
-    ],
-  },
-];
+import { navGroups } from "@/lib/navigation";
 
 function Logo() {
   return (
@@ -53,6 +22,7 @@ function Logo() {
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className="shrink-0"
+        aria-hidden="true"
       >
         <rect x="4" y="20" width="5" height="8" rx="1" fill="#4A90D9" opacity="0.4" />
         <rect x="11" y="14" width="5" height="14" rx="1" fill="#4A90D9" opacity="0.6" />
@@ -71,16 +41,20 @@ function DesktopNav() {
     <nav className="hidden lg:flex items-center gap-1">
       {navGroups.map((group) => (
         <div key={group.label} className="relative group">
-          <button className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-300 hover:text-white rounded-md transition-colors">
+          <button
+            className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-300 hover:text-white rounded-md transition-colors"
+            aria-haspopup="true"
+          >
             {group.label}
             <ChevronDown className="h-3.5 w-3.5 opacity-60" />
           </button>
-          <div className="absolute left-0 top-full pt-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-            <div className="bg-white rounded-lg shadow-lg border border-brand-border py-2 min-w-[220px]">
+          <div className="absolute left-0 top-full pt-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all z-50">
+            <div className="bg-white rounded-lg shadow-lg border border-brand-border py-2 min-w-[220px]" role="menu">
               {group.links.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
+                  role="menuitem"
                   className="block px-4 py-2 text-sm text-brand-primary hover:bg-brand-card transition-colors"
                 >
                   {link.label}
@@ -106,17 +80,14 @@ function MobileNav() {
       >
         <Menu className="h-6 w-6" />
       </SheetTrigger>
-      <SheetContent side="right" className="w-[300px] bg-brand-primary border-brand-secondary p-0">
+      <SheetContent
+        side="right"
+        showCloseButton={false}
+        className="w-[300px] bg-brand-primary border-brand-secondary p-0"
+      >
         <SheetTitle className="sr-only">Navigation menu</SheetTitle>
         <div className="flex items-center justify-between p-4 border-b border-brand-secondary">
           <Logo />
-          <button
-            onClick={() => setOpen(false)}
-            className="p-1 text-gray-300 hover:text-white"
-            aria-label="Close menu"
-          >
-            <X className="h-5 w-5" />
-          </button>
         </div>
         <nav className="p-4 space-y-1">
           {navGroups.map((group) => (
@@ -125,6 +96,7 @@ function MobileNav() {
                 onClick={() =>
                   setExpanded(expanded === group.label ? null : group.label)
                 }
+                aria-expanded={expanded === group.label}
                 className="flex items-center justify-between w-full px-3 py-2.5 text-sm font-medium text-gray-300 hover:text-white rounded-md transition-colors"
               >
                 {group.label}

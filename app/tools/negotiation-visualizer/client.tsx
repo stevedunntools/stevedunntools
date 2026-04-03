@@ -1,0 +1,733 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/components/ui/card";
+import { Trash2 } from "lucide-react";
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+type Party = "plaintiff" | "defendant";
+type OfferType = "number" | "bracket";
+
+interface Move {
+  id: string;
+  round: number;
+  party: Party;
+  type: OfferType;
+  value: number;
+  low: number;
+  high: number;
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+let nextId = 100;
+function makeId() {
+  return `m${nextId++}`;
+}
+
+function fmt(n: number) {
+  return "$" + n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+}
+
+function moveValues(m: Move): { low: number; high: number; mid: number } {
+  if (m.type === "number") return { low: m.value, high: m.value, mid: m.value };
+  return { low: m.low, high: m.high, mid: (m.low + m.high) / 2 };
+}
+
+/**
+ * Parse user input into a move. Supports:
+ *   "500000" or "500,000" → number offer
+ *   "200000-400000" or "200,000 - 400,000" → bracket
+ */
+function parseInput(raw: string): { type: OfferType; value: number; low: number; high: number } | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+
+  // Check for bracket (contains a dash separator between two numbers)
+  const bracketMatch = trimmed.match(/^[\s$]*([\d,]+)\s*[-–—]\s*[\s$]*([\d,]+)\s*$/);
+  if (bracketMatch) {
+    const a = parseFloat(bracketMatch[1].replace(/,/g, ""));
+    const b = parseFloat(bracketMatch[2].replace(/,/g, ""));
+    if (isNaN(a) || isNaN(b) || a <= 0 || b <= 0) return null;
+    const low = Math.min(a, b);
+    const high = Math.max(a, b);
+    if (low === high) return null;
+    return { type: "bracket", value: 0, low, high };
+  }
+
+  // Otherwise treat as a single number
+  const num = parseFloat(trimmed.replace(/[$,]/g, ""));
+  if (isNaN(num) || num <= 0) return null;
+  return { type: "number", value: num, low: 0, high: 0 };
+}
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+interface Pt {
+  x: number;
+  y: number;
+}
+
+// ---------------------------------------------------------------------------
+// Chart constants
+// ---------------------------------------------------------------------------
+
+const CHART_W = 800;
+const CHART_H = 420;
+const PAD = { top: 20, right: 30, bottom: 50, left: 80 };
+const INNER_W = CHART_W - PAD.left - PAD.right;
+const INNER_H = CHART_H - PAD.top - PAD.bottom;
+
+const BLUE = "#4A90D9";
+const BLUE_FILL = "rgba(74,144,217,0.15)";
+const BLUE_STROKE = "rgba(74,144,217,0.4)";
+const RED = "#DC2626";
+const RED_FILL = "rgba(220,38,38,0.15)";
+const RED_STROKE = "rgba(220,38,38,0.4)";
+const GREEN_FILL = "rgba(22,163,74,0.30)";
+
+// ---------------------------------------------------------------------------
+// Chart component
+// ---------------------------------------------------------------------------
+
+function NegotiationChart({ moves }: { moves: Move[] }) {
+  const { rounds, yMin, yMax, xScale, yScale } = useMemo(() => {
+    if (moves.length === 0) {
+      const mn = 0;
+      const mx = 1000000;
+      return {
+        rounds: 0,
+        yMin: mn,
+        yMax: mx,
+        xScale: (_r: number) => PAD.left + INNER_W / 2,
+        yScale: (v: number) => PAD.top + INNER_H - ((v - mn) / (mx - mn)) * INNER_H,
+      };
+    }
+
+    const rs = Math.max(...moves.map((m) => m.round));
+    const allVals: number[] = [];
+    for (const m of moves) {
+      const e = moveValues(m);
+      allVals.push(e.low, e.high);
+    }
+    const rawMin = Math.min(...allVals);
+    const rawMax = Math.max(...allVals);
+    const padding = Math.max((rawMax - rawMin) * 0.1, 10000);
+    const mn = Math.max(0, rawMin - padding);
+    const mx = rawMax + padding;
+
+    return {
+      rounds: rs,
+      yMin: mn,
+      yMax: mx,
+      xScale: (r: number) => {
+        if (rs <= 1) return PAD.left + INNER_W / 2;
+        return PAD.left + ((r - 1) / (rs - 1)) * INNER_W;
+      },
+      yScale: (v: number) => PAD.top + INNER_H - ((v - mn) / (mx - mn)) * INNER_H,
+    };
+  }, [moves]);
+
+  const pMoves = moves.filter((m) => m.party === "plaintiff").sort((a, b) => a.round - b.round);
+  const dMoves = moves.filter((m) => m.party === "defendant").sort((a, b) => a.round - b.round);
+
+  function buildBand(partyMoves: Move[]): { polygon: Pt[]; upperEdge: Pt[]; lowerEdge: Pt[] } {
+    if (partyMoves.length === 0) return { polygon: [], upperEdge: [], lowerEdge: [] };
+
+    const upperEdge: Pt[] = [];
+    const lowerEdge: Pt[] = [];
+
+    for (const m of partyMoves) {
+      const v = moveValues(m);
+      const x = xScale(m.round);
+      upperEdge.push({ x, y: yScale(v.high) });
+      lowerEdge.push({ x, y: yScale(v.low) });
+    }
+
+    const polygon = [...upperEdge, ...[...lowerEdge].reverse()];
+    return { polygon, upperEdge, lowerEdge };
+  }
+
+  // Build line segments: solid between consecutive numbers, dotted when a bracket is involved
+  function buildLineSegments(partyMoves: Move[]): { solid: Pt[][]; dotted: Pt[][] } {
+    const solid: Pt[][] = [];
+    const dotted: Pt[][] = [];
+    for (let i = 0; i < partyMoves.length - 1; i++) {
+      const a = partyMoves[i];
+      const b = partyMoves[i + 1];
+      const aVal = moveValues(a);
+      const bVal = moveValues(b);
+      const p1: Pt = { x: xScale(a.round), y: yScale(aVal.mid) };
+      const p2: Pt = { x: xScale(b.round), y: yScale(bVal.mid) };
+
+      if (a.type === "number" && b.type === "number") {
+        solid.push([p1, p2]);
+      } else {
+        dotted.push([p1, p2]);
+      }
+    }
+    return { solid, dotted };
+  }
+
+  // Build dot positions at midpoints
+  function buildMidpoints(partyMoves: Move[]): Pt[] {
+    return partyMoves.map((m) => {
+      const v = moveValues(m);
+      return { x: xScale(m.round), y: yScale(v.mid) };
+    });
+  }
+
+  const pBand = useMemo(() => buildBand(pMoves), [pMoves, xScale, yScale]);
+  const dBand = useMemo(() => buildBand(dMoves), [dMoves, xScale, yScale]);
+  const pLines = useMemo(() => buildLineSegments(pMoves), [pMoves, xScale, yScale]);
+  const dLines = useMemo(() => buildLineSegments(dMoves), [dMoves, xScale, yScale]);
+
+  // Compute green overlap using segment-by-segment band intersection.
+  // This avoids Sutherland-Hodgman's convexity requirement.
+  const overlapPolygon = useMemo(() => {
+    if (pBand.upperEdge.length < 2 || dBand.upperEdge.length < 2) return [];
+
+    // Collect all x-positions from both bands and sort
+    const allX = new Set<number>();
+    for (const p of pBand.upperEdge) allX.add(p.x);
+    for (const p of dBand.upperEdge) allX.add(p.x);
+    const xs = [...allX].sort((a, b) => a - b);
+
+    // Only consider x range where both bands exist
+    const pMinX = pBand.upperEdge[0].x;
+    const pMaxX = pBand.upperEdge[pBand.upperEdge.length - 1].x;
+    const dMinX = dBand.upperEdge[0].x;
+    const dMaxX = dBand.upperEdge[dBand.upperEdge.length - 1].x;
+    const overlapMinX = Math.max(pMinX, dMinX);
+    const overlapMaxX = Math.min(pMaxX, dMaxX);
+
+    if (overlapMinX >= overlapMaxX) return [];
+
+    // Interpolate a piecewise-linear edge at a given x
+    function interpEdge(edge: Pt[], x: number): number {
+      if (x <= edge[0].x) return edge[0].y;
+      if (x >= edge[edge.length - 1].x) return edge[edge.length - 1].y;
+      for (let i = 0; i < edge.length - 1; i++) {
+        if (x >= edge[i].x && x <= edge[i + 1].x) {
+          const t = (x - edge[i].x) / (edge[i + 1].x - edge[i].x);
+          return edge[i].y + t * (edge[i + 1].y - edge[i].y);
+        }
+      }
+      return edge[edge.length - 1].y;
+    }
+
+    // At each x, compute overlap band:
+    // In SVG coords, upper edge has SMALLER y (higher dollar), lower has LARGER y.
+    // Overlap upper (smallest y) = max of both upper y values (most constrained top)
+    // Overlap lower (largest y) = min of both lower y values (most constrained bottom)
+    // Overlap exists when overlap_upper_y < overlap_lower_y (in SVG space)
+    const points: { x: number; topY: number; botY: number; hasOverlap: boolean }[] = [];
+
+    const filteredXs = xs.filter((x) => x >= overlapMinX && x <= overlapMaxX);
+
+    // Add crossing-point detection: also sample between consecutive xs
+    const sampleXs: number[] = [];
+    for (const x of filteredXs) sampleXs.push(x);
+
+    for (const x of sampleXs) {
+      const pTopY = interpEdge(pBand.upperEdge, x);
+      const pBotY = interpEdge(pBand.lowerEdge, x);
+      const dTopY = interpEdge(dBand.upperEdge, x);
+      const dBotY = interpEdge(dBand.lowerEdge, x);
+
+      // In SVG: smaller y = higher value. overlap top = max y (lower of the two tops)
+      const overlapTopY = Math.max(pTopY, dTopY);
+      const overlapBotY = Math.min(pBotY, dBotY);
+
+      points.push({ x, topY: overlapTopY, botY: overlapBotY, hasOverlap: overlapTopY < overlapBotY });
+    }
+
+    // Build polygon segments from consecutive overlapping points
+    const polygons: Pt[][] = [];
+    let currentUpper: Pt[] = [];
+    let currentLower: Pt[] = [];
+
+    for (let i = 0; i < points.length; i++) {
+      const p = points[i];
+      if (p.hasOverlap) {
+        currentUpper.push({ x: p.x, y: p.topY });
+        currentLower.push({ x: p.x, y: p.botY });
+      } else {
+        if (currentUpper.length >= 2) {
+          polygons.push([...currentUpper, ...[...currentLower].reverse()]);
+        }
+        currentUpper = [];
+        currentLower = [];
+      }
+    }
+    if (currentUpper.length >= 2) {
+      polygons.push([...currentUpper, ...[...currentLower].reverse()]);
+    }
+
+    // Return the largest polygon (typically there's just one)
+    if (polygons.length === 0) return [];
+    return polygons.reduce((a, b) => (a.length > b.length ? a : b));
+  }, [pBand, dBand]);
+
+  const pMidpoints = useMemo(() => buildMidpoints(pMoves), [pMoves, xScale, yScale]);
+  const dMidpoints = useMemo(() => buildMidpoints(dMoves), [dMoves, xScale, yScale]);
+
+  const yTicks = useMemo(() => {
+    const range = yMax - yMin;
+    const rawStep = range / 5;
+    const mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
+    const step = Math.ceil(rawStep / mag) * mag;
+    const ticks: number[] = [];
+    let v = Math.ceil(yMin / step) * step;
+    while (v <= yMax) {
+      ticks.push(v);
+      v += step;
+    }
+    return ticks;
+  }, [yMin, yMax]);
+
+  function pointsToPath(pts: Pt[], closed: boolean = false): string {
+    if (pts.length === 0) return "";
+    const d = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+    return closed ? d + " Z" : d;
+  }
+
+  return (
+    <svg
+      viewBox={`0 0 ${CHART_W} ${CHART_H}`}
+      className="w-full h-auto"
+      role="img"
+      aria-label="Negotiation chart showing offers and brackets from both parties"
+    >
+      {/* Grid lines and Y-axis labels */}
+      {yTicks.map((v) => (
+        <g key={`ytick-${v}`}>
+          <line
+            x1={PAD.left}
+            y1={yScale(v)}
+            x2={PAD.left + INNER_W}
+            y2={yScale(v)}
+            stroke="#E5E7EB"
+            strokeWidth="1"
+          />
+          <text
+            x={PAD.left - 10}
+            y={yScale(v)}
+            textAnchor="end"
+            dominantBaseline="middle"
+            className="fill-brand-muted"
+            fontSize="11"
+          >
+            {v >= 1000000
+              ? `$${(v / 1000000).toFixed(v % 1000000 === 0 ? 0 : 1)}M`
+              : v >= 1000
+              ? `$${(v / 1000).toFixed(0)}k`
+              : `$${v}`}
+          </text>
+        </g>
+      ))}
+
+      {/* X-axis labels */}
+      {Array.from({ length: rounds }, (_, i) => i + 1).map((r) => (
+        <text
+          key={`xtick-${r}`}
+          x={xScale(r)}
+          y={CHART_H - PAD.bottom + 25}
+          textAnchor="middle"
+          className="fill-brand-muted"
+          fontSize="12"
+        >
+          {r}
+        </text>
+      ))}
+
+      {/* X-axis title */}
+      {rounds > 0 && (
+        <text
+          x={PAD.left + INNER_W / 2}
+          y={CHART_H - 5}
+          textAnchor="middle"
+          className="fill-brand-muted"
+          fontSize="12"
+        >
+          Round
+        </text>
+      )}
+
+      {/* Axis lines */}
+      <line
+        x1={PAD.left}
+        y1={PAD.top}
+        x2={PAD.left}
+        y2={PAD.top + INNER_H}
+        stroke="#D1D5DB"
+        strokeWidth="1"
+      />
+      <line
+        x1={PAD.left}
+        y1={PAD.top + INNER_H}
+        x2={PAD.left + INNER_W}
+        y2={PAD.top + INNER_H}
+        stroke="#D1D5DB"
+        strokeWidth="1"
+      />
+
+      {/* Clip path to exclude overlap zone from party fills */}
+      {overlapPolygon.length >= 3 && (
+        <defs>
+          <clipPath id="clip-no-overlap">
+            <path d={`M0,0 H${CHART_W} V${CHART_H} H0 Z ${pointsToPath(overlapPolygon, true)}`} clipRule="evenodd" />
+          </clipPath>
+        </defs>
+      )}
+
+      {/* Plaintiff band (clipped to exclude overlap) */}
+      {pBand.polygon.length >= 3 && (
+        <path
+          d={pointsToPath(pBand.polygon, true)}
+          fill={BLUE_FILL}
+          stroke="none"
+          clipPath={overlapPolygon.length >= 3 ? "url(#clip-no-overlap)" : undefined}
+        />
+      )}
+      {pBand.upperEdge.length > 1 && (
+        <path d={pointsToPath(pBand.upperEdge)} fill="none" stroke={BLUE_STROKE} strokeWidth="1" />
+      )}
+      {pBand.lowerEdge.length > 1 && (
+        <path d={pointsToPath(pBand.lowerEdge)} fill="none" stroke={BLUE_STROKE} strokeWidth="1" />
+      )}
+
+      {/* Defendant band (clipped to exclude overlap) */}
+      {dBand.polygon.length >= 3 && (
+        <path
+          d={pointsToPath(dBand.polygon, true)}
+          fill={RED_FILL}
+          stroke="none"
+          clipPath={overlapPolygon.length >= 3 ? "url(#clip-no-overlap)" : undefined}
+        />
+      )}
+      {dBand.upperEdge.length > 1 && (
+        <path d={pointsToPath(dBand.upperEdge)} fill="none" stroke={RED_STROKE} strokeWidth="1" />
+      )}
+      {dBand.lowerEdge.length > 1 && (
+        <path d={pointsToPath(dBand.lowerEdge)} fill="none" stroke={RED_STROKE} strokeWidth="1" />
+      )}
+
+      {/* Green overlap zone (clean, no red/blue underneath) */}
+      {overlapPolygon.length >= 3 && (
+        <path d={pointsToPath(overlapPolygon, true)} fill="#16A34A" fillOpacity="0.2" stroke="none" />
+      )}
+
+      {/* Plaintiff lines: solid between numbers, dotted when brackets involved */}
+      {pLines.solid.map((seg, i) => (
+        <path key={`p-solid-${i}`} d={pointsToPath(seg)} fill="none" stroke={BLUE} strokeWidth="1.5" />
+      ))}
+      {pLines.dotted.map((seg, i) => (
+        <path key={`p-dot-${i}`} d={pointsToPath(seg)} fill="none" stroke={BLUE} strokeWidth="1.5" strokeDasharray="5 3" />
+      ))}
+
+      {/* Defendant lines: solid between numbers, dotted when brackets involved */}
+      {dLines.solid.map((seg, i) => (
+        <path key={`d-solid-${i}`} d={pointsToPath(seg)} fill="none" stroke={RED} strokeWidth="1.5" />
+      ))}
+      {dLines.dotted.map((seg, i) => (
+        <path key={`d-dot-${i}`} d={pointsToPath(seg)} fill="none" stroke={RED} strokeWidth="1.5" strokeDasharray="5 3" />
+      ))}
+
+      {/* Plaintiff dots at midpoints */}
+      {pMidpoints.map((p, i) => (
+        <circle
+          key={`p-circ-${i}`}
+          cx={p.x}
+          cy={p.y}
+          r="4.5"
+          fill={BLUE}
+          stroke="white"
+          strokeWidth="1.5"
+        />
+      ))}
+
+      {/* Defendant dots at midpoints */}
+      {dMidpoints.map((p, i) => (
+        <circle
+          key={`d-circ-${i}`}
+          cx={p.x}
+          cy={p.y}
+          r="4.5"
+          fill={RED}
+          stroke="white"
+          strokeWidth="1.5"
+        />
+      ))}
+
+      {/* Empty state */}
+      {moves.length === 0 && (
+        <text
+          x={CHART_W / 2}
+          y={CHART_H / 2}
+          textAnchor="middle"
+          className="fill-brand-muted"
+          fontSize="14"
+        >
+          Add moves below to see the chart
+        </text>
+      )}
+    </svg>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main client component
+// ---------------------------------------------------------------------------
+
+export default function NegotiationVisualizerClient() {
+  const [moves, setMoves] = useState<Move[]>([]);
+
+  const [party, setParty] = useState<Party>("plaintiff");
+  const [input, setInput] = useState("");
+
+  const nextRound = useMemo(() => {
+    if (moves.length === 0) return 1;
+    const lastRound = Math.max(...moves.map((m) => m.round));
+    const lastRoundMoves = moves.filter((m) => m.round === lastRound);
+    const hasPlaintiff = lastRoundMoves.some((m) => m.party === "plaintiff");
+    const hasDefendant = lastRoundMoves.some((m) => m.party === "defendant");
+    if (hasPlaintiff && hasDefendant) return lastRound + 1;
+    return lastRound;
+  }, [moves]);
+
+  function addMove() {
+    const parsed = parseInput(input);
+    if (!parsed) return;
+
+    // Don't allow same party twice in same round
+    const roundMoves = moves.filter((m) => m.round === nextRound);
+    if (roundMoves.some((m) => m.party === party)) return;
+
+    const move: Move = {
+      id: makeId(),
+      round: nextRound,
+      party,
+      ...parsed,
+    };
+
+    setMoves([...moves, move]);
+    setInput("");
+    setParty(party === "plaintiff" ? "defendant" : "plaintiff");
+  }
+
+  function removeMove(id: string) {
+    setMoves(moves.filter((m) => m.id !== id));
+  }
+
+  function clearAll() {
+    setMoves([]);
+    setParty("plaintiff");
+  }
+
+  // Overlap info for the text callout
+  const overlapInfo = useMemo(() => {
+    const pBrackets = moves
+      .filter((m) => m.party === "plaintiff" && m.type === "bracket")
+      .sort((a, b) => a.round - b.round);
+    const dBrackets = moves
+      .filter((m) => m.party === "defendant" && m.type === "bracket")
+      .sort((a, b) => a.round - b.round);
+    if (pBrackets.length === 0 || dBrackets.length === 0) return null;
+
+    const pLatest = pBrackets[pBrackets.length - 1];
+    const dLatest = dBrackets[dBrackets.length - 1];
+    const overlapLow = Math.max(pLatest.low, dLatest.low);
+    const overlapHigh = Math.min(pLatest.high, dLatest.high);
+
+    if (overlapLow >= overlapHigh) return null;
+    return { low: overlapLow, high: overlapHigh };
+  }, [moves]);
+
+  return (
+    <div className="space-y-6">
+      {/* Chart */}
+      <Card className="bg-white border-brand-border">
+        <CardContent className="pt-6">
+          <NegotiationChart moves={moves} />
+
+          {/* Legend */}
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-4 text-sm text-brand-muted">
+            <span className="flex items-center gap-2">
+              <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: BLUE }} />
+              Plaintiff
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: RED }} />
+              Defendant
+            </span>
+            <span className="flex items-center gap-2">
+              <span
+                className="inline-block w-3 h-3 rounded-sm"
+                style={{ backgroundColor: GREEN_FILL }}
+              />
+              Bracket overlap
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="inline-block w-4 border-t-2 border-dashed border-brand-muted" />
+              Midpoint trend
+            </span>
+          </div>
+
+          {overlapInfo && (
+            <div className="mt-3 px-3 py-2 bg-green-50 border border-green-200 rounded-md text-sm text-green-800">
+              Current bracket overlap: {fmt(overlapInfo.low)} &ndash; {fmt(overlapInfo.high)} (midpoint: {fmt((overlapInfo.low + overlapInfo.high) / 2)})
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {/* Add move form */}
+        <Card className="bg-white border-brand-border lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-brand-primary text-base">Add Move</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Party toggle */}
+            <div>
+              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+                Party
+              </label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setParty("plaintiff")}
+                  className={`flex-1 px-3 py-2 text-sm font-medium rounded-md border transition-colors ${
+                    party === "plaintiff"
+                      ? "bg-[#4A90D9] text-white border-[#4A90D9]"
+                      : "bg-white text-brand-muted border-brand-border hover:border-brand-accent"
+                  }`}
+                >
+                  Plaintiff
+                </button>
+                <button
+                  onClick={() => setParty("defendant")}
+                  className={`flex-1 px-3 py-2 text-sm font-medium rounded-md border transition-colors ${
+                    party === "defendant"
+                      ? "bg-[#DC2626] text-white border-[#DC2626]"
+                      : "bg-white text-brand-muted border-brand-border hover:border-brand-accent"
+                  }`}
+                >
+                  Defendant
+                </button>
+              </div>
+            </div>
+
+            {/* Unified input */}
+            <div>
+              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+                Offer
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && addMove()}
+                  placeholder="500,000 or 200,000-400,000"
+                  className="w-full px-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent"
+                />
+              </div>
+              <p className="mt-1.5 text-xs text-brand-muted">
+                Enter a number for a firm offer (e.g. <span className="font-medium">500,000</span>)
+                or a range for a bracket (e.g. <span className="font-medium">200,000-400,000</span>).
+              </p>
+            </div>
+
+            <div className="text-xs text-brand-muted">
+              Round {nextRound}
+              {moves.filter((m) => m.round === nextRound).length > 0 && (
+                <> &mdash; {moves.find((m) => m.round === nextRound)?.party === "plaintiff" ? "defendant" : "plaintiff"}&apos;s turn</>
+              )}
+            </div>
+
+            <Button onClick={addMove} className="w-full">
+              Add Move
+            </Button>
+
+            {moves.length > 0 && (
+              <Button variant="outline" onClick={clearAll} className="w-full">
+                Clear All
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Move history */}
+        <Card className="bg-white border-brand-border lg:col-span-3">
+          <CardHeader>
+            <CardTitle className="text-brand-primary text-base">Move History</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {moves.length === 0 ? (
+              <p className="text-sm text-brand-muted py-4 text-center">
+                No moves yet. Add your first move to get started.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-brand-border text-left">
+                      <th className="pb-2 pr-3 font-medium text-brand-muted">Round</th>
+                      <th className="pb-2 pr-3 font-medium text-brand-muted">Party</th>
+                      <th className="pb-2 pr-3 font-medium text-brand-muted">Value</th>
+                      <th className="pb-2 w-10"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {moves.map((m) => (
+                      <tr key={m.id} className="border-b border-brand-border/50">
+                        <td className="py-2 pr-3 text-brand-primary">{m.round}</td>
+                        <td className="py-2 pr-3">
+                          <span
+                            className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full text-white ${
+                              m.party === "plaintiff" ? "bg-[#4A90D9]" : "bg-[#DC2626]"
+                            }`}
+                          >
+                            {m.party === "plaintiff" ? "P" : "D"}
+                          </span>
+                        </td>
+                        <td className="py-2 pr-3 text-brand-primary font-medium">
+                          {m.type === "number"
+                            ? fmt(m.value)
+                            : `${fmt(m.low)} – ${fmt(m.high)}`}
+                        </td>
+                        <td className="py-2">
+                          <button
+                            onClick={() => removeMove(m.id)}
+                            className="p-1 text-brand-muted hover:text-brand-error transition-colors"
+                            aria-label={`Remove round ${m.round} ${m.party} move`}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

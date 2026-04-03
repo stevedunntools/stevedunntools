@@ -1,15 +1,5 @@
 import Link from "next/link";
-
-const toolLinks = [
-  { href: "/tools/settlement-range", label: "Settlement Range Calculator" },
-  { href: "/tools/batna-analysis", label: "BATNA Analysis" },
-  { href: "/tools/risk-assessment", label: "Risk Assessment" },
-  { href: "/tools/bracket-generator", label: "Bracket Generator" },
-  { href: "/tools/move-tracker", label: "Move Tracker" },
-  { href: "/tools/zone-of-possible-agreement", label: "ZOPA Calculator" },
-  { href: "/tools/damages-calculator", label: "Damages Calculator" },
-  { href: "/tools/severance-estimator", label: "Severance Estimator" },
-];
+import { navGroups } from "@/lib/navigation";
 
 const companyLinks = [
   { href: "/about", label: "About" },
@@ -22,7 +12,7 @@ export default function Footer() {
   return (
     <footer className="bg-brand-primary text-gray-400 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr] gap-8">
           {/* Brand */}
           <div>
             <span className="text-lg font-semibold text-white">
@@ -34,47 +24,44 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Tools */}
-          <div>
-            <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
-              Tools
-            </h3>
-            <ul className="space-y-2">
-              {toolLinks.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm hover:text-white transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Company */}
-          <div>
-            <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
-              Company
-            </h3>
-            <ul className="space-y-2">
-              {companyLinks.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm hover:text-white transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Tool categories */}
+          {navGroups
+            .filter((g) => g.label !== "About")
+            .map((group) => (
+              <div key={group.label}>
+                <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
+                  {group.label}
+                </h3>
+                <ul className="space-y-2">
+                  {group.links.map((link) => (
+                    <li key={link.href}>
+                      <Link
+                        href={link.href}
+                        className="text-sm hover:text-white transition-colors"
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
         </div>
 
-        <div className="mt-10 pt-6 border-t border-brand-secondary text-sm text-center">
-          &copy; {new Date().getFullYear()} Steve Dunn Tools. All rights reserved.
+        {/* Bottom bar */}
+        <div className="mt-10 pt-6 border-t border-brand-secondary flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
+          <span>&copy; {new Date().getFullYear()} Steve Dunn Tools. All rights reserved.</span>
+          <div className="flex gap-4">
+            {companyLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="hover:text-white transition-colors"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </footer>
