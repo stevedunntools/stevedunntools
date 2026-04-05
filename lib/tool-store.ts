@@ -1,7 +1,7 @@
 /**
  * Shared tool data store using sessionStorage.
  *
- * Tools can write named values (e.g. "simple-damages-estimator.totalDamages")
+ * Tools can write named values (e.g. "employment-damages-estimator.total")
  * and other tools can read them to pre-populate fields.
  *
  * Data persists until the browser tab is closed or the user clears it.
@@ -43,7 +43,7 @@ export function getToolValue<T = unknown>(key: string): T | undefined {
   return store[key] as T | undefined;
 }
 
-/** Read all values matching a prefix (e.g. "simple-damages-estimator.") */
+/** Read all values matching a prefix (e.g. "employment-damages-estimator.") */
 export function getToolValues(prefix: string): Record<string, unknown> {
   const store = getStore();
   const result: Record<string, unknown> = {};

@@ -8,22 +8,17 @@ import {
   CardTitle,
   CardContent,
 } from "@/components/ui/card";
-import { getToolValue } from "@/lib/tool-store";
+import { fmt, parseNum } from "@/lib/format";
+import { Row, Separator } from "@/components/breakdown-table";
+import DollarInput from "@/components/dollar-input";
+import { useToolValue } from "@/hooks/use-tool-store";
 
 // ---------------------------------------------------------------------------
-// Helpers
+// Constants
 // ---------------------------------------------------------------------------
 
-function fmt(n: number) {
-  return "$" + n.toLocaleString("en-US", { maximumFractionDigits: 0 });
-}
-
-function parseNum(s: string): number {
-  const cleaned = s.replace(/[$,\s]/g, "");
-  if (cleaned === "") return 0;
-  const n = parseFloat(cleaned);
-  return isNaN(n) ? 0 : n;
-}
+const plainInputClass =
+  "w-full px-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
 
 // ---------------------------------------------------------------------------
 // Component
@@ -49,33 +44,23 @@ export default function PlaintiffsExpectedValueClient() {
   });
 
   // Auto-populate damages from either damages estimator
+  const [piTotal] = useToolValue<number>("personal-injury-damages-estimator.total");
+  const [empTotal] = useToolValue<number>("employment-damages-estimator.total");
+
   useEffect(() => {
-    // Check both estimators, use whichever has a value
-    const piTotal = getToolValue<number>("personal-injury-damages-estimator.total");
-    const empTotal = getToolValue<number>("employment-damages-estimator.total");
-    const best = (piTotal && piTotal > 0) ? piTotal : (empTotal && empTotal > 0) ? empTotal : null;
+    const best =
+      piTotal && piTotal > 0
+        ? piTotal
+        : empTotal && empTotal > 0
+        ? empTotal
+        : null;
 
     if (best) {
       const formatted = best.toFixed(0);
       setDamages(formatted);
       setCommitted((prev) => ({ ...prev, damages: formatted }));
     }
-
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      if (
-        (detail.key === "personal-injury-damages-estimator.total" ||
-          detail.key === "employment-damages-estimator.total") &&
-        detail.value > 0
-      ) {
-        const formatted = (detail.value as number).toFixed(0);
-        setDamages(formatted);
-        setCommitted((prev) => ({ ...prev, damages: formatted }));
-      }
-    };
-    window.addEventListener("sdt-store-update", handler);
-    return () => window.removeEventListener("sdt-store-update", handler);
-  }, []);
+  }, [piTotal, empTotal]);
 
   function commit() {
     setCommitted({
@@ -87,10 +72,6 @@ export default function PlaintiffsExpectedValueClient() {
       yearsToPayment,
       discountRate,
     });
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter") commit();
   }
 
   function clearAll() {
@@ -149,12 +130,6 @@ export default function PlaintiffsExpectedValueClient() {
     intangibleCosts !== "" ||
     yearsToPayment !== "";
 
-  const inputClass =
-    "w-full pl-7 pr-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
-
-  const plainInputClass =
-    "w-full px-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
       {/* Inputs */}
@@ -171,19 +146,12 @@ export default function PlaintiffsExpectedValueClient() {
               <label className="block text-sm font-medium text-brand-primary mb-1.5">
                 Plaintiff&apos;s total damages
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={damages}
-                  onChange={(e) => setDamages(e.target.value)}
-                  onBlur={commit}
-                  onKeyDown={handleKeyDown}
-                  placeholder="250,000"
-                  className={inputClass}
-                />
-              </div>
+              <DollarInput
+                value={damages}
+                onChange={setDamages}
+                onCommit={commit}
+                placeholder="250,000"
+              />
             </div>
           </CardContent>
         </Card>
@@ -235,7 +203,7 @@ export default function PlaintiffsExpectedValueClient() {
                 value={yearsToPayment}
                 onChange={(e) => setYearsToPayment(e.target.value)}
                 onBlur={commit}
-                onKeyDown={handleKeyDown}
+                onKeyDown={(e) => e.key === "Enter" && commit()}
                 placeholder="2"
                 className={plainInputClass}
               />
@@ -279,55 +247,34 @@ export default function PlaintiffsExpectedValueClient() {
               <label className="block text-sm font-medium text-brand-primary mb-1.5">
                 Attorneys fees
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={fees}
-                  onChange={(e) => setFees(e.target.value)}
-                  onBlur={commit}
-                  onKeyDown={handleKeyDown}
-                  placeholder="25,000"
-                  className={inputClass}
-                />
-              </div>
+              <DollarInput
+                value={fees}
+                onChange={setFees}
+                onCommit={commit}
+                placeholder="25,000"
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-brand-primary mb-1.5">
                 Litigation costs
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={litigationCosts}
-                  onChange={(e) => setLitigationCosts(e.target.value)}
-                  onBlur={commit}
-                  onKeyDown={handleKeyDown}
-                  placeholder="10,000"
-                  className={inputClass}
-                />
-              </div>
+              <DollarInput
+                value={litigationCosts}
+                onChange={setLitigationCosts}
+                onCommit={commit}
+                placeholder="10,000"
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-brand-primary mb-1.5">
                 Intangible costs
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={intangibleCosts}
-                  onChange={(e) => setIntangibleCosts(e.target.value)}
-                  onBlur={commit}
-                  onKeyDown={handleKeyDown}
-                  placeholder="5,000"
-                  className={inputClass}
-                />
-              </div>
+              <DollarInput
+                value={intangibleCosts}
+                onChange={setIntangibleCosts}
+                onCommit={commit}
+                placeholder="5,000"
+              />
             </div>
           </CardContent>
         </Card>
@@ -360,17 +307,17 @@ export default function PlaintiffsExpectedValueClient() {
             <CardContent>
               <table className="w-full text-sm">
                 <tbody>
-                  <Row label="Total damages" value={fmt(calc.damages)} />
+                  <Row label="Total damages" value={calc.damages} />
                   <Row label="Probability of success" value={`${calc.probability}%`} />
-                  <Row label="Probability-adjusted value" value={fmt(calc.probabilityAdjusted)} bold />
+                  <Row label="Probability-adjusted value" value={calc.probabilityAdjusted} bold />
                   <Separator />
-                  <Row label="Years to payment" value={calc.years > 0 ? `${calc.years}` : "—"} />
+                  <Row label="Years to payment" value={calc.years > 0 ? `${calc.years}` : "\u2014"} />
                   <Row label="Annual discount rate" value={`${calc.discountRate}%`} />
-                  <Row label="Discounted value" value={fmt(calc.discountedValue)} bold />
+                  <Row label="Discounted value" value={calc.discountedValue} bold />
                   <Separator />
-                  <Row label="Attorneys fees" value={`(${fmt(calc.fees)})`} negative />
-                  <Row label="Litigation costs" value={`(${fmt(calc.litigationCosts)})`} negative />
-                  <Row label="Intangible costs" value={`(${fmt(calc.intangibleCosts)})`} negative />
+                  <Row label="Attorneys fees" value={calc.fees} negative />
+                  <Row label="Litigation costs" value={calc.litigationCosts} negative />
+                  <Row label="Intangible costs" value={calc.intangibleCosts} negative />
                   <Separator />
                   <tr>
                     <td className="py-2 font-semibold text-brand-primary">Expected value</td>
@@ -390,46 +337,5 @@ export default function PlaintiffsExpectedValueClient() {
         </div>
       </div>
     </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Table helpers
-// ---------------------------------------------------------------------------
-
-function Row({
-  label,
-  value,
-  bold,
-  negative,
-}: {
-  label: string;
-  value: string;
-  bold?: boolean;
-  negative?: boolean;
-}) {
-  return (
-    <tr>
-      <td className={`py-1.5 ${bold ? "font-medium text-brand-primary" : "text-brand-muted"}`}>
-        {label}
-      </td>
-      <td
-        className={`py-1.5 text-right tabular-nums ${
-          bold ? "font-medium text-brand-primary" : negative ? "text-brand-error" : "text-brand-muted"
-        }`}
-      >
-        {value}
-      </td>
-    </tr>
-  );
-}
-
-function Separator() {
-  return (
-    <tr>
-      <td colSpan={2} className="py-1">
-        <div className="border-t border-brand-border" />
-      </td>
-    </tr>
   );
 }

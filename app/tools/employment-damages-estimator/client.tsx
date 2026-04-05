@@ -10,21 +10,13 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Trash2 } from "lucide-react";
+import { fmt, parseNum } from "@/lib/format";
+import { Row, Separator } from "@/components/breakdown-table";
+import DollarInput from "@/components/dollar-input";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function fmt(n: number) {
-  return "$" + n.toLocaleString("en-US", { maximumFractionDigits: 0 });
-}
-
-function parseNum(s: string): number {
-  const cleaned = s.replace(/[$,\s]/g, "");
-  if (cleaned === "") return 0;
-  const n = parseFloat(cleaned);
-  return isNaN(n) ? 0 : n;
-}
 
 type LiquidatedType = "none" | "2x-wages" | "2x-wages-benefits" | "3x-wages";
 
@@ -42,10 +34,12 @@ interface MitigationJob {
   current: boolean;
 }
 
-let nextJobId = 1;
 function makeJobId() {
-  return `job-${nextJobId++}`;
+  return crypto.randomUUID();
 }
+
+const monthInputClass =
+  "w-full px-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
 
 // ---------------------------------------------------------------------------
 // Component
@@ -201,12 +195,6 @@ export default function EmploymentDamagesClient() {
     punitive !== "" ||
     otherDamages !== "";
 
-  const inputClass =
-    "w-full pl-7 pr-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
-
-  const monthInputClass =
-    "w-full px-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
       {/* Inputs */}
@@ -224,37 +212,23 @@ export default function EmploymentDamagesClient() {
                 <label className="block text-sm font-medium text-brand-primary mb-1.5">
                   Monthly compensation at termination
                 </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={monthlyComp}
-                    onChange={(e) => setMonthlyComp(e.target.value)}
-                    onBlur={commit}
-                    onKeyDown={handleKeyDown}
-                    placeholder="7,000"
-                    className={inputClass}
-                  />
-                </div>
+                <DollarInput
+                  value={monthlyComp}
+                  onChange={setMonthlyComp}
+                  onCommit={commit}
+                  placeholder="7,000"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-brand-primary mb-1.5">
                   Monthly benefits value
                 </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={monthlyBenefits}
-                    onChange={(e) => setMonthlyBenefits(e.target.value)}
-                    onBlur={commit}
-                    onKeyDown={handleKeyDown}
-                    placeholder="1,500"
-                    className={inputClass}
-                  />
-                </div>
+                <DollarInput
+                  value={monthlyBenefits}
+                  onChange={setMonthlyBenefits}
+                  onCommit={commit}
+                  placeholder="1,500"
+                />
               </div>
             </div>
             <div className="max-w-[calc(50%-0.5rem)]">
@@ -305,19 +279,12 @@ export default function EmploymentDamagesClient() {
                     <label className="block text-xs font-medium text-brand-muted mb-1">
                       Monthly compensation
                     </label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        value={job.monthlyComp}
-                        onChange={(e) => updateJob(job.id, "monthlyComp", e.target.value)}
-                        onBlur={commit}
-                        onKeyDown={handleKeyDown}
-                        placeholder="5,000"
-                        className={inputClass}
-                      />
-                    </div>
+                    <DollarInput
+                      value={job.monthlyComp}
+                      onChange={(v) => updateJob(job.id, "monthlyComp", v)}
+                      onCommit={commit}
+                      placeholder="5,000"
+                    />
                   </div>
                   <button
                     onClick={() => removeJob(job.id)}
@@ -395,19 +362,12 @@ export default function EmploymentDamagesClient() {
               <label className="block text-sm font-medium text-brand-primary mb-1.5">
                 Compensatory damages (emotional distress)
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={compensatory}
-                  onChange={(e) => setCompensatory(e.target.value)}
-                  onBlur={commit}
-                  onKeyDown={handleKeyDown}
-                  placeholder="50,000"
-                  className={inputClass}
-                />
-              </div>
+              <DollarInput
+                value={compensatory}
+                onChange={setCompensatory}
+                onCommit={commit}
+                placeholder="50,000"
+              />
             </div>
 
             <div>
@@ -439,38 +399,24 @@ export default function EmploymentDamagesClient() {
               <label className="block text-sm font-medium text-brand-primary mb-1.5">
                 Punitive damages
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={punitive}
-                  onChange={(e) => setPunitive(e.target.value)}
-                  onBlur={commit}
-                  onKeyDown={handleKeyDown}
-                  placeholder="0"
-                  className={inputClass}
-                />
-              </div>
+              <DollarInput
+                value={punitive}
+                onChange={setPunitive}
+                onCommit={commit}
+                placeholder="0"
+              />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-brand-primary mb-1.5">
                 Other damages
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={otherDamages}
-                  onChange={(e) => setOtherDamages(e.target.value)}
-                  onBlur={commit}
-                  onKeyDown={handleKeyDown}
-                  placeholder="0"
-                  className={inputClass}
-                />
-              </div>
+              <DollarInput
+                value={otherDamages}
+                onChange={setOtherDamages}
+                onCommit={commit}
+                placeholder="0"
+              />
             </div>
           </CardContent>
         </Card>
@@ -534,47 +480,5 @@ export default function EmploymentDamagesClient() {
         </div>
       </div>
     </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Table helpers
-// ---------------------------------------------------------------------------
-
-function Row({
-  label,
-  value,
-  bold,
-  negative,
-}: {
-  label: string;
-  value: number;
-  bold?: boolean;
-  negative?: boolean;
-}) {
-  const display = negative && value !== 0 ? `(${fmt(Math.abs(value))})` : fmt(value);
-  return (
-    <tr>
-      <td className={`py-1.5 ${bold ? "font-medium text-brand-primary" : "text-brand-muted"}`}>
-        {label}
-      </td>
-      <td
-        className={`py-1.5 text-right tabular-nums ${
-          bold ? "font-medium text-brand-primary" : negative && value !== 0 ? "text-brand-error" : "text-brand-muted"
-        }`}
-      >
-        {display}
-      </td>
-    </tr>
-  );
-}
-
-function Separator() {
-  return (
-    <tr>
-      <td colSpan={2} className="py-1">
-        <div className="border-t border-brand-border" />
-      </td>
-    </tr>
   );
 }

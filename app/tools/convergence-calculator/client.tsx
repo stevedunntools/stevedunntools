@@ -6,21 +6,8 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function fmt(n: number) {
-  return "$" + n.toLocaleString("en-US", { maximumFractionDigits: 0 });
-}
-
-function parseNum(s: string): number | null {
-  const cleaned = s.replace(/[$,\s]/g, "");
-  if (cleaned === "") return null;
-  const n = parseFloat(cleaned);
-  return isNaN(n) || n < 0 ? null : n;
-}
+import { fmt, parseNumOrNull } from "@/lib/format";
+import { generateYTicks, formatTickLabel } from "@/lib/chart-utils";
 
 // ---------------------------------------------------------------------------
 // Chart constants
@@ -76,19 +63,7 @@ function TrendChart({ data }: { data: ChartData }) {
   }
 
   // Y ticks
-  const yTicks = useMemo(() => {
-    const range = yMax - yMin;
-    const rawStep = range / 5;
-    const mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
-    const step = Math.ceil(rawStep / mag) * mag;
-    const ticks: number[] = [];
-    let v = Math.ceil(yMin / step) * step;
-    while (v <= yMax) {
-      ticks.push(v);
-      v += step;
-    }
-    return ticks;
-  }, [yMin, yMax]);
+  const yTicks = useMemo(() => generateYTicks(yMin, yMax), [yMin, yMax]);
 
   // Points
   const pSolid = [
@@ -142,11 +117,7 @@ function TrendChart({ data }: { data: ChartData }) {
             className="fill-brand-muted"
             fontSize="11"
           >
-            {v >= 1000000
-              ? `$${(v / 1000000).toFixed(v % 1000000 === 0 ? 0 : 1)}M`
-              : v >= 1000
-              ? `$${(v / 1000).toFixed(0)}k`
-              : `$${v}`}
+            {formatTickLabel(v)}
           </text>
         </g>
       ))}
@@ -251,10 +222,10 @@ export default function ConvergenceCalculatorClient() {
   }
 
   const analysis = useMemo(() => {
-    const p1 = parseNum(committed.p1);
-    const p2 = parseNum(committed.p2);
-    const d1 = parseNum(committed.d1);
-    const d2 = parseNum(committed.d2);
+    const p1 = parseNumOrNull(committed.p1);
+    const p2 = parseNumOrNull(committed.p2);
+    const d1 = parseNumOrNull(committed.d1);
+    const d2 = parseNumOrNull(committed.d2);
 
     if (p1 === null || p2 === null || d1 === null || d2 === null) {
       return { ready: false as const };
@@ -270,7 +241,7 @@ export default function ConvergenceCalculatorClient() {
     // (pSlope - dSlope)*(r-1) = d1 - p1
     const slopeDiff = pSlope - dSlope;
 
-    if (Math.abs(slopeDiff) < 0.01) {
+    if (Math.abs(slopeDiff) < Math.abs(Math.max(pSlope, dSlope, 1)) * 1e-10) {
       // Parallel lines
       if (Math.abs(p1 - d1) < 0.01) {
         return { ready: true as const, converges: false as const, reason: "Offers are identical — no convergence needed." };

@@ -9,6 +9,8 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Trash2 } from "lucide-react";
+import { fmt } from "@/lib/format";
+import { Pt, pointsToPath, generateYTicks, formatTickLabel } from "@/lib/chart-utils";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -31,13 +33,8 @@ interface Move {
 // Helpers
 // ---------------------------------------------------------------------------
 
-let nextId = 100;
 function makeId() {
-  return `m${nextId++}`;
-}
-
-function fmt(n: number) {
-  return "$" + n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+  return crypto.randomUUID();
 }
 
 function moveValues(m: Move): { low: number; high: number; mid: number } {
@@ -70,15 +67,6 @@ function parseInput(raw: string): { type: OfferType; value: number; low: number;
   const num = parseFloat(trimmed.replace(/[$,]/g, ""));
   if (isNaN(num) || num <= 0) return null;
   return { type: "number", value: num, low: 0, high: 0 };
-}
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-interface Pt {
-  x: number;
-  y: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -190,10 +178,10 @@ function NegotiationChart({ moves }: { moves: Move[] }) {
     });
   }
 
-  const pBand = useMemo(() => buildBand(pMoves), [pMoves, xScale, yScale]);
-  const dBand = useMemo(() => buildBand(dMoves), [dMoves, xScale, yScale]);
-  const pLines = useMemo(() => buildLineSegments(pMoves), [pMoves, xScale, yScale]);
-  const dLines = useMemo(() => buildLineSegments(dMoves), [dMoves, xScale, yScale]);
+  const pBand = useMemo(() => buildBand(pMoves), [moves]);
+  const dBand = useMemo(() => buildBand(dMoves), [moves]);
+  const pLines = useMemo(() => buildLineSegments(pMoves), [moves]);
+  const dLines = useMemo(() => buildLineSegments(dMoves), [moves]);
 
   // Compute green overlap using segment-by-segment band intersection.
   // This avoids Sutherland-Hodgman's convexity requirement.
@@ -282,28 +270,10 @@ function NegotiationChart({ moves }: { moves: Move[] }) {
     return polygons.reduce((a, b) => (a.length > b.length ? a : b));
   }, [pBand, dBand]);
 
-  const pMidpoints = useMemo(() => buildMidpoints(pMoves), [pMoves, xScale, yScale]);
-  const dMidpoints = useMemo(() => buildMidpoints(dMoves), [dMoves, xScale, yScale]);
+  const pMidpoints = useMemo(() => buildMidpoints(pMoves), [moves]);
+  const dMidpoints = useMemo(() => buildMidpoints(dMoves), [moves]);
 
-  const yTicks = useMemo(() => {
-    const range = yMax - yMin;
-    const rawStep = range / 5;
-    const mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
-    const step = Math.ceil(rawStep / mag) * mag;
-    const ticks: number[] = [];
-    let v = Math.ceil(yMin / step) * step;
-    while (v <= yMax) {
-      ticks.push(v);
-      v += step;
-    }
-    return ticks;
-  }, [yMin, yMax]);
-
-  function pointsToPath(pts: Pt[], closed: boolean = false): string {
-    if (pts.length === 0) return "";
-    const d = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-    return closed ? d + " Z" : d;
-  }
+  const yTicks = useMemo(() => generateYTicks(yMin, yMax), [yMin, yMax]);
 
   return (
     <svg
@@ -331,11 +301,7 @@ function NegotiationChart({ moves }: { moves: Move[] }) {
             className="fill-brand-muted"
             fontSize="11"
           >
-            {v >= 1000000
-              ? `$${(v / 1000000).toFixed(v % 1000000 === 0 ? 0 : 1)}M`
-              : v >= 1000
-              ? `$${(v / 1000).toFixed(0)}k`
-              : `$${v}`}
+            {formatTickLabel(v)}
           </text>
         </g>
       ))}

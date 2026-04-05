@@ -6,17 +6,7 @@ import {
   Card,
   CardContent,
 } from "@/components/ui/card";
-
-function fmt(n: number) {
-  return "$" + n.toLocaleString("en-US", { maximumFractionDigits: 0 });
-}
-
-function parseNum(s: string): number | null {
-  const cleaned = s.replace(/[$,\s]/g, "");
-  if (cleaned === "") return null;
-  const n = parseFloat(cleaned);
-  return isNaN(n) ? null : n;
-}
+import { fmt, parseNumOrNull } from "@/lib/format";
 
 type Field = "upper" | "lower" | "mid";
 
@@ -30,9 +20,9 @@ export default function BracketGeneratorClient() {
   const [committed, setCommitted] = useState<Set<Field>>(new Set());
 
   function recalc(field: Field, uStr: string, lStr: string, mStr: string) {
-    const u = parseNum(uStr);
-    const l = parseNum(lStr);
-    const m = parseNum(mStr);
+    const u = parseNumOrNull(uStr);
+    const l = parseNumOrNull(lStr);
+    const m = parseNumOrNull(mStr);
 
     if (field === "upper") {
       if (u !== null && l !== null) {
@@ -103,7 +93,7 @@ export default function BracketGeneratorClient() {
 
     // Live recalc only if 2+ fields have been previously committed by user
     if (othersCommitted(field) >= 2 || (othersCommitted(field) >= 1 && committed.has(field))) {
-      if (parseNum(value) !== null) {
+      if (parseNumOrNull(value) !== null) {
         recalc(field, newU, newL, newM);
       }
     }
@@ -120,11 +110,12 @@ export default function BracketGeneratorClient() {
     }
   }
 
-  const upper = parseNum(upperStr);
-  const lower = parseNum(lowerStr);
-  const mid = parseNum(midStr);
+  const upper = parseNumOrNull(upperStr);
+  const lower = parseNumOrNull(lowerStr);
+  const mid = parseNumOrNull(midStr);
   const allFilled = upper !== null && lower !== null && mid !== null;
   const hasAny = upperStr !== "" || lowerStr !== "" || midStr !== "";
+  const invalidRange = upper !== null && lower !== null && lower > upper;
 
   function clearAll() {
     setUpperStr("");
@@ -204,13 +195,18 @@ export default function BracketGeneratorClient() {
         </div>
 
         {/* Summary */}
-        {allFilled && (
+        {invalidRange && (
+          <div className="pt-2 border-t border-brand-border text-sm text-brand-caution">
+            <p>Lower value should be less than upper value</p>
+          </div>
+        )}
+        {allFilled && !invalidRange && (
           <div className="pt-2 border-t border-brand-border text-sm text-brand-muted space-y-1">
             <p>
-              Bracket: <span className="font-medium text-brand-primary">{fmt(lower!)}</span> &ndash; <span className="font-medium text-brand-primary">{fmt(upper!)}</span>
+              Bracket: <span className="font-medium text-brand-primary">{fmt(lower)}</span> &ndash; <span className="font-medium text-brand-primary">{fmt(upper)}</span>
             </p>
             <p>
-              Midpoint: <span className="font-medium text-brand-primary">{fmt(mid!)}</span>
+              Midpoint: <span className="font-medium text-brand-primary">{fmt(mid)}</span>
             </p>
           </div>
         )}

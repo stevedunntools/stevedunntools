@@ -9,21 +9,9 @@ import {
   CardTitle,
   CardContent,
 } from "@/components/ui/card";
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function fmt(n: number) {
-  return "$" + n.toLocaleString("en-US", { maximumFractionDigits: 0 });
-}
-
-function parseNum(s: string): number {
-  const cleaned = s.replace(/[$,\s]/g, "");
-  if (cleaned === "") return 0;
-  const n = parseFloat(cleaned);
-  return isNaN(n) ? 0 : n;
-}
+import { fmt, parseNum } from "@/lib/format";
+import { Row, Separator } from "@/components/breakdown-table";
+import DollarInput from "@/components/dollar-input";
 
 const MULTIPLIER_STEPS = [1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
 
@@ -59,10 +47,6 @@ export default function PersonalInjuryClient() {
     });
   }
 
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter") commit();
-  }
-
   function clearAll() {
     setMedicalToDate("");
     setFutureMedical("");
@@ -90,7 +74,7 @@ export default function PersonalInjuryClient() {
 
     const totalMedical = medTo + medFuture;
     const painAndSuffering = totalMedical * mult;
-    const total = painAndSuffering + earnTo + earnFuture + prop;
+    const total = totalMedical + painAndSuffering + earnTo + earnFuture + prop;
 
     return {
       medicalToDate: medTo,
@@ -117,9 +101,6 @@ export default function PersonalInjuryClient() {
     futureLostEarnings !== "" ||
     propertyDamage !== "";
 
-  const inputClass =
-    "w-full pl-7 pr-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
       {/* Inputs */}
@@ -137,37 +118,23 @@ export default function PersonalInjuryClient() {
                 <label className="block text-sm font-medium text-brand-primary mb-1.5">
                   Medical expenses to date
                 </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={medicalToDate}
-                    onChange={(e) => setMedicalToDate(e.target.value)}
-                    onBlur={commit}
-                    onKeyDown={handleKeyDown}
-                    placeholder="25,000"
-                    className={inputClass}
-                  />
-                </div>
+                <DollarInput
+                  value={medicalToDate}
+                  onChange={setMedicalToDate}
+                  onCommit={commit}
+                  placeholder="25,000"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-brand-primary mb-1.5">
                   Future medical expenses
                 </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={futureMedical}
-                    onChange={(e) => setFutureMedical(e.target.value)}
-                    onBlur={commit}
-                    onKeyDown={handleKeyDown}
-                    placeholder="10,000"
-                    className={inputClass}
-                  />
-                </div>
+                <DollarInput
+                  value={futureMedical}
+                  onChange={setFutureMedical}
+                  onCommit={commit}
+                  placeholder="10,000"
+                />
               </div>
             </div>
           </CardContent>
@@ -230,37 +197,23 @@ export default function PersonalInjuryClient() {
                 <label className="block text-sm font-medium text-brand-primary mb-1.5">
                   Lost earnings to date
                 </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={lostEarningsToDate}
-                    onChange={(e) => setLostEarningsToDate(e.target.value)}
-                    onBlur={commit}
-                    onKeyDown={handleKeyDown}
-                    placeholder="15,000"
-                    className={inputClass}
-                  />
-                </div>
+                <DollarInput
+                  value={lostEarningsToDate}
+                  onChange={setLostEarningsToDate}
+                  onCommit={commit}
+                  placeholder="15,000"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-brand-primary mb-1.5">
                   Future lost earnings
                 </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={futureLostEarnings}
-                    onChange={(e) => setFutureLostEarnings(e.target.value)}
-                    onBlur={commit}
-                    onKeyDown={handleKeyDown}
-                    placeholder="20,000"
-                    className={inputClass}
-                  />
-                </div>
+                <DollarInput
+                  value={futureLostEarnings}
+                  onChange={setFutureLostEarnings}
+                  onCommit={commit}
+                  placeholder="20,000"
+                />
               </div>
             </div>
           </CardContent>
@@ -278,19 +231,12 @@ export default function PersonalInjuryClient() {
               <label className="block text-sm font-medium text-brand-primary mb-1.5">
                 Property damage
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={propertyDamage}
-                  onChange={(e) => setPropertyDamage(e.target.value)}
-                  onBlur={commit}
-                  onKeyDown={handleKeyDown}
-                  placeholder="5,000"
-                  className={inputClass}
-                />
-              </div>
+              <DollarInput
+                value={propertyDamage}
+                onChange={setPropertyDamage}
+                onCommit={commit}
+                placeholder="5,000"
+              />
             </div>
           </CardContent>
         </Card>
@@ -355,44 +301,5 @@ export default function PersonalInjuryClient() {
         </div>
       </div>
     </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Table helpers
-// ---------------------------------------------------------------------------
-
-function Row({
-  label,
-  value,
-  bold,
-}: {
-  label: string;
-  value: number;
-  bold?: boolean;
-}) {
-  return (
-    <tr>
-      <td className={`py-1.5 ${bold ? "font-medium text-brand-primary" : "text-brand-muted"}`}>
-        {label}
-      </td>
-      <td
-        className={`py-1.5 text-right tabular-nums ${
-          bold ? "font-medium text-brand-primary" : "text-brand-muted"
-        }`}
-      >
-        {fmt(value)}
-      </td>
-    </tr>
-  );
-}
-
-function Separator() {
-  return (
-    <tr>
-      <td colSpan={2} className="py-1">
-        <div className="border-t border-brand-border" />
-      </td>
-    </tr>
   );
 }
