@@ -26,7 +26,6 @@ export const navGroups = [
     label: "About",
     links: [
       { href: "/about", label: "About Steve Dunn" },
-      { href: "/contact", label: "Contact" },
     ],
   },
 ];

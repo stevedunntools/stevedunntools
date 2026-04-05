@@ -3,7 +3,6 @@ import { navGroups } from "@/lib/navigation";
 
 const companyLinks = [
   { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
   { href: "/disclaimer", label: "Disclaimer" },
   { href: "/privacy", label: "Privacy Policy" },
 ];
