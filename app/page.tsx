@@ -13,12 +13,10 @@ const toolDescriptions: Record<string, string> = {
     "Visualize the negotiation process with an interactive chart of offers, counteroffers, and convergence patterns.",
   "/tools/bracket-generator":
     "Generate bracketed offer ranges to propose structured negotiation moves.",
-  "/tools/trend-analyzer":
-    "Analyze negotiation momentum by tracking offer patterns and predicting settlement trajectories.",
+  "/tools/convergence-calculator":
+    "Enter two offers from each party to project where their trends would intersect.",
 
   // Settlement Analysis
-  "/tools/simple-damages-estimator":
-    "Quickly estimate total damages with a streamlined set of inputs for straightforward disputes.",
   "/tools/employment-damages-estimator":
     "Calculate potential employment damages including lost wages, benefits, and emotional distress.",
   "/tools/personal-injury-damages-estimator":

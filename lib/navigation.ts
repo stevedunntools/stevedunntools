@@ -4,13 +4,12 @@ export const navGroups = [
     links: [
       { href: "/tools/negotiation-visualizer", label: "Negotiation Visualizer" },
       { href: "/tools/bracket-generator", label: "Bracket Generator" },
-      { href: "/tools/trend-analyzer", label: "Trend Analyzer" },
+      { href: "/tools/convergence-calculator", label: "Convergence Calculator" },
     ],
   },
   {
     label: "Settlement Analysis",
     links: [
-      { href: "/tools/simple-damages-estimator", label: "Simple Damages Estimator" },
       { href: "/tools/employment-damages-estimator", label: "Employment Damages Estimator" },
       { href: "/tools/personal-injury-damages-estimator", label: "Personal Injury Damages Estimator" },
       { href: "/tools/plaintiffs-expected-value", label: "Plaintiff's Expected Value" },
