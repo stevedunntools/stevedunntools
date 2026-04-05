@@ -17,9 +17,30 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Steve Dunn Tools — Mediation Calculators & Dispute Resolution Tools",
+  title: "Steve Dunn Tools — Settlement Tools Built by a Mediator",
   description:
-    "Practical mediation tools built by a mediator. Settlement calculators, negotiation utilities, and employment dispute tools for lawyers, mediators, and parties.",
+    "Practical settlement tools built by a mediator. Calculators and utilities for lawyers, mediators, and parties in dispute resolution.",
+  openGraph: {
+    title: "Steve Dunn Tools",
+    description: "Settlement tools built by a mediator.",
+    url: "https://stevedunntools.com",
+    siteName: "Steve Dunn Tools",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Steve Dunn Tools — Settlement tools built by a mediator",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Steve Dunn Tools",
+    description: "Settlement tools built by a mediator.",
+    images: ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({
