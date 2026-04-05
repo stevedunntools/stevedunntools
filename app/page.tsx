@@ -48,7 +48,7 @@ export default function Home() {
       <section className="py-20 sm:py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-brand-primary">
-            Mediation tools built by a mediator.
+            Settlement tools built by a mediator.
           </h1>
           <p className="mt-5 max-w-2xl mx-auto text-lg text-brand-muted">
             Practical calculators and utilities for lawyers, mediators, and
