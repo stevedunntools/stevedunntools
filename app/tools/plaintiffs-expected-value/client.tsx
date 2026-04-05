@@ -29,31 +29,45 @@ function parseNum(s: string): number {
 // Component
 // ---------------------------------------------------------------------------
 
-export default function PlaintiffsPIExpectedValueClient() {
+export default function PlaintiffsExpectedValueClient() {
   const [damages, setDamages] = useState("");
+  const [fees, setFees] = useState("");
+  const [litigationCosts, setLitigationCosts] = useState("");
+  const [intangibleCosts, setIntangibleCosts] = useState("");
   const [probability, setProbability] = useState(100);
   const [yearsToPayment, setYearsToPayment] = useState("");
   const [discountRate, setDiscountRate] = useState(4);
 
   const [committed, setCommitted] = useState({
     damages: "",
+    fees: "",
+    litigationCosts: "",
+    intangibleCosts: "",
     probability: 100,
     yearsToPayment: "",
     discountRate: 4,
   });
 
-  // Auto-populate from PI damages estimator if available
+  // Auto-populate damages from either damages estimator
   useEffect(() => {
+    // Check both estimators, use whichever has a value
     const piTotal = getToolValue<number>("personal-injury-damages-estimator.total");
-    if (piTotal && piTotal > 0) {
-      const formatted = piTotal.toFixed(0);
+    const empTotal = getToolValue<number>("employment-damages-estimator.total");
+    const best = (piTotal && piTotal > 0) ? piTotal : (empTotal && empTotal > 0) ? empTotal : null;
+
+    if (best) {
+      const formatted = best.toFixed(0);
       setDamages(formatted);
       setCommitted((prev) => ({ ...prev, damages: formatted }));
     }
 
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail;
-      if (detail.key === "personal-injury-damages-estimator.total" && detail.value > 0) {
+      if (
+        (detail.key === "personal-injury-damages-estimator.total" ||
+          detail.key === "employment-damages-estimator.total") &&
+        detail.value > 0
+      ) {
         const formatted = (detail.value as number).toFixed(0);
         setDamages(formatted);
         setCommitted((prev) => ({ ...prev, damages: formatted }));
@@ -66,6 +80,9 @@ export default function PlaintiffsPIExpectedValueClient() {
   function commit() {
     setCommitted({
       damages,
+      fees,
+      litigationCosts,
+      intangibleCosts,
       probability,
       yearsToPayment,
       discountRate,
@@ -78,11 +95,17 @@ export default function PlaintiffsPIExpectedValueClient() {
 
   function clearAll() {
     setDamages("");
+    setFees("");
+    setLitigationCosts("");
+    setIntangibleCosts("");
     setProbability(100);
     setYearsToPayment("");
     setDiscountRate(4);
     setCommitted({
       damages: "",
+      fees: "",
+      litigationCosts: "",
+      intangibleCosts: "",
       probability: 100,
       yearsToPayment: "",
       discountRate: 4,
@@ -91,13 +114,18 @@ export default function PlaintiffsPIExpectedValueClient() {
 
   const calc = useMemo(() => {
     const dmg = parseNum(committed.damages);
+    const f = parseNum(committed.fees);
+    const lit = parseNum(committed.litigationCosts);
+    const intang = parseNum(committed.intangibleCosts);
     const prob = committed.probability / 100;
     const years = parseNum(committed.yearsToPayment);
     const rate = committed.discountRate / 100;
 
     const probabilityAdjusted = dmg * prob;
     const discountFactor = years > 0 ? 1 / Math.pow(1 + rate, years) : 1;
-    const presentExpectedValue = probabilityAdjusted * discountFactor;
+    const discountedValue = probabilityAdjusted * discountFactor;
+    const totalDeductions = f + lit + intang;
+    const expectedValue = discountedValue - totalDeductions;
 
     return {
       damages: dmg,
@@ -105,12 +133,21 @@ export default function PlaintiffsPIExpectedValueClient() {
       probabilityAdjusted,
       years,
       discountRate: committed.discountRate,
-      discountFactor,
-      presentExpectedValue,
+      discountedValue,
+      fees: f,
+      litigationCosts: lit,
+      intangibleCosts: intang,
+      totalDeductions,
+      expectedValue,
     };
   }, [committed]);
 
-  const hasAny = damages !== "" || yearsToPayment !== "";
+  const hasAny =
+    damages !== "" ||
+    fees !== "" ||
+    litigationCosts !== "" ||
+    intangibleCosts !== "" ||
+    yearsToPayment !== "";
 
   const inputClass =
     "w-full pl-7 pr-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
@@ -129,7 +166,7 @@ export default function PlaintiffsPIExpectedValueClient() {
               Damages
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             <div className="max-w-[calc(50%-0.5rem)]">
               <label className="block text-sm font-medium text-brand-primary mb-1.5">
                 Plaintiff&apos;s total damages
@@ -230,6 +267,71 @@ export default function PlaintiffsPIExpectedValueClient() {
           </CardContent>
         </Card>
 
+        {/* Fees & Costs */}
+        <Card className="bg-white border-brand-border">
+          <CardHeader>
+            <CardTitle className="text-brand-primary text-base">
+              Fees &amp; Costs
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+                Attorneys fees
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={fees}
+                  onChange={(e) => setFees(e.target.value)}
+                  onBlur={commit}
+                  onKeyDown={handleKeyDown}
+                  placeholder="25,000"
+                  className={inputClass}
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+                Litigation costs
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={litigationCosts}
+                  onChange={(e) => setLitigationCosts(e.target.value)}
+                  onBlur={commit}
+                  onKeyDown={handleKeyDown}
+                  placeholder="10,000"
+                  className={inputClass}
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+                Intangible costs
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={intangibleCosts}
+                  onChange={(e) => setIntangibleCosts(e.target.value)}
+                  onBlur={commit}
+                  onKeyDown={handleKeyDown}
+                  placeholder="5,000"
+                  className={inputClass}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {hasAny && (
           <Button variant="outline" onClick={clearAll}>
             Clear All
@@ -243,9 +345,9 @@ export default function PlaintiffsPIExpectedValueClient() {
           {/* Total */}
           <Card className="bg-white border-brand-accent">
             <CardContent className="pt-6">
-              <p className="text-sm text-brand-muted mb-1">Present Expected Value</p>
+              <p className="text-sm text-brand-muted mb-1">Plaintiff&apos;s Expected Value</p>
               <p className="text-3xl font-bold text-brand-accent">
-                {fmt(calc.presentExpectedValue)}
+                {fmt(calc.expectedValue)}
               </p>
             </CardContent>
           </Card>
@@ -259,16 +361,21 @@ export default function PlaintiffsPIExpectedValueClient() {
               <table className="w-full text-sm">
                 <tbody>
                   <Row label="Total damages" value={fmt(calc.damages)} />
-                  <Row label={`Probability of success`} value={`${calc.probability}%`} />
+                  <Row label="Probability of success" value={`${calc.probability}%`} />
                   <Row label="Probability-adjusted value" value={fmt(calc.probabilityAdjusted)} bold />
                   <Separator />
                   <Row label="Years to payment" value={calc.years > 0 ? `${calc.years}` : "—"} />
                   <Row label="Annual discount rate" value={`${calc.discountRate}%`} />
+                  <Row label="Discounted value" value={fmt(calc.discountedValue)} bold />
+                  <Separator />
+                  <Row label="Attorneys fees" value={`(${fmt(calc.fees)})`} negative />
+                  <Row label="Litigation costs" value={`(${fmt(calc.litigationCosts)})`} negative />
+                  <Row label="Intangible costs" value={`(${fmt(calc.intangibleCosts)})`} negative />
                   <Separator />
                   <tr>
-                    <td className="py-2 font-semibold text-brand-primary">Present expected value</td>
+                    <td className="py-2 font-semibold text-brand-primary">Expected value</td>
                     <td className="py-2 text-right font-semibold text-brand-accent">
-                      {fmt(calc.presentExpectedValue)}
+                      {fmt(calc.expectedValue)}
                     </td>
                   </tr>
                 </tbody>
@@ -294,10 +401,12 @@ function Row({
   label,
   value,
   bold,
+  negative,
 }: {
   label: string;
   value: string;
   bold?: boolean;
+  negative?: boolean;
 }) {
   return (
     <tr>
@@ -306,7 +415,7 @@ function Row({
       </td>
       <td
         className={`py-1.5 text-right tabular-nums ${
-          bold ? "font-medium text-brand-primary" : "text-brand-muted"
+          bold ? "font-medium text-brand-primary" : negative ? "text-brand-error" : "text-brand-muted"
         }`}
       >
         {value}

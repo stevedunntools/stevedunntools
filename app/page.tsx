@@ -21,10 +21,8 @@ const toolDescriptions: Record<string, string> = {
     "Calculate potential employment damages including lost wages, benefits, and emotional distress.",
   "/tools/personal-injury-damages-estimator":
     "Estimate personal injury damages across medical costs, lost earnings, pain and suffering, and more.",
-  "/tools/plaintiffs-pi-expected-value":
-    "Calculate the probability-weighted expected value of a personal injury case across multiple scenarios.",
-  "/tools/plaintiffs-employment-expected-value":
-    "Calculate the probability-weighted expected value of an employment case across multiple scenarios.",
+  "/tools/plaintiffs-expected-value":
+    "Calculate the probability-weighted expected value of a plaintiff's case, adjusted for costs and the time value of money.",
   "/tools/defendants-expected-cost":
     "Estimate the defendant's total expected cost including liability risk, damages exposure, and defense costs.",
 

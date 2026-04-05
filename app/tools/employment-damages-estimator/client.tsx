@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { setToolValue } from "@/lib/tool-store";
 import {
   Card,
   CardHeader,
@@ -184,6 +185,11 @@ export default function EmploymentDamagesClient() {
       grossTotal,
     };
   }, [committed]);
+
+  // Share total with other tools (e.g. expected value calculator)
+  useEffect(() => {
+    setToolValue("employment-damages-estimator.total", calc.grossTotal);
+  }, [calc.grossTotal]);
 
   const hasAny =
     monthlyComp !== "" ||
