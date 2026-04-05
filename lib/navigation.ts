@@ -4,7 +4,7 @@ export const navGroups = [
     links: [
       { href: "/tools/negotiation-visualizer", label: "Negotiation Visualizer" },
       { href: "/tools/bracket-generator", label: "Bracket Generator" },
-      { href: "/tools/convergence-calculator", label: "Convergence Calculator" },
+      { href: "/tools/convergence-calculator", label: "Convergence Visualizer" },
     ],
   },
   {

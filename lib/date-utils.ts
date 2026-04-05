@@ -2,12 +2,23 @@
  * U.S. Federal Holiday calculations and business day utilities.
  */
 
+/**
+ * Adjust a fixed-date holiday for weekend substitution:
+ * Saturday → observed on preceding Friday, Sunday → observed on following Monday.
+ */
+function observedDate(d: Date): Date {
+  const day = d.getDay();
+  if (day === 6) return new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1);
+  if (day === 0) return new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+  return d;
+}
+
 /** Get all U.S. federal holidays for a given year */
 export function getFederalHolidays(year: number): Date[] {
   const holidays: Date[] = [];
 
   // New Year's Day — January 1
-  holidays.push(new Date(year, 0, 1));
+  holidays.push(observedDate(new Date(year, 0, 1)));
 
   // MLK Day — Third Monday of January
   holidays.push(nthWeekday(year, 0, 1, 3));
@@ -19,10 +30,10 @@ export function getFederalHolidays(year: number): Date[] {
   holidays.push(lastWeekday(year, 4, 1));
 
   // Juneteenth — June 19
-  holidays.push(new Date(year, 5, 19));
+  holidays.push(observedDate(new Date(year, 5, 19)));
 
   // Independence Day — July 4
-  holidays.push(new Date(year, 6, 4));
+  holidays.push(observedDate(new Date(year, 6, 4)));
 
   // Labor Day — First Monday of September
   holidays.push(nthWeekday(year, 8, 1, 1));
@@ -31,13 +42,13 @@ export function getFederalHolidays(year: number): Date[] {
   holidays.push(nthWeekday(year, 9, 1, 2));
 
   // Veterans Day — November 11
-  holidays.push(new Date(year, 10, 11));
+  holidays.push(observedDate(new Date(year, 10, 11)));
 
   // Thanksgiving — Fourth Thursday of November
   holidays.push(nthWeekday(year, 10, 4, 4));
 
   // Christmas — December 25
-  holidays.push(new Date(year, 11, 25));
+  holidays.push(observedDate(new Date(year, 11, 25)));
 
   return holidays;
 }
@@ -64,11 +75,9 @@ function lastWeekday(year: number, month: number, weekday: number): Date {
 /** Check if a date is a federal holiday */
 export function isFederalHoliday(date: Date): boolean {
   const holidays = getFederalHolidays(date.getFullYear());
-  const t = date.getTime();
+  const dNorm = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
   return holidays.some((h) => {
-    // Normalize both to midnight
     const hNorm = new Date(h.getFullYear(), h.getMonth(), h.getDate()).getTime();
-    const dNorm = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
     return hNorm === dNorm;
   });
 }

@@ -15,12 +15,12 @@ import PercentSlider from "@/components/percent-slider";
 
 export default function ContingencyCalculatorClient() {
   const [settlement, setSettlement] = useState("");
-  const [contingencyPct, setContingencyPct] = useState(33);
+  const [contingencyPct, setContingencyPct] = useState(1);
   const [costs, setCosts] = useState("");
 
   const [committed, setCommitted] = useState({
     settlement: "",
-    contingencyPct: 33,
+    contingencyPct: 1,
     costs: "",
   });
 
@@ -38,7 +38,7 @@ export default function ContingencyCalculatorClient() {
     setCosts("");
     setCommitted({
       settlement: "",
-      contingencyPct: 33,
+      contingencyPct: 1,
       costs: "",
     });
   }
@@ -101,7 +101,8 @@ export default function ContingencyCalculatorClient() {
                 setCommitted((prev) => ({ ...prev, contingencyPct: val }));
               }}
               min={1}
-              max={50}
+              max={100}
+              label="Use slider or type exact percentage"
             />
           </CardContent>
         </Card>
@@ -167,6 +168,11 @@ export default function ContingencyCalculatorClient() {
               </table>
             </CardContent>
           </Card>
+
+          <p className="text-xs text-brand-muted">
+            This is an estimate for settlement discussion purposes only. It is
+            not legal advice and does not account for all possible factors.
+          </p>
         </div>
       </div>
     </div>

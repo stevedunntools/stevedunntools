@@ -10,9 +10,9 @@ import {
 const toolDescriptions: Record<string, string> = {
   // Negotiation Tools
   "/tools/negotiation-visualizer":
-    "Visualize the negotiation process with an interactive chart of offers, counteroffers, and convergence patterns.",
+    "Visualize the negotiation process with an interactive chart of offers, counteroffers, and brackets.",
   "/tools/bracket-generator":
-    "Generate bracketed offer ranges to propose structured negotiation moves.",
+    "Automatically calculate bracketed offer ranges.",
   "/tools/convergence-calculator":
     "Enter two offers from each party to project where their trends would intersect.",
 
@@ -20,23 +20,23 @@ const toolDescriptions: Record<string, string> = {
   "/tools/employment-damages-estimator":
     "Calculate potential employment damages including lost wages, benefits, and emotional distress.",
   "/tools/personal-injury-damages-estimator":
-    "Estimate personal injury damages across medical costs, lost earnings, and non-economic damages.",
+    "Estimate personal injury damages including medical costs, lost earnings, and non-economic damages.",
   "/tools/plaintiffs-expected-value":
     "Calculate the probability-weighted expected value of a plaintiff's case, adjusted for costs and the time value of money.",
   "/tools/defendants-expected-cost":
     "Estimate the defendant's total expected cost including liability risk, damages exposure, and defense costs.",
   "/tools/contingency-calculator":
-    "Calculate attorney fees under various contingency arrangements and their impact on net recovery.",
+    "Calculate plaintiff's net recovery after fees and costs.",
   "/tools/employment-contingency-calculator":
     "Calculate net recovery with wage and non-wage allocation for employment settlements.",
   "/tools/simple-interest-calculator":
     "Calculate simple interest on any amount over any time period at any rate.",
   "/tools/payment-over-time":
-    "Build a complete payment schedule for settlements paid in installments with interest.",
+    "Build a complete payment schedule for settlements paid in installments.",
   "/tools/days-between-dates":
     "Calculate the number of years, months, weeks, and days between two dates.",
   "/tools/add-subtract-date":
-    "Add or subtract years, months, weeks, and days from a date, with business day support.",
+    "Add or subtract years, months, weeks, and days from a date.",
 };
 
 const toolCategories = navGroups.filter((g) => g.label !== "About");

@@ -1,5 +1,7 @@
 /** Format a number as a dollar amount with commas, e.g. "$1,234,567" */
 export function fmt(n: number) {
+  if (!isFinite(n)) return "$0";
+  if (n < 0) return "-$" + Math.abs(n).toLocaleString("en-US", { maximumFractionDigits: 0 });
   return "$" + n.toLocaleString("en-US", { maximumFractionDigits: 0 });
 }
 

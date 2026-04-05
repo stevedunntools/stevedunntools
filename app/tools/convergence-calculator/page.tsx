@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import ConvergenceCalculatorClient from "./client";
 
 export const metadata: Metadata = {
-  title: "Convergence Calculator | Steve Dunn Tools",
+  title: "Convergence Visualizer | Steve Dunn Tools",
   description:
     "Enter two offers from each party to project where their trends would intersect.",
 };
@@ -15,7 +15,7 @@ export default function ConvergenceCalculatorPage() {
           Negotiation Tools
         </p>
         <h1 className="text-3xl font-bold text-brand-primary">
-          Convergence Calculator
+          Convergence Visualizer
         </h1>
         <p className="mt-2 text-brand-muted max-w-2xl">
           Enter two offers from each party. The tool extrapolates both trends

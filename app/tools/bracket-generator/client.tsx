@@ -29,46 +29,30 @@ export default function BracketGeneratorClient() {
         setMidStr(((u + l) / 2).toFixed(0));
         setAutoField("mid");
       } else if (u !== null && m !== null) {
-        const newL = 2 * m - u;
-        if (newL >= 0) {
-          setLowerStr(newL.toFixed(0));
-          setAutoField("lower");
-        }
+        setLowerStr((2 * m - u).toFixed(0));
+        setAutoField("lower");
       }
     } else if (field === "lower") {
       if (u !== null && l !== null) {
         setMidStr(((u + l) / 2).toFixed(0));
         setAutoField("mid");
       } else if (l !== null && m !== null) {
-        const newU = 2 * m - l;
-        if (newU >= 0) {
-          setUpperStr(newU.toFixed(0));
-          setAutoField("upper");
-        }
+        setUpperStr((2 * m - l).toFixed(0));
+        setAutoField("upper");
       }
     } else if (field === "mid") {
       if (u !== null && l !== null && m !== null) {
         const currentMid = (u + l) / 2;
         const delta = m - currentMid;
-        const newU = u + delta;
-        const newL = l + delta;
-        if (newU >= 0 && newL >= 0) {
-          setUpperStr(newU.toFixed(0));
-          setLowerStr(newL.toFixed(0));
-          setAutoField(null);
-        }
+        setUpperStr((u + delta).toFixed(0));
+        setLowerStr((l + delta).toFixed(0));
+        setAutoField(null);
       } else if (m !== null && u !== null) {
-        const newL = 2 * m - u;
-        if (newL >= 0) {
-          setLowerStr(newL.toFixed(0));
-          setAutoField("lower");
-        }
+        setLowerStr((2 * m - u).toFixed(0));
+        setAutoField("lower");
       } else if (m !== null && l !== null) {
-        const newU = 2 * m - l;
-        if (newU >= 0) {
-          setUpperStr(newU.toFixed(0));
-          setAutoField("upper");
-        }
+        setUpperStr((2 * m - l).toFixed(0));
+        setAutoField("upper");
       }
     }
   }

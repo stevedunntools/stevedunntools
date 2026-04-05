@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { setToolValue } from "@/lib/tool-store";
 import {
   Card,
   CardHeader,
@@ -180,11 +179,6 @@ export default function EmploymentDamagesClient() {
     };
   }, [committed]);
 
-  // Share total with other tools (e.g. expected value calculator)
-  useEffect(() => {
-    setToolValue("employment-damages-estimator.total", calc.grossTotal);
-  }, [calc.grossTotal]);
-
   const hasAny =
     monthlyComp !== "" ||
     monthlyBenefits !== "" ||
@@ -344,7 +338,7 @@ export default function EmploymentDamagesClient() {
                 className={monthInputClass}
               />
               <p className="mt-1 text-xs text-brand-muted">
-                Compensation only, reduced by current job compensation if applicable
+                Offset by current compensation if applicable
               </p>
             </div>
           </CardContent>
@@ -377,13 +371,12 @@ export default function EmploymentDamagesClient() {
               <select
                 value={liquidatedType}
                 onChange={(e) => {
-                  setLiquidatedType(e.target.value as LiquidatedType);
-                  setTimeout(() => {
-                    setCommitted((prev) => ({
-                      ...prev,
-                      liquidatedType: e.target.value as LiquidatedType,
-                    }));
-                  }, 0);
+                  const val = e.target.value as LiquidatedType;
+                  setLiquidatedType(val);
+                  setCommitted((prev) => ({
+                    ...prev,
+                    liquidatedType: val,
+                  }));
                 }}
                 className="w-full px-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent"
               >
@@ -452,7 +445,7 @@ export default function EmploymentDamagesClient() {
                   <Row label="Back pay (compensation)" value={calc.backPayComp} />
                   <Row label="Back pay (benefits)" value={calc.backPayBenefits} />
                   <Row label="Gross back pay" value={calc.backPay} bold />
-                  <Row label="Less: mitigation" value={-calc.totalMitigation} negative />
+                  <Row label="Less: mitigation" value={calc.totalMitigation} negative />
                   <Row label="Net back pay" value={calc.netBackPay} bold />
                   <Separator />
                   <Row label="Front pay" value={calc.frontPay} />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,7 +12,6 @@ import { fmt, parseNum } from "@/lib/format";
 import { Row, Separator } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
 import PercentSlider from "@/components/percent-slider";
-import { useToolValue } from "@/hooks/use-tool-store";
 
 export default function DefendantsExpectedCostClient() {
   const [damages, setDamages] = useState("");
@@ -32,25 +31,6 @@ export default function DefendantsExpectedCostClient() {
     defendantCosts: "",
     intangibleCosts: "",
   });
-
-  // Auto-populate damages from either damages estimator
-  const [piTotal] = useToolValue<number>("personal-injury-damages-estimator.total");
-  const [empTotal] = useToolValue<number>("employment-damages-estimator.total");
-
-  useEffect(() => {
-    const best =
-      piTotal && piTotal > 0
-        ? piTotal
-        : empTotal && empTotal > 0
-        ? empTotal
-        : null;
-
-    if (best) {
-      const formatted = best.toFixed(0);
-      setDamages(formatted);
-      setCommitted((prev) => ({ ...prev, damages: formatted }));
-    }
-  }, [piTotal, empTotal]);
 
   function commit() {
     setCommitted({

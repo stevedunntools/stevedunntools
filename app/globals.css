@@ -144,8 +144,8 @@
     display: none !important;
   }
 
-  /* Hide labels for inputs (but not table headers) */
-  label {
+  /* Hide labels for form inputs (but preserve table labels) */
+  [data-slot="card"] label {
     display: none !important;
   }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -114,7 +114,7 @@ function NegotiationChart({ offers }: { offers: Offer[] }) {
     }
     const rawMin = Math.min(...allVals);
     const rawMax = Math.max(...allVals);
-    const padding = Math.max((rawMax - rawMin) * 0.1, 10000);
+    const padding = Math.max((rawMax - rawMin) * 0.15, rawMax * 0.1, 1);
     const mn = Math.max(0, rawMin - padding);
     const mx = rawMax + padding;
 
@@ -459,6 +459,7 @@ export default function NegotiationVisualizerClient() {
 
   const [party, setParty] = useState<Party>("plaintiff");
   const [input, setInput] = useState("");
+  const addButtonRef = useRef<HTMLButtonElement>(null);
 
   const nextRound = useMemo(() => {
     if (offers.length === 0) return 1;
@@ -497,6 +498,7 @@ export default function NegotiationVisualizerClient() {
   function clearAll() {
     setOffers([]);
     setParty("plaintiff");
+    setInput("");
   }
 
   // Overlap info for the text callout
@@ -567,7 +569,10 @@ export default function NegotiationVisualizerClient() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addOffer()}
-                  onBlur={() => { if (input.trim()) addOffer(); }}
+                  onBlur={(e) => {
+                    if (e.relatedTarget === addButtonRef.current) return;
+                    if (input.trim()) addOffer();
+                  }}
                   placeholder="500,000 or 200,000-400,000"
                   className="w-full px-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent"
                 />
@@ -585,7 +590,7 @@ export default function NegotiationVisualizerClient() {
               )}
             </div>
 
-            <Button onClick={addOffer} className="w-full">
+            <Button ref={addButtonRef} onClick={addOffer} className="w-full">
               Add Offer
             </Button>
 
@@ -634,7 +639,7 @@ export default function NegotiationVisualizerClient() {
                         <td className="py-2 pr-3 text-brand-primary font-medium">
                           {m.type === "number"
                             ? fmt(m.value)
-                            : `${fmt(m.low)} – ${fmt(m.high)}`}
+                            : `${fmt(m.low)} – ${fmt(m.high)} (${fmt((m.low + m.high) / 2)})`}
                         </td>
                         <td className="py-2 print:hidden">
                           <button
@@ -679,13 +684,13 @@ export default function NegotiationVisualizerClient() {
             </span>
             <span className="flex items-center gap-2">
               <span className="inline-block w-4 border-t-2 border-dashed border-brand-muted" />
-              Midpoint trend
+              Bracket midpoint
             </span>
           </div>
 
           {overlapInfo && (
             <div className="mt-3 px-3 py-2 bg-green-50 border border-green-200 rounded-md text-sm text-green-800">
-              Current bracket overlap: {fmt(overlapInfo.low)} &ndash; {fmt(overlapInfo.high)} (midpoint: {fmt((overlapInfo.low + overlapInfo.high) / 2)})
+              Current bracket overlap: {fmt(overlapInfo.low)} &ndash; {fmt(overlapInfo.high)}
             </div>
           )}
         </CardContent>

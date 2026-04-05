@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardHeader,
@@ -21,10 +22,14 @@ export default function DaysBetweenDatesClient() {
     const [earlier, later] =
       startDate <= endDate ? [startDate, endDate] : [endDate, startDate];
 
+    // Normalize to noon to avoid DST edge cases
+    const earlierNoon = new Date(earlier.getFullYear(), earlier.getMonth(), earlier.getDate(), 12);
+    const laterNoon = new Date(later.getFullYear(), later.getMonth(), later.getDate(), 12);
+
     // Total days
     const msPerDay = 1000 * 60 * 60 * 24;
     let totalDays = Math.round(
-      (later.getTime() - earlier.getTime()) / msPerDay
+      (laterNoon.getTime() - earlierNoon.getTime()) / msPerDay
     );
     if (includeEndDay) totalDays += 1;
 
@@ -80,6 +85,14 @@ export default function DaysBetweenDatesClient() {
     };
   }, [startDate, endDate, includeEndDay]);
 
+  function clearAll() {
+    setStartDate(null);
+    setEndDate(null);
+    setIncludeEndDay(false);
+  }
+
+  const hasAny = startDate !== null || endDate !== null;
+
   function formatDuration(parts: { value: number; label: string }[]): string {
     const nonZero = parts.filter((p) => p.value > 0);
     if (nonZero.length === 0) return "0 days";
@@ -124,6 +137,12 @@ export default function DaysBetweenDatesClient() {
             </label>
           </CardContent>
         </Card>
+
+        {hasAny && (
+          <Button variant="outline" onClick={clearAll}>
+            Clear All
+          </Button>
+        )}
       </div>
 
       {/* Results */}

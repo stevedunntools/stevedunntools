@@ -20,8 +20,7 @@ export default function DefendantsExpectedCostPage() {
         <p className="mt-2 text-brand-muted max-w-2xl">
           Estimate the defendant&apos;s total expected cost of litigation,
           including probability-adjusted damages and fee exposure, plus defense
-          costs. If you have already filled out a damages estimator, the damages
-          amount will be pre-filled.
+          costs.
         </p>
       </div>
       <DefendantsExpectedCostClient />

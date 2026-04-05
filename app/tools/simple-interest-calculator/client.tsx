@@ -183,6 +183,7 @@ export default function SimpleInterestClient() {
                 </select>
               </div>
             </div>
+            <p className="mt-2 text-xs text-brand-muted">Uses a 365-day year</p>
           </CardContent>
         </Card>
 
@@ -228,6 +229,11 @@ export default function SimpleInterestClient() {
               </table>
             </CardContent>
           </Card>
+
+          <p className="text-xs text-brand-muted">
+            This is an estimate for settlement discussion purposes only. It is
+            not legal advice and does not account for all possible factors.
+          </p>
         </div>
       </div>
     </div>

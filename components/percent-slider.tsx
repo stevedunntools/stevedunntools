@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface PercentSliderProps {
   value: number;
@@ -23,6 +23,8 @@ export default function PercentSlider({
   allowOverflow = false,
 }: PercentSliderProps) {
   const [textValue, setTextValue] = useState(formatPct(value));
+
+  useEffect(() => { setTextValue(formatPct(value)); }, [value]);
 
   function formatPct(n: number) {
     return Number.isInteger(n) ? n.toString() : n.toFixed(3).replace(/0+$/, "").replace(/\.$/, "");

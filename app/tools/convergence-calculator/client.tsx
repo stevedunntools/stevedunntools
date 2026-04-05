@@ -50,7 +50,8 @@ function TrendChart({ data }: { data: ChartData }) {
 
   const rawMin = Math.min(...allVals);
   const rawMax = Math.max(...allVals);
-  const padding = Math.max((rawMax - rawMin) * 0.1, 10000);
+  const range = rawMax - rawMin;
+  const padding = Math.max(range * 0.15, rawMax * 0.1, 1);
   const yMin = Math.max(0, rawMin - padding);
   const yMax = rawMax + padding;
 

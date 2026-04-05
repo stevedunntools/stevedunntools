@@ -1,3 +1,5 @@
+"use client";
+
 interface DollarInputProps {
   value: string;
   onChange: (value: string) => void;
@@ -34,5 +36,3 @@ export default function DollarInput({
     </div>
   );
 }
-
-export { baseClass as dollarInputClass };

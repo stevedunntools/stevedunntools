@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardHeader,
@@ -57,10 +58,14 @@ export default function AddSubtractDateClient() {
       resultDate.setDate(resultDate.getDate() + sign * dys);
     }
 
+    // Normalize to noon to avoid DST edge cases
+    const startNoon = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 12);
+    const resultNoon = new Date(resultDate.getFullYear(), resultDate.getMonth(), resultDate.getDate(), 12);
+
     // Count calendar days between start and result
     const msPerDay = 1000 * 60 * 60 * 24;
     const totalCalendarDays = Math.abs(
-      Math.round((resultDate.getTime() - startDate.getTime()) / msPerDay)
+      Math.round((resultNoon.getTime() - startNoon.getTime()) / msPerDay)
     );
 
     // Count business days between start and result
@@ -77,6 +82,19 @@ export default function AddSubtractDateClient() {
       totalBusinessDays: totalBizDays,
     };
   }, [startDate, direction, years, months, weeks, days, businessDays, holidayMode]);
+
+  function clearAll() {
+    setStartDate(null);
+    setDirection("add");
+    setYears("");
+    setMonths("");
+    setWeeks("");
+    setDays("");
+    setBusinessDays(false);
+    setHolidayMode("federal");
+  }
+
+  const hasAny = startDate !== null || years !== "" || months !== "" || weeks !== "" || days !== "";
 
   function formatDate(d: Date): string {
     return `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
@@ -227,6 +245,12 @@ export default function AddSubtractDateClient() {
             )}
           </CardContent>
         </Card>
+
+        {hasAny && (
+          <Button variant="outline" onClick={clearAll}>
+            Clear All
+          </Button>
+        )}
       </div>
 
       {/* Results */}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,7 +11,7 @@ import {
 import { fmt, parseNum } from "@/lib/format";
 import { Row, Separator } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
-import { useToolValue } from "@/hooks/use-tool-store";
+import PercentSlider from "@/components/percent-slider";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -19,10 +19,6 @@ import { useToolValue } from "@/hooks/use-tool-store";
 
 const plainInputClass =
   "w-full px-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
 
 export default function PlaintiffsExpectedValueClient() {
   const [damages, setDamages] = useState("");
@@ -42,25 +38,6 @@ export default function PlaintiffsExpectedValueClient() {
     yearsToPayment: "",
     discountRate: 4,
   });
-
-  // Auto-populate damages from either damages estimator
-  const [piTotal] = useToolValue<number>("personal-injury-damages-estimator.total");
-  const [empTotal] = useToolValue<number>("employment-damages-estimator.total");
-
-  useEffect(() => {
-    const best =
-      piTotal && piTotal > 0
-        ? piTotal
-        : empTotal && empTotal > 0
-        ? empTotal
-        : null;
-
-    if (best) {
-      const formatted = best.toFixed(0);
-      setDamages(formatted);
-      setCommitted((prev) => ({ ...prev, damages: formatted }));
-    }
-  }, [piTotal, empTotal]);
 
   function commit() {
     setCommitted({
@@ -163,24 +140,15 @@ export default function PlaintiffsExpectedValueClient() {
               Probability of Success
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-brand-muted">1%</span>
-              <span className="text-lg font-semibold text-brand-accent">{probability}%</span>
-              <span className="text-sm text-brand-muted">100%</span>
-            </div>
-            <input
-              type="range"
-              min="1"
-              max="100"
-              step="1"
+          <CardContent>
+            <PercentSlider
               value={probability}
-              onChange={(e) => {
-                const val = parseInt(e.target.value);
+              onChange={(val) => {
                 setProbability(val);
                 setCommitted((prev) => ({ ...prev, probability: val }));
               }}
-              className="w-full accent-brand-accent"
+              min={1}
+              max={100}
             />
           </CardContent>
         </Card>
@@ -209,29 +177,17 @@ export default function PlaintiffsExpectedValueClient() {
               />
             </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-medium text-brand-primary">Annual discount rate</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-brand-muted">1%</span>
-                <span className="text-lg font-semibold text-brand-accent">{discountRate}%</span>
-                <span className="text-sm text-brand-muted">10%</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="10"
-                step="1"
-                value={discountRate}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value);
-                  setDiscountRate(val);
-                  setCommitted((prev) => ({ ...prev, discountRate: val }));
-                }}
-                className="w-full accent-brand-accent"
-              />
-            </div>
+            <PercentSlider
+              value={discountRate}
+              onChange={(val) => {
+                setDiscountRate(val);
+                setCommitted((prev) => ({ ...prev, discountRate: val }));
+              }}
+              min={1}
+              max={10}
+              allowOverflow
+              label="Annual discount rate"
+            />
           </CardContent>
         </Card>
 

@@ -19,9 +19,7 @@ export default function PlaintiffsExpectedValuePage() {
         </h1>
         <p className="mt-2 text-brand-muted max-w-2xl">
           Calculate the expected value of a case adjusted for probability of
-          success and time value of money, less fees and costs. If you have
-          already filled out a damages estimator, the damages amount will be
-          pre-filled.
+          success and time value of money, less fees and costs.
         </p>
       </div>
       <PlaintiffsExpectedValueClient />
