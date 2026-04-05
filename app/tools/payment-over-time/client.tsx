@@ -12,6 +12,7 @@ import { Trash2 } from "lucide-react";
 import { fmt, parseNum } from "@/lib/format";
 import DollarInput from "@/components/dollar-input";
 import PercentSlider from "@/components/percent-slider";
+import ExportPdfButton from "@/components/export-pdf-button";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -304,7 +305,7 @@ export default function PaymentOverTimeClient() {
   return (
     <div className="space-y-6">
       {/* Settlement + Interest row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 print:hidden">
         <Card className="bg-white border-brand-border">
           <CardHeader>
             <CardTitle className="text-brand-primary text-base">
@@ -386,7 +387,7 @@ export default function PaymentOverTimeClient() {
       </div>
 
       {/* Up-front payments */}
-      <Card className="bg-white border-brand-border">
+      <Card className="bg-white border-brand-border print:hidden">
         <CardHeader>
           <CardTitle className="text-brand-primary text-base">
             Up-Front Payments
@@ -436,7 +437,7 @@ export default function PaymentOverTimeClient() {
       </Card>
 
       {/* Installments */}
-      <Card className="bg-white border-brand-border">
+      <Card className="bg-white border-brand-border print:hidden">
         <CardHeader>
           <CardTitle className="text-brand-primary text-base">
             Installments
@@ -517,9 +518,11 @@ export default function PaymentOverTimeClient() {
       </Card>
 
       {hasAny && (
-        <Button variant="outline" onClick={clearAll}>
-          Clear All
-        </Button>
+        <div className="print:hidden">
+          <Button variant="outline" onClick={clearAll}>
+            Clear All
+          </Button>
+        </div>
       )}
 
       {/* Schedule */}
@@ -591,6 +594,12 @@ export default function PaymentOverTimeClient() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {schedule.length > 0 && (
+        <div className="print:hidden">
+          <ExportPdfButton />
+        </div>
       )}
     </div>
   );

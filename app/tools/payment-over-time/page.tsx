@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function PaymentOverTimePage() {
   return (
     <>
-      <div className="mb-8">
+      <div className="mb-8 print:hidden">
         <p className="text-sm font-medium text-brand-accent mb-1">
           Calculators
         </p>
