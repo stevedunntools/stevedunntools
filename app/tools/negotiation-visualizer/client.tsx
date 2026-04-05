@@ -19,7 +19,7 @@ import { Pt, pointsToPath, generateYTicks, formatTickLabel } from "@/lib/chart-u
 type Party = "plaintiff" | "defendant";
 type OfferType = "number" | "bracket";
 
-interface Move {
+interface Offer {
   id: string;
   round: number;
   party: Party;
@@ -37,13 +37,13 @@ function makeId() {
   return crypto.randomUUID();
 }
 
-function moveValues(m: Move): { low: number; high: number; mid: number } {
+function offerValues(m: Offer): { low: number; high: number; mid: number } {
   if (m.type === "number") return { low: m.value, high: m.value, mid: m.value };
   return { low: m.low, high: m.high, mid: (m.low + m.high) / 2 };
 }
 
 /**
- * Parse user input into a move. Supports:
+ * Parse user input into an offer. Supports:
  *   "500000" or "500,000" → number offer
  *   "200000-400000" or "200,000 - 400,000" → bracket
  */
@@ -91,9 +91,9 @@ const GREEN_FILL = "rgba(22,163,74,0.30)";
 // Chart component
 // ---------------------------------------------------------------------------
 
-function NegotiationChart({ moves }: { moves: Move[] }) {
+function NegotiationChart({ offers }: { offers: Offer[] }) {
   const { rounds, yMin, yMax, xScale, yScale } = useMemo(() => {
-    if (moves.length === 0) {
+    if (offers.length === 0) {
       const mn = 0;
       const mx = 1000000;
       return {
@@ -105,10 +105,10 @@ function NegotiationChart({ moves }: { moves: Move[] }) {
       };
     }
 
-    const rs = Math.max(...moves.map((m) => m.round));
+    const rs = Math.max(...offers.map((m) => m.round));
     const allVals: number[] = [];
-    for (const m of moves) {
-      const e = moveValues(m);
+    for (const m of offers) {
+      const e = offerValues(m);
       allVals.push(e.low, e.high);
     }
     const rawMin = Math.min(...allVals);
@@ -127,19 +127,19 @@ function NegotiationChart({ moves }: { moves: Move[] }) {
       },
       yScale: (v: number) => PAD.top + INNER_H - ((v - mn) / (mx - mn)) * INNER_H,
     };
-  }, [moves]);
+  }, [offers]);
 
-  const pMoves = moves.filter((m) => m.party === "plaintiff").sort((a, b) => a.round - b.round);
-  const dMoves = moves.filter((m) => m.party === "defendant").sort((a, b) => a.round - b.round);
+  const pOffers = offers.filter((m) => m.party === "plaintiff").sort((a, b) => a.round - b.round);
+  const dOffers = offers.filter((m) => m.party === "defendant").sort((a, b) => a.round - b.round);
 
-  function buildBand(partyMoves: Move[]): { polygon: Pt[]; upperEdge: Pt[]; lowerEdge: Pt[] } {
-    if (partyMoves.length === 0) return { polygon: [], upperEdge: [], lowerEdge: [] };
+  function buildBand(partyOffers: Offer[]): { polygon: Pt[]; upperEdge: Pt[]; lowerEdge: Pt[] } {
+    if (partyOffers.length === 0) return { polygon: [], upperEdge: [], lowerEdge: [] };
 
     const upperEdge: Pt[] = [];
     const lowerEdge: Pt[] = [];
 
-    for (const m of partyMoves) {
-      const v = moveValues(m);
+    for (const m of partyOffers) {
+      const v = offerValues(m);
       const x = xScale(m.round);
       upperEdge.push({ x, y: yScale(v.high) });
       lowerEdge.push({ x, y: yScale(v.low) });
@@ -150,14 +150,14 @@ function NegotiationChart({ moves }: { moves: Move[] }) {
   }
 
   // Build line segments: solid between consecutive numbers, dotted when a bracket is involved
-  function buildLineSegments(partyMoves: Move[]): { solid: Pt[][]; dotted: Pt[][] } {
+  function buildLineSegments(partyOffers: Offer[]): { solid: Pt[][]; dotted: Pt[][] } {
     const solid: Pt[][] = [];
     const dotted: Pt[][] = [];
-    for (let i = 0; i < partyMoves.length - 1; i++) {
-      const a = partyMoves[i];
-      const b = partyMoves[i + 1];
-      const aVal = moveValues(a);
-      const bVal = moveValues(b);
+    for (let i = 0; i < partyOffers.length - 1; i++) {
+      const a = partyOffers[i];
+      const b = partyOffers[i + 1];
+      const aVal = offerValues(a);
+      const bVal = offerValues(b);
       const p1: Pt = { x: xScale(a.round), y: yScale(aVal.mid) };
       const p2: Pt = { x: xScale(b.round), y: yScale(bVal.mid) };
 
@@ -171,17 +171,17 @@ function NegotiationChart({ moves }: { moves: Move[] }) {
   }
 
   // Build dot positions at midpoints
-  function buildMidpoints(partyMoves: Move[]): Pt[] {
-    return partyMoves.map((m) => {
-      const v = moveValues(m);
+  function buildMidpoints(partyOffers: Offer[]): Pt[] {
+    return partyOffers.map((m) => {
+      const v = offerValues(m);
       return { x: xScale(m.round), y: yScale(v.mid) };
     });
   }
 
-  const pBand = useMemo(() => buildBand(pMoves), [moves]);
-  const dBand = useMemo(() => buildBand(dMoves), [moves]);
-  const pLines = useMemo(() => buildLineSegments(pMoves), [moves]);
-  const dLines = useMemo(() => buildLineSegments(dMoves), [moves]);
+  const pBand = useMemo(() => buildBand(pOffers), [offers]);
+  const dBand = useMemo(() => buildBand(dOffers), [offers]);
+  const pLines = useMemo(() => buildLineSegments(pOffers), [offers]);
+  const dLines = useMemo(() => buildLineSegments(dOffers), [offers]);
 
   // Compute green overlap using segment-by-segment band intersection.
   // This avoids Sutherland-Hodgman's convexity requirement.
@@ -270,8 +270,8 @@ function NegotiationChart({ moves }: { moves: Move[] }) {
     return polygons.reduce((a, b) => (a.length > b.length ? a : b));
   }, [pBand, dBand]);
 
-  const pMidpoints = useMemo(() => buildMidpoints(pMoves), [moves]);
-  const dMidpoints = useMemo(() => buildMidpoints(dMoves), [moves]);
+  const pMidpoints = useMemo(() => buildMidpoints(pOffers), [offers]);
+  const dMidpoints = useMemo(() => buildMidpoints(dOffers), [offers]);
 
   const yTicks = useMemo(() => generateYTicks(yMin, yMax), [yMin, yMax]);
 
@@ -440,7 +440,7 @@ function NegotiationChart({ moves }: { moves: Move[] }) {
       ))}
 
       {/* Empty state */}
-      {moves.length === 0 && (
+      {offers.length === 0 && (
         <text
           x={CHART_W / 2}
           y={CHART_H / 2}
@@ -448,7 +448,7 @@ function NegotiationChart({ moves }: { moves: Move[] }) {
           className="fill-brand-muted"
           fontSize="14"
         >
-          Add moves below to see the chart
+          Add offers below to see the chart
         </text>
       )}
     </svg>
@@ -460,56 +460,56 @@ function NegotiationChart({ moves }: { moves: Move[] }) {
 // ---------------------------------------------------------------------------
 
 export default function NegotiationVisualizerClient() {
-  const [moves, setMoves] = useState<Move[]>([]);
+  const [offers, setOffers] = useState<Offer[]>([]);
 
   const [party, setParty] = useState<Party>("plaintiff");
   const [input, setInput] = useState("");
 
   const nextRound = useMemo(() => {
-    if (moves.length === 0) return 1;
-    const lastRound = Math.max(...moves.map((m) => m.round));
-    const lastRoundMoves = moves.filter((m) => m.round === lastRound);
-    const hasPlaintiff = lastRoundMoves.some((m) => m.party === "plaintiff");
-    const hasDefendant = lastRoundMoves.some((m) => m.party === "defendant");
+    if (offers.length === 0) return 1;
+    const lastRound = Math.max(...offers.map((m) => m.round));
+    const lastRoundOffers = offers.filter((m) => m.round === lastRound);
+    const hasPlaintiff = lastRoundOffers.some((m) => m.party === "plaintiff");
+    const hasDefendant = lastRoundOffers.some((m) => m.party === "defendant");
     if (hasPlaintiff && hasDefendant) return lastRound + 1;
     return lastRound;
-  }, [moves]);
+  }, [offers]);
 
-  function addMove() {
+  function addOffer() {
     const parsed = parseInput(input);
     if (!parsed) return;
 
     // Don't allow same party twice in same round
-    const roundMoves = moves.filter((m) => m.round === nextRound);
-    if (roundMoves.some((m) => m.party === party)) return;
+    const roundOffers = offers.filter((m) => m.round === nextRound);
+    if (roundOffers.some((m) => m.party === party)) return;
 
-    const move: Move = {
+    const offer: Offer = {
       id: makeId(),
       round: nextRound,
       party,
       ...parsed,
     };
 
-    setMoves([...moves, move]);
+    setOffers([...offers, offer]);
     setInput("");
     setParty(party === "plaintiff" ? "defendant" : "plaintiff");
   }
 
-  function removeMove(id: string) {
-    setMoves(moves.filter((m) => m.id !== id));
+  function removeOffer(id: string) {
+    setOffers(offers.filter((m) => m.id !== id));
   }
 
   function clearAll() {
-    setMoves([]);
+    setOffers([]);
     setParty("plaintiff");
   }
 
   // Overlap info for the text callout
   const overlapInfo = useMemo(() => {
-    const pBrackets = moves
+    const pBrackets = offers
       .filter((m) => m.party === "plaintiff" && m.type === "bracket")
       .sort((a, b) => a.round - b.round);
-    const dBrackets = moves
+    const dBrackets = offers
       .filter((m) => m.party === "defendant" && m.type === "bracket")
       .sort((a, b) => a.round - b.round);
     if (pBrackets.length === 0 || dBrackets.length === 0) return null;
@@ -521,14 +521,14 @@ export default function NegotiationVisualizerClient() {
 
     if (overlapLow >= overlapHigh) return null;
     return { low: overlapLow, high: overlapHigh };
-  }, [moves]);
+  }, [offers]);
 
   return (
     <div className="space-y-6">
       {/* Chart */}
       <Card className="bg-white border-brand-border">
         <CardContent className="pt-6">
-          <NegotiationChart moves={moves} />
+          <NegotiationChart offers={offers} />
 
           {/* Legend */}
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-4 text-sm text-brand-muted">
@@ -562,10 +562,10 @@ export default function NegotiationVisualizerClient() {
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Add move form */}
+        {/* Add offer form */}
         <Card className="bg-white border-brand-border lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-brand-primary text-base">Add Move</CardTitle>
+            <CardTitle className="text-brand-primary text-base">Add Offer</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Party toggle */}
@@ -607,7 +607,7 @@ export default function NegotiationVisualizerClient() {
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && addMove()}
+                  onKeyDown={(e) => e.key === "Enter" && addOffer()}
                   placeholder="500,000 or 200,000-400,000"
                   className="w-full px-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent"
                 />
@@ -620,16 +620,16 @@ export default function NegotiationVisualizerClient() {
 
             <div className="text-xs text-brand-muted">
               Round {nextRound}
-              {moves.filter((m) => m.round === nextRound).length > 0 && (
-                <> &mdash; {moves.find((m) => m.round === nextRound)?.party === "plaintiff" ? "defendant" : "plaintiff"}&apos;s turn</>
+              {offers.filter((m) => m.round === nextRound).length > 0 && (
+                <> &mdash; {offers.find((m) => m.round === nextRound)?.party === "plaintiff" ? "defendant" : "plaintiff"}&apos;s turn</>
               )}
             </div>
 
-            <Button onClick={addMove} className="w-full">
-              Add Move
+            <Button onClick={addOffer} className="w-full">
+              Add Offer
             </Button>
 
-            {moves.length > 0 && (
+            {offers.length > 0 && (
               <Button variant="outline" onClick={clearAll} className="w-full">
                 Clear All
               </Button>
@@ -637,15 +637,15 @@ export default function NegotiationVisualizerClient() {
           </CardContent>
         </Card>
 
-        {/* Move history */}
+        {/* Offer history */}
         <Card className="bg-white border-brand-border lg:col-span-3">
           <CardHeader>
-            <CardTitle className="text-brand-primary text-base">Move History</CardTitle>
+            <CardTitle className="text-brand-primary text-base">Offer History</CardTitle>
           </CardHeader>
           <CardContent>
-            {moves.length === 0 ? (
+            {offers.length === 0 ? (
               <p className="text-sm text-brand-muted py-4 text-center">
-                No moves yet. Add your first move to get started.
+                No offers yet. Add your first offer to get started.
               </p>
             ) : (
               <div className="overflow-x-auto">
@@ -659,7 +659,7 @@ export default function NegotiationVisualizerClient() {
                     </tr>
                   </thead>
                   <tbody>
-                    {moves.map((m) => (
+                    {offers.map((m) => (
                       <tr key={m.id} className="border-b border-brand-border/50">
                         <td className="py-2 pr-3 text-brand-primary">{m.round}</td>
                         <td className="py-2 pr-3">
@@ -678,9 +678,9 @@ export default function NegotiationVisualizerClient() {
                         </td>
                         <td className="py-2">
                           <button
-                            onClick={() => removeMove(m.id)}
+                            onClick={() => removeOffer(m.id)}
                             className="p-1 text-brand-muted hover:text-brand-error transition-colors"
-                            aria-label={`Remove round ${m.round} ${m.party} move`}
+                            aria-label={`Remove round ${m.round} ${m.party} offer`}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>

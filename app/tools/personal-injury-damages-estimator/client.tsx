@@ -144,7 +144,7 @@ export default function PersonalInjuryClient() {
         <Card className="bg-white border-brand-border">
           <CardHeader>
             <CardTitle className="text-brand-primary text-base">
-              Pain &amp; Suffering Multiplier
+              Non-Economic Damages Multiple of Medical Expenses
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -274,7 +274,7 @@ export default function PersonalInjuryClient() {
                   <Row label="Total medical expenses" value={calc.totalMedical} bold />
                   <Separator />
                   <Row
-                    label={`Pain & suffering (${calc.multiplier}× medical)`}
+                    label={`Non-economic damages (${calc.multiplier}× medical)`}
                     value={calc.painAndSuffering}
                     bold
                   />

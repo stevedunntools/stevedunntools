@@ -17,17 +17,21 @@ function Logo() {
     <Link href="/" className="flex items-center gap-2.5 group">
       <svg
         width="32"
-        height="32"
-        viewBox="0 0 32 32"
+        height="28"
+        viewBox="0 0 32 28"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className="shrink-0"
         aria-hidden="true"
       >
-        <rect x="4" y="20" width="5" height="8" rx="1" fill="#4A90D9" opacity="0.4" />
-        <rect x="11" y="14" width="5" height="14" rx="1" fill="#4A90D9" opacity="0.6" />
-        <rect x="18" y="8" width="5" height="20" rx="1" fill="#4A90D9" opacity="0.8" />
-        <rect x="25" y="4" width="5" height="24" rx="1" fill="#4A90D9" />
+        <rect x="1"  y="18" width="4" height="9"  rx="1" fill="#4A90D9" opacity="0.3" />
+        <rect x="7"  y="16" width="4" height="11" rx="1" fill="#4A90D9" opacity="0.45" />
+        <rect x="13" y="14" width="4" height="13" rx="1" fill="#4A90D9" opacity="0.6" />
+        <rect x="19" y="12" width="4" height="15" rx="1" fill="#4A90D9" opacity="0.78" />
+        <rect x="25" y="10" width="4" height="17" rx="1" fill="#4A90D9" opacity="0.95" />
+        <path d="M1 12 L9 9.5 L15 7.5" stroke="#4A90D9" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M15 7.5 L21 5.5 L29 3" stroke="#DC2626" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="15" cy="7.5" r="2.25" fill="#16A34A" />
       </svg>
       <span className="text-lg font-semibold tracking-tight text-white">
         Steve Dunn <span className="text-brand-accent font-bold">TOOLS</span>
