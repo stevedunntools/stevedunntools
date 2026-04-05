@@ -259,7 +259,7 @@ export default function EmploymentDamagesClient() {
           <CardContent className="space-y-4">
             {jobs.map((job, idx) => (
               <div key={job.id} className="space-y-2">
-                <div className="grid grid-cols-[1fr_1fr_auto] gap-3 items-end">
+                <div className="grid grid-cols-[1fr_1fr_auto] gap-3">
                   <div>
                     <label className="block text-xs font-medium text-brand-muted mb-1">
                       Months employed
@@ -288,7 +288,7 @@ export default function EmploymentDamagesClient() {
                   </div>
                   <button
                     onClick={() => removeJob(job.id)}
-                    className="p-2 text-brand-muted hover:text-brand-error transition-colors mb-0.5"
+                    className="mt-5 p-2 text-brand-muted hover:text-brand-error transition-colors"
                     aria-label={`Remove job ${idx + 1}`}
                   >
                     <Trash2 className="h-4 w-4" />

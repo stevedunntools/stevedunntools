@@ -13,7 +13,7 @@ import { fmt, parseNum } from "@/lib/format";
 import { Row, Separator } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
 
-const MULTIPLIER_STEPS = [1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
+const MULTIPLIER_STEPS = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
 
 // ---------------------------------------------------------------------------
 // Component
@@ -149,13 +149,13 @@ export default function PersonalInjuryClient() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-brand-muted">1.5×</span>
+              <span className="text-sm text-brand-muted">1×</span>
               <span className="text-lg font-semibold text-brand-accent">{multiplier}×</span>
               <span className="text-sm text-brand-muted">5×</span>
             </div>
             <input
               type="range"
-              min="1.5"
+              min="1"
               max="5"
               step="0.5"
               value={multiplier}

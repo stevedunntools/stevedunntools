@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import ExportPdfButton from "@/components/export-pdf-button";
 
 export default function ToolLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -37,9 +36,6 @@ export default function ToolLayout({ children }: { children: React.ReactNode }) 
           Back to all tools
         </Link>
         {children}
-        <div className="mt-8 print:hidden">
-          <ExportPdfButton />
-        </div>
       </div>
     </div>
   );

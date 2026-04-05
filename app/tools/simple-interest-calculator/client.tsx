@@ -146,7 +146,7 @@ export default function SimpleInterestClient() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-3 items-end max-w-[calc(66%)]">
+            <div className="grid grid-cols-2 gap-3 max-w-[calc(66%)]">
               <div className="flex-1">
                 <label className="block text-sm font-medium text-brand-primary mb-1.5">
                   Duration

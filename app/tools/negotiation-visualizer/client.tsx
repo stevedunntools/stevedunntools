@@ -11,6 +11,7 @@ import {
 import { Trash2 } from "lucide-react";
 import { fmt } from "@/lib/format";
 import { Pt, pointsToPath, generateYTicks, formatTickLabel } from "@/lib/chart-utils";
+import ExportPdfButton from "@/components/export-pdf-button";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -689,6 +690,10 @@ export default function NegotiationVisualizerClient() {
           )}
         </CardContent>
       </Card>
+
+      <div className="print:hidden">
+        <ExportPdfButton />
+      </div>
     </div>
   );
 }

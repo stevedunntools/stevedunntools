@@ -394,7 +394,7 @@ export default function PaymentOverTimeClient() {
         </CardHeader>
         <CardContent className="space-y-4">
           {upfronts.map((u, idx) => (
-            <div key={u.id} className="grid grid-cols-[1fr_1fr_auto] gap-3 items-end">
+            <div key={u.id} className="grid grid-cols-[1fr_1fr_auto] gap-3">
               <div>
                 <label className="block text-xs font-medium text-brand-muted mb-1">
                   Amount
@@ -422,7 +422,7 @@ export default function PaymentOverTimeClient() {
               </div>
               <button
                 onClick={() => removeUpfront(u.id)}
-                className="p-2 text-brand-muted hover:text-brand-error transition-colors mb-0.5"
+                className="mt-5 p-2 text-brand-muted hover:text-brand-error transition-colors"
                 aria-label={`Remove up-front payment ${idx + 1}`}
               >
                 <Trash2 className="h-4 w-4" />
