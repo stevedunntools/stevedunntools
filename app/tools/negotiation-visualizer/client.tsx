@@ -183,28 +183,20 @@ function NegotiationChart({ offers }: { offers: Offer[] }) {
   const pLines = useMemo(() => buildLineSegments(pOffers), [offers]);
   const dLines = useMemo(() => buildLineSegments(dOffers), [offers]);
 
-  // Compute green overlap using segment-by-segment band intersection.
-  // This avoids Sutherland-Hodgman's convexity requirement.
+  // Compute green overlap: the geometric intersection of the two band polygons.
+  // Dense sampling across the x-range to catch all overlapping areas.
   const overlapPolygon = useMemo(() => {
     if (pBand.upperEdge.length < 2 || dBand.upperEdge.length < 2) return [];
 
-    // Collect all x-positions from both bands and sort
-    const allX = new Set<number>();
-    for (const p of pBand.upperEdge) allX.add(p.x);
-    for (const p of dBand.upperEdge) allX.add(p.x);
-    const xs = [...allX].sort((a, b) => a - b);
-
-    // Only consider x range where both bands exist
     const pMinX = pBand.upperEdge[0].x;
     const pMaxX = pBand.upperEdge[pBand.upperEdge.length - 1].x;
     const dMinX = dBand.upperEdge[0].x;
     const dMaxX = dBand.upperEdge[dBand.upperEdge.length - 1].x;
-    const overlapMinX = Math.max(pMinX, dMinX);
-    const overlapMaxX = Math.min(pMaxX, dMaxX);
+    const rangeMinX = Math.max(pMinX, dMinX);
+    const rangeMaxX = Math.min(pMaxX, dMaxX);
 
-    if (overlapMinX >= overlapMaxX) return [];
+    if (rangeMinX >= rangeMaxX) return [];
 
-    // Interpolate a piecewise-linear edge at a given x
     function interpEdge(edge: Pt[], x: number): number {
       if (x <= edge[0].x) return edge[0].y;
       if (x >= edge[edge.length - 1].x) return edge[edge.length - 1].y;
@@ -217,42 +209,43 @@ function NegotiationChart({ offers }: { offers: Offer[] }) {
       return edge[edge.length - 1].y;
     }
 
-    // At each x, compute overlap band:
-    // In SVG coords, upper edge has SMALLER y (higher dollar), lower has LARGER y.
-    // Overlap upper (smallest y) = max of both upper y values (most constrained top)
-    // Overlap lower (largest y) = min of both lower y values (most constrained bottom)
-    // Overlap exists when overlap_upper_y < overlap_lower_y (in SVG space)
-    const points: { x: number; topY: number; botY: number; hasOverlap: boolean }[] = [];
+    // Sample densely across the range (every 2 pixels)
+    const STEP = 2;
+    const samples: { x: number; topY: number; botY: number; has: boolean }[] = [];
 
-    const filteredXs = xs.filter((x) => x >= overlapMinX && x <= overlapMaxX);
-
-    // Add crossing-point detection: also sample between consecutive xs
-    const sampleXs: number[] = [];
-    for (const x of filteredXs) sampleXs.push(x);
-
-    for (const x of sampleXs) {
+    for (let x = rangeMinX; x <= rangeMaxX; x += STEP) {
       const pTopY = interpEdge(pBand.upperEdge, x);
       const pBotY = interpEdge(pBand.lowerEdge, x);
       const dTopY = interpEdge(dBand.upperEdge, x);
       const dBotY = interpEdge(dBand.lowerEdge, x);
 
-      // In SVG: smaller y = higher value. overlap top = max y (lower of the two tops)
-      const overlapTopY = Math.max(pTopY, dTopY);
-      const overlapBotY = Math.min(pBotY, dBotY);
+      const topY = Math.max(pTopY, dTopY);
+      const botY = Math.min(pBotY, dBotY);
 
-      points.push({ x, topY: overlapTopY, botY: overlapBotY, hasOverlap: overlapTopY < overlapBotY });
+      samples.push({ x, topY, botY, has: topY < botY - 0.5 });
     }
 
-    // Build polygon segments from consecutive overlapping points
+    // Ensure we include the exact end point
+    if (samples.length > 0 && samples[samples.length - 1].x < rangeMaxX) {
+      const x = rangeMaxX;
+      const pTopY = interpEdge(pBand.upperEdge, x);
+      const pBotY = interpEdge(pBand.lowerEdge, x);
+      const dTopY = interpEdge(dBand.upperEdge, x);
+      const dBotY = interpEdge(dBand.lowerEdge, x);
+      const topY = Math.max(pTopY, dTopY);
+      const botY = Math.min(pBotY, dBotY);
+      samples.push({ x, topY, botY, has: topY < botY - 0.5 });
+    }
+
+    // Build polygon segments from consecutive overlapping samples
     const polygons: Pt[][] = [];
     let currentUpper: Pt[] = [];
     let currentLower: Pt[] = [];
 
-    for (let i = 0; i < points.length; i++) {
-      const p = points[i];
-      if (p.hasOverlap) {
-        currentUpper.push({ x: p.x, y: p.topY });
-        currentLower.push({ x: p.x, y: p.botY });
+    for (const s of samples) {
+      if (s.has) {
+        currentUpper.push({ x: s.x, y: s.topY });
+        currentLower.push({ x: s.x, y: s.botY });
       } else {
         if (currentUpper.length >= 2) {
           polygons.push([...currentUpper, ...[...currentLower].reverse()]);
@@ -265,9 +258,7 @@ function NegotiationChart({ offers }: { offers: Offer[] }) {
       polygons.push([...currentUpper, ...[...currentLower].reverse()]);
     }
 
-    // Return the largest polygon (typically there's just one)
-    if (polygons.length === 0) return [];
-    return polygons.reduce((a, b) => (a.length > b.length ? a : b));
+    return polygons;
   }, [pBand, dBand]);
 
   const pMidpoints = useMemo(() => buildMidpoints(pOffers), [offers]);
@@ -351,11 +342,14 @@ function NegotiationChart({ offers }: { offers: Offer[] }) {
         strokeWidth="1"
       />
 
-      {/* Clip path to exclude overlap zone from party fills */}
-      {overlapPolygon.length >= 3 && (
+      {/* Clip path to exclude overlap zones from party fills */}
+      {overlapPolygon.length > 0 && (
         <defs>
           <clipPath id="clip-no-overlap">
-            <path d={`M0,0 H${CHART_W} V${CHART_H} H0 Z ${pointsToPath(overlapPolygon, true)}`} clipRule="evenodd" />
+            <path
+              d={`M0,0 H${CHART_W} V${CHART_H} H0 Z ${overlapPolygon.map((poly) => pointsToPath(poly, true)).join(" ")}`}
+              clipRule="evenodd"
+            />
           </clipPath>
         </defs>
       )}
@@ -366,7 +360,7 @@ function NegotiationChart({ offers }: { offers: Offer[] }) {
           d={pointsToPath(pBand.polygon, true)}
           fill={BLUE_FILL}
           stroke="none"
-          clipPath={overlapPolygon.length >= 3 ? "url(#clip-no-overlap)" : undefined}
+          clipPath={overlapPolygon.length > 0 ? "url(#clip-no-overlap)" : undefined}
         />
       )}
       {pBand.upperEdge.length > 1 && (
@@ -382,7 +376,7 @@ function NegotiationChart({ offers }: { offers: Offer[] }) {
           d={pointsToPath(dBand.polygon, true)}
           fill={RED_FILL}
           stroke="none"
-          clipPath={overlapPolygon.length >= 3 ? "url(#clip-no-overlap)" : undefined}
+          clipPath={overlapPolygon.length > 0 ? "url(#clip-no-overlap)" : undefined}
         />
       )}
       {dBand.upperEdge.length > 1 && (
@@ -392,10 +386,10 @@ function NegotiationChart({ offers }: { offers: Offer[] }) {
         <path d={pointsToPath(dBand.lowerEdge)} fill="none" stroke={RED_STROKE} strokeWidth="1" />
       )}
 
-      {/* Green overlap zone (clean, no red/blue underneath) */}
-      {overlapPolygon.length >= 3 && (
-        <path d={pointsToPath(overlapPolygon, true)} fill="#16A34A" fillOpacity="0.2" stroke="none" />
-      )}
+      {/* Green overlap zones (clean, no red/blue underneath) */}
+      {overlapPolygon.map((poly, i) => (
+        <path key={`overlap-${i}`} d={pointsToPath(poly, true)} fill="#16A34A" fillOpacity="0.2" stroke="none" />
+      ))}
 
       {/* Plaintiff lines: solid between numbers, dotted when brackets involved */}
       {pLines.solid.map((seg, i) => (
@@ -525,45 +519,9 @@ export default function NegotiationVisualizerClient() {
 
   return (
     <div className="space-y-6">
-      {/* Chart */}
-      <Card className="bg-white border-brand-border">
-        <CardContent className="pt-6">
-          <NegotiationChart offers={offers} />
-
-          {/* Legend */}
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-4 text-sm text-brand-muted">
-            <span className="flex items-center gap-2">
-              <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: BLUE }} />
-              Plaintiff
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: RED }} />
-              Defendant
-            </span>
-            <span className="flex items-center gap-2">
-              <span
-                className="inline-block w-3 h-3 rounded-sm"
-                style={{ backgroundColor: GREEN_FILL }}
-              />
-              Bracket overlap
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="inline-block w-4 border-t-2 border-dashed border-brand-muted" />
-              Midpoint trend
-            </span>
-          </div>
-
-          {overlapInfo && (
-            <div className="mt-3 px-3 py-2 bg-green-50 border border-green-200 rounded-md text-sm text-green-800">
-              Current bracket overlap: {fmt(overlapInfo.low)} &ndash; {fmt(overlapInfo.high)} (midpoint: {fmt((overlapInfo.low + overlapInfo.high) / 2)})
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Add offer form */}
-        <Card className="bg-white border-brand-border lg:col-span-2">
+        <Card className="bg-white border-brand-border lg:col-span-2 print:hidden">
           <CardHeader>
             <CardTitle className="text-brand-primary text-base">Add Offer</CardTitle>
           </CardHeader>
@@ -608,6 +566,7 @@ export default function NegotiationVisualizerClient() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addOffer()}
+                  onBlur={() => { if (input.trim()) addOffer(); }}
                   placeholder="500,000 or 200,000-400,000"
                   className="w-full px-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent"
                 />
@@ -638,7 +597,7 @@ export default function NegotiationVisualizerClient() {
         </Card>
 
         {/* Offer history */}
-        <Card className="bg-white border-brand-border lg:col-span-3">
+        <Card className="bg-white border-brand-border lg:col-span-3 print:col-span-full">
           <CardHeader>
             <CardTitle className="text-brand-primary text-base">Offer History</CardTitle>
           </CardHeader>
@@ -655,7 +614,7 @@ export default function NegotiationVisualizerClient() {
                       <th className="pb-2 pr-3 font-medium text-brand-muted">Round</th>
                       <th className="pb-2 pr-3 font-medium text-brand-muted">Party</th>
                       <th className="pb-2 pr-3 font-medium text-brand-muted">Value</th>
-                      <th className="pb-2 w-10"></th>
+                      <th className="pb-2 w-10 print:hidden"></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -676,7 +635,7 @@ export default function NegotiationVisualizerClient() {
                             ? fmt(m.value)
                             : `${fmt(m.low)} – ${fmt(m.high)}`}
                         </td>
-                        <td className="py-2">
+                        <td className="py-2 print:hidden">
                           <button
                             onClick={() => removeOffer(m.id)}
                             className="p-1 text-brand-muted hover:text-brand-error transition-colors"
@@ -694,6 +653,42 @@ export default function NegotiationVisualizerClient() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Chart */}
+      <Card className="bg-white border-brand-border">
+        <CardContent className="pt-6">
+          <NegotiationChart offers={offers} />
+
+          {/* Legend */}
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-4 text-sm text-brand-muted">
+            <span className="flex items-center gap-2">
+              <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: BLUE }} />
+              Plaintiff
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: RED }} />
+              Defendant
+            </span>
+            <span className="flex items-center gap-2">
+              <span
+                className="inline-block w-3 h-3 rounded-sm"
+                style={{ backgroundColor: GREEN_FILL }}
+              />
+              Bracket overlap
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="inline-block w-4 border-t-2 border-dashed border-brand-muted" />
+              Midpoint trend
+            </span>
+          </div>
+
+          {overlapInfo && (
+            <div className="mt-3 px-3 py-2 bg-green-50 border border-green-200 rounded-md text-sm text-green-800">
+              Current bracket overlap: {fmt(overlapInfo.low)} &ndash; {fmt(overlapInfo.high)} (midpoint: {fmt((overlapInfo.low + overlapInfo.high) / 2)})
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

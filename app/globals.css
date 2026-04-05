@@ -136,19 +136,28 @@
   }
 
   /* Hide interactive elements */
-  input[type="range"],
+  input,
   button,
-  select {
+  select,
+  [type="range"],
+  [type="checkbox"] {
     display: none !important;
   }
 
-  /* Show input values as text */
-  input[type="text"] {
-    border: none !important;
-    padding: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    outline: none !important;
+  /* Hide labels for inputs (but not table headers) */
+  label {
+    display: none !important;
+  }
+
+  /* Hide tool page title and description */
+  [data-print-hide],
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Hide trash icons */
+  [aria-label*="Remove"] {
+    display: none !important;
   }
 
   /* Prevent page breaks inside cards */
@@ -156,10 +165,23 @@
     position: static !important;
   }
 
-  /* Adjust grid for single column print */
-  .lg\:col-span-3,
-  .lg\:col-span-2 {
-    grid-column: span 1 !important;
+  /* Make all grid items full width in print */
+  [class*="col-span"] {
+    grid-column: 1 / -1 !important;
+  }
+
+  /* Grids become single column */
+  [class*="grid-cols"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Tables print at full width */
+  .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+  table {
+    width: 100% !important;
   }
 
   /* Add branding to print */
