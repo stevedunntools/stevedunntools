@@ -13,15 +13,17 @@ import { Row, Separator } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
 import PercentSlider from "@/components/percent-slider";
 
-export default function ContingencyCalculatorClient() {
+export default function EmploymentContingencyClient() {
   const [settlement, setSettlement] = useState("");
   const [contingencyPct, setContingencyPct] = useState(33);
   const [costs, setCosts] = useState("");
+  const [wagesPct, setWagesPct] = useState(50);
 
   const [committed, setCommitted] = useState({
     settlement: "",
     contingencyPct: 33,
     costs: "",
+    wagesPct: 50,
   });
 
   function commit() {
@@ -29,6 +31,7 @@ export default function ContingencyCalculatorClient() {
       settlement,
       contingencyPct,
       costs,
+      wagesPct,
     });
   }
 
@@ -36,27 +39,37 @@ export default function ContingencyCalculatorClient() {
     setSettlement("");
     setContingencyPct(33);
     setCosts("");
+    setWagesPct(50);
     setCommitted({
       settlement: "",
       contingencyPct: 33,
       costs: "",
+      wagesPct: 50,
     });
   }
 
   const calc = useMemo(() => {
     const s = parseNum(committed.settlement);
-    const pct = committed.contingencyPct / 100;
+    const feePct = committed.contingencyPct / 100;
     const c = parseNum(committed.costs);
+    const wPct = committed.wagesPct / 100;
 
-    const attorneyFee = s * pct;
-    const netToPlaintiff = s - attorneyFee - c;
+    const attorneyFee = s * feePct;
+    const feeAndCosts = attorneyFee + c;
+    const netToPlaintiff = s - feeAndCosts;
+    const wages = netToPlaintiff * wPct;
+    const nonWage = netToPlaintiff * (1 - wPct);
 
     return {
       settlement: s,
       contingencyPct: committed.contingencyPct,
       attorneyFee,
       costs: c,
+      feeAndCosts,
       netToPlaintiff,
+      wagesPct: committed.wagesPct,
+      wages,
+      nonWage,
     };
   }, [committed]);
 
@@ -127,6 +140,26 @@ export default function ContingencyCalculatorClient() {
           </CardContent>
         </Card>
 
+        <Card className="bg-white border-brand-border">
+          <CardHeader>
+            <CardTitle className="text-brand-primary text-base">
+              Allocated to Wages
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <PercentSlider
+              value={wagesPct}
+              onChange={(val) => {
+                setWagesPct(val);
+                setCommitted((prev) => ({ ...prev, wagesPct: val }));
+              }}
+              min={0}
+              max={100}
+              label="Percentage of net recovery allocated to wages for tax purposes"
+            />
+          </CardContent>
+        </Card>
+
         {hasAny && (
           <Button variant="outline" onClick={clearAll}>
             Clear All
@@ -154,15 +187,11 @@ export default function ContingencyCalculatorClient() {
               <table className="w-full text-sm">
                 <tbody>
                   <Row label="Settlement amount" value={calc.settlement} />
-                  <Row label={`Attorney fee (${calc.contingencyPct}%)`} value={calc.attorneyFee} negative />
-                  <Row label="Costs" value={calc.costs} negative />
+                  <Row label={`Attorney fee (${calc.contingencyPct}%) + costs`} value={calc.feeAndCosts} negative />
+                  <Row label="Net to plaintiff" value={calc.netToPlaintiff} bold />
                   <Separator />
-                  <tr>
-                    <td className="py-2 font-semibold text-brand-primary">Net to plaintiff</td>
-                    <td className="py-2 text-right font-semibold text-brand-accent">
-                      {fmt(calc.netToPlaintiff)}
-                    </td>
-                  </tr>
+                  <Row label={`Plaintiff's wages (${calc.wagesPct}%)`} value={calc.wages} />
+                  <Row label={`Plaintiff's non-wage income (${100 - calc.wagesPct}%)`} value={calc.nonWage} />
                 </tbody>
               </table>
             </CardContent>

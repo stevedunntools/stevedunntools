@@ -20,6 +20,7 @@ export const navGroups = [
     label: "Calculators",
     links: [
       { href: "/tools/contingency-calculator", label: "Contingency Calculator" },
+      { href: "/tools/employment-contingency-calculator", label: "Employment Contingency Calculator" },
       { href: "/tools/tax-allocation-calculator", label: "Tax Allocation Calculator" },
       { href: "/tools/plaintiffs-net-take-home", label: "Plaintiff's Net Take-Home Calculator" },
       { href: "/tools/simple-interest-calculator", label: "Simple Interest Calculator" },

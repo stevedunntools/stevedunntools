@@ -29,6 +29,8 @@ const toolDescriptions: Record<string, string> = {
   // Calculators
   "/tools/contingency-calculator":
     "Calculate attorney fees under various contingency arrangements and their impact on net recovery.",
+  "/tools/employment-contingency-calculator":
+    "Calculate net recovery with wage and non-wage allocation for employment settlements.",
   "/tools/tax-allocation-calculator":
     "Allocate settlement proceeds across tax categories to estimate after-tax value.",
   "/tools/plaintiffs-net-take-home":
