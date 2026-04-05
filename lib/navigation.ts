@@ -12,7 +12,8 @@ export const navGroups = [
     links: [
       { href: "/tools/employment-damages-estimator", label: "Employment Damages Estimator" },
       { href: "/tools/personal-injury-damages-estimator", label: "Personal Injury Damages Estimator" },
-      { href: "/tools/plaintiffs-expected-value", label: "Plaintiff's Expected Value" },
+      { href: "/tools/plaintiffs-pi-expected-value", label: "Plaintiff's PI Expected Value" },
+      { href: "/tools/plaintiffs-employment-expected-value", label: "Plaintiff's Employment Expected Value" },
       { href: "/tools/defendants-expected-cost", label: "Defendant's Expected Cost" },
     ],
   },

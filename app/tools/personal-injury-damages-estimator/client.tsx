@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { setToolValue } from "@/lib/tool-store";
 import {
   Card,
   CardHeader,
@@ -103,6 +104,11 @@ export default function PersonalInjuryClient() {
       total,
     };
   }, [committed]);
+
+  // Share total with other tools (e.g. PI expected value calculator)
+  useEffect(() => {
+    setToolValue("personal-injury-damages-estimator.total", calc.total);
+  }, [calc.total]);
 
   const hasAny =
     medicalToDate !== "" ||

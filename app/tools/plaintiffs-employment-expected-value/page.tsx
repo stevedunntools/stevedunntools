@@ -2,17 +2,17 @@ import type { Metadata } from "next";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 
 export const metadata: Metadata = {
-  title: "Plaintiff's Expected Value | Steve Dunn Tools",
-  description: "Calculate the probability-weighted expected value of a plaintiff's case across multiple scenarios.",
+  title: "Plaintiff's Employment Expected Value | Steve Dunn Tools",
+  description: "Calculate the probability-weighted expected value of an employment case across multiple scenarios.",
 };
 
-export default function PlaintiffsExpectedValuePage() {
+export default function PlaintiffsEmploymentExpectedValuePage() {
   return (
     <>
       <div className="mb-8">
         <p className="text-sm font-medium text-brand-accent mb-1">Settlement Analysis</p>
-        <h1 className="text-3xl font-bold text-brand-primary">Plaintiff's Expected Value</h1>
-        <p className="mt-2 text-brand-muted">Calculate the probability-weighted expected value of a plaintiff's case across multiple scenarios.</p>
+        <h1 className="text-3xl font-bold text-brand-primary">Plaintiff&apos;s Employment Expected Value</h1>
+        <p className="mt-2 text-brand-muted">Calculate the probability-weighted expected value of an employment case across multiple scenarios.</p>
       </div>
       <Card className="bg-white border-brand-border">
         <CardHeader>
