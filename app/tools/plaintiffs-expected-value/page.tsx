@@ -12,7 +12,7 @@ export default function PlaintiffsExpectedValuePage() {
     <>
       <div className="mb-8">
         <p className="text-sm font-medium text-brand-accent mb-1">
-          Settlement Analysis
+          Calculators
         </p>
         <h1 className="text-3xl font-bold text-brand-primary">
           Plaintiff&apos;s Expected Value

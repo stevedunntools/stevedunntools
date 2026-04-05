@@ -10,7 +10,7 @@ export default function DefendantsExpectedCostPage() {
   return (
     <>
       <div className="mb-8">
-        <p className="text-sm font-medium text-brand-accent mb-1">Settlement Analysis</p>
+        <p className="text-sm font-medium text-brand-accent mb-1">Calculators</p>
         <h1 className="text-3xl font-bold text-brand-primary">Defendant's Expected Cost</h1>
         <p className="mt-2 text-brand-muted">Estimate the defendant's total expected cost including liability risk, damages exposure, and defense costs.</p>
       </div>

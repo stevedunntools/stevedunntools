@@ -16,29 +16,27 @@ const toolDescriptions: Record<string, string> = {
   "/tools/convergence-calculator":
     "Enter two offers from each party to project where their trends would intersect.",
 
-  // Settlement Analysis
+  // Calculators
   "/tools/employment-damages-estimator":
     "Calculate potential employment damages including lost wages, benefits, and emotional distress.",
   "/tools/personal-injury-damages-estimator":
-    "Estimate personal injury damages across medical costs, lost earnings, pain and suffering, and more.",
+    "Estimate personal injury damages across medical costs, lost earnings, and non-economic damages.",
   "/tools/plaintiffs-expected-value":
     "Calculate the probability-weighted expected value of a plaintiff's case, adjusted for costs and the time value of money.",
   "/tools/defendants-expected-cost":
     "Estimate the defendant's total expected cost including liability risk, damages exposure, and defense costs.",
-
-  // Calculators
   "/tools/contingency-calculator":
     "Calculate attorney fees under various contingency arrangements and their impact on net recovery.",
   "/tools/employment-contingency-calculator":
     "Calculate net recovery with wage and non-wage allocation for employment settlements.",
-  "/tools/tax-allocation-calculator":
-    "Allocate settlement proceeds across tax categories to estimate after-tax value.",
-  "/tools/plaintiffs-net-take-home":
-    "Calculate what the plaintiff actually takes home after fees, liens, costs, and taxes.",
   "/tools/simple-interest-calculator":
     "Calculate simple interest on any amount over any time period at any rate.",
   "/tools/payment-over-time":
     "Build a complete payment schedule for settlements paid in installments with interest.",
+  "/tools/days-between-dates":
+    "Calculate the number of years, months, weeks, and days between two dates.",
+  "/tools/add-subtract-date":
+    "Add or subtract years, months, weeks, and days from a date, with business day support.",
 };
 
 const toolCategories = navGroups.filter((g) => g.label !== "About");

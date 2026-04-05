@@ -8,23 +8,18 @@ export const navGroups = [
     ],
   },
   {
-    label: "Settlement Analysis",
+    label: "Calculators",
     links: [
       { href: "/tools/employment-damages-estimator", label: "Employment Damages Estimator" },
       { href: "/tools/personal-injury-damages-estimator", label: "Personal Injury Damages Estimator" },
       { href: "/tools/plaintiffs-expected-value", label: "Plaintiff's Expected Value" },
       { href: "/tools/defendants-expected-cost", label: "Defendant's Expected Cost" },
-    ],
-  },
-  {
-    label: "Calculators",
-    links: [
       { href: "/tools/contingency-calculator", label: "Contingency Calculator" },
       { href: "/tools/employment-contingency-calculator", label: "Employment Contingency Calculator" },
-      { href: "/tools/tax-allocation-calculator", label: "Tax Allocation Calculator" },
-      { href: "/tools/plaintiffs-net-take-home", label: "Plaintiff's Net Take-Home Calculator" },
       { href: "/tools/simple-interest-calculator", label: "Simple Interest Calculator" },
       { href: "/tools/payment-over-time", label: "Payment Over Time Calculator" },
+      { href: "/tools/days-between-dates", label: "Days Between Dates" },
+      { href: "/tools/add-subtract-date", label: "Add/Subtract from Date" },
     ],
   },
   {
