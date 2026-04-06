@@ -17,6 +17,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  verification: {
+    google: "rQ-mXVUes7yEDNySfnh_vfbCWe03EE-9h7Tn2jGag0M",
+  },
   title: "Steve Dunn Tools — Settlement Tools Built by a Mediator",
   description:
     "Practical settlement tools built by a mediator. Calculators and utilities for lawyers, mediators, and parties in dispute resolution.",
