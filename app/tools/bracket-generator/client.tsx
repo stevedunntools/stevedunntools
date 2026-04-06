@@ -16,13 +16,10 @@ export default function BracketGeneratorClient() {
   const [midStr, setMidStr] = useState("");
   const [autoField, setAutoField] = useState<Field | null>(null);
 
-  // Track which fields the user has committed at least once
-  const [committed, setCommitted] = useState<Set<Field>>(new Set());
-
-  function recalc(field: Field, uStr: string, lStr: string, mStr: string) {
-    const u = parseNumOrNull(uStr);
-    const l = parseNumOrNull(lStr);
-    const m = parseNumOrNull(mStr);
+  function recalc(field: Field) {
+    const u = parseNumOrNull(upperStr);
+    const l = parseNumOrNull(lowerStr);
+    const m = parseNumOrNull(midStr);
 
     if (field === "upper") {
       if (u !== null && l !== null) {
@@ -57,35 +54,14 @@ export default function BracketGeneratorClient() {
     }
   }
 
-  // How many of the other two fields have been committed by the user
-  function othersCommitted(field: Field): number {
-    let count = 0;
-    if (field !== "upper" && committed.has("upper")) count++;
-    if (field !== "lower" && committed.has("lower")) count++;
-    if (field !== "mid" && committed.has("mid")) count++;
-    return count;
-  }
-
   function handleChange(field: Field, value: string) {
-    const newU = field === "upper" ? value : upperStr;
-    const newL = field === "lower" ? value : lowerStr;
-    const newM = field === "mid" ? value : midStr;
-
     if (field === "upper") setUpperStr(value);
     else if (field === "lower") setLowerStr(value);
     else setMidStr(value);
-
-    // Live recalc only if 2+ fields have been previously committed by user
-    if (othersCommitted(field) >= 2 || (othersCommitted(field) >= 1 && committed.has(field))) {
-      if (parseNumOrNull(value) !== null) {
-        recalc(field, newU, newL, newM);
-      }
-    }
   }
 
   function handleCommit(field: Field) {
-    setCommitted((prev) => new Set(prev).add(field));
-    recalc(field, upperStr, lowerStr, midStr);
+    recalc(field);
   }
 
   function handleKeyDown(field: Field, e: React.KeyboardEvent) {
@@ -106,7 +82,6 @@ export default function BracketGeneratorClient() {
     setLowerStr("");
     setMidStr("");
     setAutoField(null);
-    setCommitted(new Set());
   }
 
   return (
