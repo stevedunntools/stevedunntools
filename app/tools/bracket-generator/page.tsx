@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import BracketGeneratorClient from "./client";
 
 export const metadata: Metadata = {
-  title: "Bracket Generator | Steve Dunn Tools",
+  title: "Bracket Generator",
   description:
     "Generate a bracketed offer range by entering any two of upper, lower, and midpoint.",
+  alternates: { canonical: "/tools/bracket-generator" },
 };
 
 export default function BracketGeneratorPage() {

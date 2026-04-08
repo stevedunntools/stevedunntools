@@ -1,5 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { navGroups } from "@/lib/navigation";
+
+export const metadata: Metadata = {
+  title: "Steve Dunn Tools — Settlement Tools Built by a Mediator",
+  description:
+    "Practical settlement tools built by a mediator. Free calculators and utilities for lawyers, mediators, and parties in dispute resolution.",
+  alternates: {
+    canonical: "/",
+  },
+};
 import {
   Card,
   CardHeader,

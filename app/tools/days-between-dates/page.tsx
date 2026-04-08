@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import DaysBetweenDatesClient from "./client";
 
 export const metadata: Metadata = {
-  title: "Days Between Dates | Steve Dunn Tools",
+  title: "Days Between Dates",
   description:
     "Calculate the number of years, months, weeks, and days between two dates.",
+  alternates: { canonical: "/tools/days-between-dates" },
 };
 
 export default function DaysBetweenDatesPage() {

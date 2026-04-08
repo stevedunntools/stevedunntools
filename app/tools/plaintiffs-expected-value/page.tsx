@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import PlaintiffsExpectedValueClient from "./client";
 
 export const metadata: Metadata = {
-  title: "Plaintiff's Expected Value | Steve Dunn Tools",
+  title: "Plaintiff's Expected Value",
   description:
     "Calculate the probability-weighted expected value of a plaintiff's case, adjusted for costs and the time value of money.",
+  alternates: { canonical: "/tools/plaintiffs-expected-value" },
 };
 
 export default function PlaintiffsExpectedValuePage() {

@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import ContingencyCalculatorClient from "./client";
 
 export const metadata: Metadata = {
-  title: "Contingency Calculator | Steve Dunn Tools",
+  title: "Contingency Calculator",
   description:
     "Calculate attorney fees under a contingency arrangement and the net recovery to the plaintiff.",
+  alternates: { canonical: "/tools/contingency-calculator" },
 };
 
 export default function ContingencyCalculatorPage() {

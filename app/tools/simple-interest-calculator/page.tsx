@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import SimpleInterestClient from "./client";
 
 export const metadata: Metadata = {
-  title: "Simple Interest Calculator | Steve Dunn Tools",
+  title: "Simple Interest Calculator",
   description:
     "Calculate simple interest on any amount over any time period at any rate.",
+  alternates: { canonical: "/tools/simple-interest-calculator" },
 };
 
 export default function SimpleInterestCalculatorPage() {

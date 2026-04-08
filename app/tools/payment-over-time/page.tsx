@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import PaymentOverTimeClient from "./client";
 
 export const metadata: Metadata = {
-  title: "Payment Over Time Calculator | Steve Dunn Tools",
+  title: "Payment Over Time Calculator",
   description:
     "Build a complete payment schedule for settlements paid in installments with interest.",
+  alternates: { canonical: "/tools/payment-over-time" },
 };
 
 export default function PaymentOverTimePage() {

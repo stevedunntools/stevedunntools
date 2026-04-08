@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import EmploymentDamagesClient from "./client";
 
 export const metadata: Metadata = {
-  title: "Employment Damages Estimator | Steve Dunn Tools",
+  title: "Employment Damages Estimator",
   description:
     "Estimate employment damages including back pay, front pay, benefits, liquidated damages, and more.",
+  alternates: { canonical: "/tools/employment-damages-estimator" },
 };
 
 export default function EmploymentDamagesEstimatorPage() {

@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import EmploymentContingencyClient from "./client";
 
 export const metadata: Metadata = {
-  title: "Employment Contingency Calculator | Steve Dunn Tools",
+  title: "Employment Contingency Calculator",
   description:
     "Calculate attorney fees, net recovery, and wage vs. non-wage allocation for employment settlements.",
+  alternates: { canonical: "/tools/employment-contingency-calculator" },
 };
 
 export default function EmploymentContingencyCalculatorPage() {

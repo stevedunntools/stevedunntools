@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import ConvergenceCalculatorClient from "./client";
 
 export const metadata: Metadata = {
-  title: "Convergence Visualizer | Steve Dunn Tools",
+  title: "Convergence Visualizer",
   description:
     "Enter two offers from each party to project where their trends would intersect.",
+  alternates: { canonical: "/tools/convergence-calculator" },
 };
 
 export default function ConvergenceCalculatorPage() {

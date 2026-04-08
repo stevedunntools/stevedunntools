@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import DefendantsExpectedCostClient from "./client";
 
 export const metadata: Metadata = {
-  title: "Defendant's Expected Cost | Steve Dunn Tools",
+  title: "Defendant's Expected Cost",
   description:
     "Estimate the defendant's total expected cost including liability risk, damages exposure, and defense costs.",
+  alternates: { canonical: "/tools/defendants-expected-cost" },
 };
 
 export default function DefendantsExpectedCostPage() {

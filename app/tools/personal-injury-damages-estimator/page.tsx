@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import PersonalInjuryClient from "./client";
 
 export const metadata: Metadata = {
-  title: "Personal Injury Damages Estimator | Steve Dunn Tools",
+  title: "Personal Injury Damages Estimator",
   description:
     "Estimate personal injury damages including medical expenses, lost earnings, property damage, and non-economic damages.",
+  alternates: { canonical: "/tools/personal-injury-damages-estimator" },
 };
 
 export default function PersonalInjuryDamagesEstimatorPage() {

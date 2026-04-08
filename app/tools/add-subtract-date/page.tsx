@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import AddSubtractDateClient from "./client";
 
 export const metadata: Metadata = {
-  title: "Add/Subtract from Date | Steve Dunn Tools",
+  title: "Add/Subtract from Date",
   description:
     "Add or subtract years, months, weeks, and days from a date, with business day support.",
+  alternates: { canonical: "/tools/add-subtract-date" },
 };
 
 export default function AddSubtractDatePage() {

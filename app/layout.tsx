@@ -17,10 +17,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://stevedunntools.com"),
   verification: {
     google: "rQ-mXVUes7yEDNySfnh_vfbCWe03EE-9h7Tn2jGag0M",
   },
-  title: "Steve Dunn Tools — Settlement Tools Built by a Mediator",
+  title: {
+    default: "Steve Dunn Tools — Settlement Tools Built by a Mediator",
+    template: "%s | Steve Dunn Tools",
+  },
   description:
     "Practical settlement tools built by a mediator. Calculators and utilities for lawyers, mediators, and parties in dispute resolution.",
   openGraph: {

@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import NegotiationVisualizerClient from "./client";
 
 export const metadata: Metadata = {
-  title: "Negotiation Visualizer | Steve Dunn Tools",
+  title: "Negotiation Visualizer",
   description:
     "Visualize the negotiation process with an interactive chart of offers, counteroffers, and convergence patterns.",
+  alternates: { canonical: "/tools/negotiation-visualizer" },
 };
 
 export default function NegotiationVisualizerPage() {

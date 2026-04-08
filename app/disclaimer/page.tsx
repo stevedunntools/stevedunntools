@@ -4,6 +4,7 @@ export const metadata: Metadata = {
   title: "Disclaimer | Steve Dunn Tools",
   description:
     "Legal disclaimer for Steve Dunn Tools mediation calculators and utilities.",
+  alternates: { canonical: "/disclaimer" },
 };
 
 export default function DisclaimerPage() {
