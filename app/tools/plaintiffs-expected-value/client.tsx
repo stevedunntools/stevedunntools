@@ -201,7 +201,7 @@ export default function PlaintiffsExpectedValueClient() {
           <CardContent className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-brand-primary mb-1.5">
-                Attorneys fees
+                Attorneys&apos; fees (leave blank if contingency)
               </label>
               <DollarInput
                 value={fees}
