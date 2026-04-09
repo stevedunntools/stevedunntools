@@ -218,7 +218,7 @@ export default function AddSubtractDateClient() {
                 type="checkbox"
                 checked={businessDays}
                 onChange={(e) => setBusinessDays(e.target.checked)}
-                className="h-4 w-4 rounded border-brand-border text-brand-accent focus:ring-brand-accent"
+                className="h-5 w-5 sm:h-4 sm:w-4 rounded border-brand-border text-brand-accent focus:ring-brand-accent"
               />
               <span className="text-sm text-brand-primary">
                 Calculate days in business days

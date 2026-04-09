@@ -101,7 +101,7 @@ function MobileNav() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
-        className="lg:hidden p-2 text-gray-300 hover:text-white transition-colors"
+        className="lg:hidden p-2.5 text-gray-300 hover:text-white transition-colors"
         aria-label="Open menu"
       >
         <Menu className="h-6 w-6" />
@@ -109,7 +109,7 @@ function MobileNav() {
       <SheetContent
         side="right"
         showCloseButton={false}
-        className="w-[300px] bg-brand-primary border-brand-secondary p-0"
+        className="w-[min(300px,85vw)] bg-brand-primary border-brand-secondary p-0"
       >
         <SheetTitle className="sr-only">Navigation menu</SheetTitle>
         <div className="flex items-center justify-between p-4 border-b border-brand-secondary">

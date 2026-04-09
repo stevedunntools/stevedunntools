@@ -19,7 +19,7 @@ export default function AboutPage() {
             alt="Steve Dunn"
             width={300}
             height={300}
-            className="rounded-lg shrink-0"
+            className="rounded-lg shrink-0 max-w-[200px] sm:max-w-[300px]"
             priority
           />
           <div>

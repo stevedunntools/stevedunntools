@@ -10,10 +10,10 @@ interface DateInputProps {
 }
 
 const selectClass =
-  "px-2 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
+  "px-2 py-2.5 sm:py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
 
 const textClass =
-  "w-full px-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
+  "w-full px-3 py-2.5 sm:py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
 
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 51 }, (_, i) => currentYear - 25 + i); // 25 years back, 25 forward

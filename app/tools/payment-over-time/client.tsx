@@ -423,10 +423,10 @@ export default function PaymentOverTimeClient() {
               </div>
               <button
                 onClick={() => removeUpfront(u.id)}
-                className="mt-5 p-2 text-brand-muted hover:text-brand-error transition-colors"
+                className="sm:mt-5 p-3 sm:p-2 text-brand-muted hover:text-brand-error transition-colors"
                 aria-label={`Remove up-front payment ${idx + 1}`}
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-5 w-5 sm:h-4 sm:w-4" />
               </button>
             </div>
           ))}

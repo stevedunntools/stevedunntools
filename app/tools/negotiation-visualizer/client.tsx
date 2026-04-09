@@ -574,7 +574,7 @@ export default function NegotiationVisualizerClient() {
                     if (input.trim()) addOffer();
                   }}
                   placeholder="500,000 or 200,000-400,000"
-                  className="w-full px-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent"
+                  className="w-full px-3 py-2.5 sm:py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent"
                 />
               </div>
               <p className="mt-1.5 text-xs text-brand-muted">

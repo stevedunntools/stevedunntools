@@ -9,7 +9,7 @@ interface DollarInputProps {
 }
 
 const baseClass =
-  "w-full pl-7 pr-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
+  "w-full pl-7 pr-3 py-2.5 sm:py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
 
 export default function DollarInput({
   value,
