@@ -89,8 +89,10 @@ export default function AboutPage() {
           <p>
             Steve built these tools to help lawyers, mediators, and parties in
             dispute resolution make more informed decisions during settlement
-            negotiations. All calculations run entirely in your browser &mdash;
-            nothing is stored or transmitted.
+            negotiations. These tools are meant to be used to test assumptions
+            and model scenarios, not to give you a final answer. All
+            calculations run entirely in your browser &mdash; nothing is stored
+            or transmitted.
           </p>
 
           <h2 className="text-xl font-semibold text-brand-primary pt-4">
