@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useLayoutEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,6 +15,17 @@ export default function BracketGeneratorClient() {
   const [lowerStr, setLowerStr] = useState("");
   const [midStr, setMidStr] = useState("");
   const [autoField, setAutoField] = useState<Field | null>(null);
+  const upperRef = useRef<HTMLInputElement>(null);
+  const midRef = useRef<HTMLInputElement>(null);
+  const lowerRef = useRef<HTMLInputElement>(null);
+  const cursorRef = useRef<{ ref: React.RefObject<HTMLInputElement | null>; pos: number } | null>(null);
+
+  useLayoutEffect(() => {
+    if (cursorRef.current) {
+      cursorRef.current.ref.current?.setSelectionRange(cursorRef.current.pos, cursorRef.current.pos);
+      cursorRef.current = null;
+    }
+  });
 
   function recalc(field: Field) {
     const u = parseNumOrNull(upperStr);
@@ -54,16 +65,29 @@ export default function BracketGeneratorClient() {
     }
   }
 
-  function handleChange(field: Field, value: string) {
-    if (field === "upper") setUpperStr(value);
-    else if (field === "lower") setLowerStr(value);
-    else setMidStr(value);
+  function handleChange(field: Field, e: React.ChangeEvent<HTMLInputElement>) {
+    const raw = e.target.value;
+    const cursor = e.target.selectionStart ?? 0;
+    const digitsBefore = raw.slice(0, cursor).replace(/[^0-9]/g, "").length;
+    const formatted = commaFmt(raw);
+
+    let newCursor = 0;
+    let digits = 0;
+    for (let i = 0; i < formatted.length; i++) {
+      if (/[0-9]/.test(formatted[i])) digits++;
+      if (digits === digitsBefore) { newCursor = i + 1; break; }
+    }
+    if (digitsBefore === 0) newCursor = 0;
+
+    const ref = field === "upper" ? upperRef : field === "mid" ? midRef : lowerRef;
+    cursorRef.current = { ref, pos: newCursor };
+
+    if (field === "upper") setUpperStr(formatted);
+    else if (field === "lower") setLowerStr(formatted);
+    else setMidStr(formatted);
   }
 
   function handleCommit(field: Field) {
-    if (field === "upper") setUpperStr(commaFmt(upperStr));
-    else if (field === "lower") setLowerStr(commaFmt(lowerStr));
-    else setMidStr(commaFmt(midStr));
     recalc(field);
   }
 
@@ -98,10 +122,11 @@ export default function BracketGeneratorClient() {
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
             <input
+              ref={upperRef}
               type="text"
               inputMode="numeric"
               value={upperStr}
-              onChange={(e) => handleChange("upper", e.target.value)}
+              onChange={(e) => handleChange("upper", e)}
               onBlur={() => handleCommit("upper")}
               onKeyDown={(e) => handleKeyDown("upper", e)}
               placeholder="500,000"
@@ -120,10 +145,11 @@ export default function BracketGeneratorClient() {
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
             <input
+              ref={midRef}
               type="text"
               inputMode="numeric"
               value={midStr}
-              onChange={(e) => handleChange("mid", e.target.value)}
+              onChange={(e) => handleChange("mid", e)}
               onBlur={() => handleCommit("mid")}
               onKeyDown={(e) => handleKeyDown("mid", e)}
               placeholder="350,000"
@@ -142,10 +168,11 @@ export default function BracketGeneratorClient() {
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
             <input
+              ref={lowerRef}
               type="text"
               inputMode="numeric"
               value={lowerStr}
-              onChange={(e) => handleChange("lower", e.target.value)}
+              onChange={(e) => handleChange("lower", e)}
               onBlur={() => handleCommit("lower")}
               onKeyDown={(e) => handleKeyDown("lower", e)}
               placeholder="200,000"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useLayoutEffect } from "react";
 import {
   Card,
   CardContent,
@@ -210,15 +210,45 @@ export default function ConvergenceCalculatorClient() {
   const [p2Str, setP2Str] = useState("");
   const [d1Str, setD1Str] = useState("");
   const [d2Str, setD2Str] = useState("");
+  const p1Ref = useRef<HTMLInputElement>(null);
+  const p2Ref = useRef<HTMLInputElement>(null);
+  const d1Ref = useRef<HTMLInputElement>(null);
+  const d2Ref = useRef<HTMLInputElement>(null);
+  const cursorRef = useRef<{ ref: React.RefObject<HTMLInputElement | null>; pos: number } | null>(null);
+
+  useLayoutEffect(() => {
+    if (cursorRef.current) {
+      cursorRef.current.ref.current?.setSelectionRange(cursorRef.current.pos, cursorRef.current.pos);
+      cursorRef.current = null;
+    }
+  });
+
+  function handleInput(
+    e: React.ChangeEvent<HTMLInputElement>,
+    setter: (v: string) => void,
+    ref: React.RefObject<HTMLInputElement | null>,
+  ) {
+    const raw = e.target.value;
+    const cursor = e.target.selectionStart ?? 0;
+    const digitsBefore = raw.slice(0, cursor).replace(/[^0-9]/g, "").length;
+    const formatted = commaFmt(raw);
+
+    let newCursor = 0;
+    let digits = 0;
+    for (let i = 0; i < formatted.length; i++) {
+      if (/[0-9]/.test(formatted[i])) digits++;
+      if (digits === digitsBefore) { newCursor = i + 1; break; }
+    }
+    if (digitsBefore === 0) newCursor = 0;
+
+    cursorRef.current = { ref, pos: newCursor };
+    setter(formatted);
+  }
 
   // Committed values — only these feed the chart
   const [committed, setCommitted] = useState({ p1: "", p2: "", d1: "", d2: "" });
 
   function commit() {
-    setP1Str(commaFmt(p1Str));
-    setP2Str(commaFmt(p2Str));
-    setD1Str(commaFmt(d1Str));
-    setD2Str(commaFmt(d2Str));
     setCommitted({ p1: p1Str, p2: p2Str, d1: d1Str, d2: d2Str });
   }
 
@@ -301,10 +331,11 @@ export default function ConvergenceCalculatorClient() {
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
                 <input
+                  ref={p1Ref}
                   type="text"
                   inputMode="numeric"
                   value={p1Str}
-                  onChange={(e) => setP1Str(e.target.value)}
+                  onChange={(e) => handleInput(e, setP1Str, p1Ref)}
                   onBlur={commit}
                   onKeyDown={handleKeyDown}
                   placeholder="500,000"
@@ -319,10 +350,11 @@ export default function ConvergenceCalculatorClient() {
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
                 <input
+                  ref={p2Ref}
                   type="text"
                   inputMode="numeric"
                   value={p2Str}
-                  onChange={(e) => setP2Str(e.target.value)}
+                  onChange={(e) => handleInput(e, setP2Str, p2Ref)}
                   onBlur={commit}
                   onKeyDown={handleKeyDown}
                   placeholder="400,000"
@@ -347,10 +379,11 @@ export default function ConvergenceCalculatorClient() {
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
                 <input
+                  ref={d1Ref}
                   type="text"
                   inputMode="numeric"
                   value={d1Str}
-                  onChange={(e) => setD1Str(e.target.value)}
+                  onChange={(e) => handleInput(e, setD1Str, d1Ref)}
                   onBlur={commit}
                   onKeyDown={handleKeyDown}
                   placeholder="50,000"
@@ -365,10 +398,11 @@ export default function ConvergenceCalculatorClient() {
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
                 <input
+                  ref={d2Ref}
                   type="text"
                   inputMode="numeric"
                   value={d2Str}
-                  onChange={(e) => setD2Str(e.target.value)}
+                  onChange={(e) => handleInput(e, setD2Str, d2Ref)}
                   onBlur={commit}
                   onKeyDown={handleKeyDown}
                   placeholder="150,000"
