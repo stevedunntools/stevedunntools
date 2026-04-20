@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useLayoutEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,7 +9,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Trash2 } from "lucide-react";
-import { fmt } from "@/lib/format";
+import { fmt, commaFmt } from "@/lib/format";
 import { Pt, pointsToPath, generateYTicks, formatTickLabel } from "@/lib/chart-utils";
 import ExportPdfButton from "@/components/export-pdf-button";
 
@@ -460,6 +460,37 @@ export default function NegotiationVisualizerClient() {
   const [party, setParty] = useState<Party>("plaintiff");
   const [input, setInput] = useState("");
   const addButtonRef = useRef<HTMLButtonElement>(null);
+  const offerInputRef = useRef<HTMLInputElement>(null);
+  const offerCursorRef = useRef<number | null>(null);
+
+  useLayoutEffect(() => {
+    if (offerCursorRef.current !== null && offerInputRef.current) {
+      offerInputRef.current.setSelectionRange(offerCursorRef.current, offerCursorRef.current);
+      offerCursorRef.current = null;
+    }
+  });
+
+  function handleOfferInput(e: React.ChangeEvent<HTMLInputElement>) {
+    const raw = e.target.value;
+    const cursor = e.target.selectionStart ?? 0;
+
+    // Format each side of a range dash independently
+    const parts = raw.split("-");
+    const formatted = parts.map((p) => commaFmt(p.trim()) || p.trim()).join(parts.length > 1 ? "-" : "");
+
+    // Track cursor using digit count
+    const digitsBefore = raw.slice(0, cursor).replace(/[^0-9]/g, "").length;
+    let newCursor = 0;
+    let digits = 0;
+    for (let i = 0; i < formatted.length; i++) {
+      if (/[0-9]/.test(formatted[i])) digits++;
+      if (digits === digitsBefore) { newCursor = i + 1; break; }
+    }
+    if (digitsBefore === 0) newCursor = 0;
+
+    offerCursorRef.current = newCursor;
+    setInput(formatted);
+  }
 
   const nextRound = useMemo(() => {
     if (offers.length === 0) return 1;
@@ -565,9 +596,10 @@ export default function NegotiationVisualizerClient() {
               </label>
               <div className="relative">
                 <input
+                  ref={offerInputRef}
                   type="text"
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
+                  onChange={handleOfferInput}
                   onKeyDown={(e) => e.key === "Enter" && addOffer()}
                   onBlur={(e) => {
                     if (e.relatedTarget === addButtonRef.current) return;
