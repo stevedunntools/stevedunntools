@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
+import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,15 +15,15 @@ import DollarInput from "@/components/dollar-input";
 import PercentSlider from "@/components/percent-slider";
 
 export default function DefendantsExpectedCostClient() {
-  const [damages, setDamages] = useState("");
-  const [damagesProbability, setDamagesProbability] = useState(100);
-  const [plaintiffFees, setPlaintiffFees] = useState("");
-  const [feeProbability, setFeeProbability] = useState(100);
-  const [defendantFees, setDefendantFees] = useState("");
-  const [defendantCosts, setDefendantCosts] = useState("");
-  const [intangibleCosts, setIntangibleCosts] = useState("");
+  const [damages, setDamages] = useSessionState("tool:defendant-ec:damages", "");
+  const [damagesProbability, setDamagesProbability] = useSessionState("tool:defendant-ec:damagesProbability", 100);
+  const [plaintiffFees, setPlaintiffFees] = useSessionState("tool:defendant-ec:plaintiffFees", "");
+  const [feeProbability, setFeeProbability] = useSessionState("tool:defendant-ec:feeProbability", 100);
+  const [defendantFees, setDefendantFees] = useSessionState("tool:defendant-ec:defendantFees", "");
+  const [defendantCosts, setDefendantCosts] = useSessionState("tool:defendant-ec:defendantCosts", "");
+  const [intangibleCosts, setIntangibleCosts] = useSessionState("tool:defendant-ec:intangibleCosts", "");
 
-  const [committed, setCommitted] = useState({
+  const [committed, setCommitted] = useSessionState("tool:defendant-ec:committed", {
     damages: "",
     damagesProbability: 100,
     plaintiffFees: "",
@@ -61,6 +62,7 @@ export default function DefendantsExpectedCostClient() {
       defendantCosts: "",
       intangibleCosts: "",
     });
+    clearSessionKeys("tool:defendant-ec:");
   }
 
   const calc = useMemo(() => {

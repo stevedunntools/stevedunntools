@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
+import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,11 +15,11 @@ import DollarInput from "@/components/dollar-input";
 import PercentSlider from "@/components/percent-slider";
 
 export default function ContingencyCalculatorClient() {
-  const [settlement, setSettlement] = useState("");
-  const [contingencyPct, setContingencyPct] = useState(1);
-  const [costs, setCosts] = useState("");
+  const [settlement, setSettlement] = useSessionState("tool:contingency:settlement", "");
+  const [contingencyPct, setContingencyPct] = useSessionState("tool:contingency:contingencyPct", 1);
+  const [costs, setCosts] = useSessionState("tool:contingency:costs", "");
 
-  const [committed, setCommitted] = useState({
+  const [committed, setCommitted] = useSessionState("tool:contingency:committed", {
     settlement: "",
     contingencyPct: 1,
     costs: "",
@@ -41,6 +42,7 @@ export default function ContingencyCalculatorClient() {
       contingencyPct: 1,
       costs: "",
     });
+    clearSessionKeys("tool:contingency:");
   }
 
   const calc = useMemo(() => {

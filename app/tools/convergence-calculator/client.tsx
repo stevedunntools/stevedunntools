@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useRef, useLayoutEffect } from "react";
+import { useMemo, useRef, useLayoutEffect } from "react";
+import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
 import {
   Card,
   CardContent,
@@ -206,10 +207,10 @@ function TrendChart({ data }: { data: ChartData }) {
 // ---------------------------------------------------------------------------
 
 export default function ConvergenceCalculatorClient() {
-  const [p1Str, setP1Str] = useState("");
-  const [p2Str, setP2Str] = useState("");
-  const [d1Str, setD1Str] = useState("");
-  const [d2Str, setD2Str] = useState("");
+  const [p1Str, setP1Str] = useSessionState("tool:convergence:p1", "");
+  const [p2Str, setP2Str] = useSessionState("tool:convergence:p2", "");
+  const [d1Str, setD1Str] = useSessionState("tool:convergence:d1", "");
+  const [d2Str, setD2Str] = useSessionState("tool:convergence:d2", "");
   const p1Ref = useRef<HTMLInputElement>(null);
   const p2Ref = useRef<HTMLInputElement>(null);
   const d1Ref = useRef<HTMLInputElement>(null);
@@ -246,7 +247,7 @@ export default function ConvergenceCalculatorClient() {
   }
 
   // Committed values — only these feed the chart
-  const [committed, setCommitted] = useState({ p1: "", p2: "", d1: "", d2: "" });
+  const [committed, setCommitted] = useSessionState("tool:convergence:committed", { p1: "", p2: "", d1: "", d2: "" });
 
   function commit() {
     setCommitted({ p1: p1Str, p2: p2Str, d1: d1Str, d2: d2Str });
@@ -306,6 +307,7 @@ export default function ConvergenceCalculatorClient() {
     setD1Str("");
     setD2Str("");
     setCommitted({ p1: "", p2: "", d1: "", d2: "" });
+    clearSessionKeys("tool:convergence:");
   }
 
   const hasAny = p1Str !== "" || p2Str !== "" || d1Str !== "" || d2Str !== "";

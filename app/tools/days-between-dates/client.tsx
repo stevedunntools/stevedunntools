@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
+import { useSessionState, clearSessionKeys, dateSerializer } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,9 +12,9 @@ import {
 import DateInput from "@/components/date-input";
 
 export default function DaysBetweenDatesClient() {
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
-  const [includeEndDay, setIncludeEndDay] = useState(false);
+  const [startDate, setStartDate] = useSessionState<Date | null>("tool:days-between:start", null, dateSerializer);
+  const [endDate, setEndDate] = useSessionState<Date | null>("tool:days-between:end", null, dateSerializer);
+  const [includeEndDay, setIncludeEndDay] = useSessionState("tool:days-between:includeEndDay", false);
 
   const result = useMemo(() => {
     if (!startDate || !endDate) return null;
@@ -89,6 +90,7 @@ export default function DaysBetweenDatesClient() {
     setStartDate(null);
     setEndDate(null);
     setIncludeEndDay(false);
+    clearSessionKeys("tool:days-between:");
   }
 
   const hasAny = startDate !== null || endDate !== null;

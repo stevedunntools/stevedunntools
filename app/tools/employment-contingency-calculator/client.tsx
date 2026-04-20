@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
+import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,12 +15,12 @@ import DollarInput from "@/components/dollar-input";
 import PercentSlider from "@/components/percent-slider";
 
 export default function EmploymentContingencyClient() {
-  const [settlement, setSettlement] = useState("");
-  const [contingencyPct, setContingencyPct] = useState(1);
-  const [costs, setCosts] = useState("");
-  const [wagesPct, setWagesPct] = useState(50);
+  const [settlement, setSettlement] = useSessionState("tool:emp-contingency:settlement", "");
+  const [contingencyPct, setContingencyPct] = useSessionState("tool:emp-contingency:contingencyPct", 1);
+  const [costs, setCosts] = useSessionState("tool:emp-contingency:costs", "");
+  const [wagesPct, setWagesPct] = useSessionState("tool:emp-contingency:wagesPct", 50);
 
-  const [committed, setCommitted] = useState({
+  const [committed, setCommitted] = useSessionState("tool:emp-contingency:committed", {
     settlement: "",
     contingencyPct: 1,
     costs: "",
@@ -46,6 +47,7 @@ export default function EmploymentContingencyClient() {
       costs: "",
       wagesPct: 50,
     });
+    clearSessionKeys("tool:emp-contingency:");
   }
 
   const calc = useMemo(() => {

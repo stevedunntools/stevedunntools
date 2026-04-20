@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
+import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,12 +23,12 @@ const timeUnitOptions: { value: TimeUnit; label: string }[] = [
 ];
 
 export default function SimpleInterestClient() {
-  const [principal, setPrincipal] = useState("");
-  const [rate, setRate] = useState(5);
-  const [timePeriod, setTimePeriod] = useState("");
-  const [timeUnit, setTimeUnit] = useState<TimeUnit>("months");
+  const [principal, setPrincipal] = useSessionState("tool:simple-interest:principal", "");
+  const [rate, setRate] = useSessionState("tool:simple-interest:rate", 5);
+  const [timePeriod, setTimePeriod] = useSessionState("tool:simple-interest:timePeriod", "");
+  const [timeUnit, setTimeUnit] = useSessionState<TimeUnit>("tool:simple-interest:timeUnit", "months");
 
-  const [committed, setCommitted] = useState({
+  const [committed, setCommitted] = useSessionState("tool:simple-interest:committed", {
     principal: "",
     rate: 5,
     timePeriod: "",
@@ -54,6 +55,7 @@ export default function SimpleInterestClient() {
       timePeriod: "",
       timeUnit: "months",
     });
+    clearSessionKeys("tool:simple-interest:");
   }
 
   const calc = useMemo(() => {

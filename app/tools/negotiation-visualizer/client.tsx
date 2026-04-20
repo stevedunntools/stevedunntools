@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, useLayoutEffect } from "react";
+import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -455,9 +456,9 @@ function NegotiationChart({ offers }: { offers: Offer[] }) {
 // ---------------------------------------------------------------------------
 
 export default function NegotiationVisualizerClient() {
-  const [offers, setOffers] = useState<Offer[]>([]);
+  const [offers, setOffers] = useSessionState<Offer[]>("tool:neg-viz:offers", []);
 
-  const [party, setParty] = useState<Party>("plaintiff");
+  const [party, setParty] = useSessionState<Party>("tool:neg-viz:party", "plaintiff");
   const [input, setInput] = useState("");
   const addButtonRef = useRef<HTMLButtonElement>(null);
   const offerInputRef = useRef<HTMLInputElement>(null);
@@ -530,6 +531,7 @@ export default function NegotiationVisualizerClient() {
     setOffers([]);
     setParty("plaintiff");
     setInput("");
+    clearSessionKeys("tool:neg-viz:");
   }
 
   // Overlap info for the text callout

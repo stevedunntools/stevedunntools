@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
+import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,14 +20,14 @@ const MULTIPLIER_STEPS = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
 // ---------------------------------------------------------------------------
 
 export default function PersonalInjuryClient() {
-  const [medicalToDate, setMedicalToDate] = useState("");
-  const [futureMedical, setFutureMedical] = useState("");
-  const [lostEarningsToDate, setLostEarningsToDate] = useState("");
-  const [futureLostEarnings, setFutureLostEarnings] = useState("");
-  const [propertyDamage, setPropertyDamage] = useState("");
-  const [multiplier, setMultiplier] = useState(3);
+  const [medicalToDate, setMedicalToDate] = useSessionState("tool:pi-damages:medicalToDate", "");
+  const [futureMedical, setFutureMedical] = useSessionState("tool:pi-damages:futureMedical", "");
+  const [lostEarningsToDate, setLostEarningsToDate] = useSessionState("tool:pi-damages:lostEarningsToDate", "");
+  const [futureLostEarnings, setFutureLostEarnings] = useSessionState("tool:pi-damages:futureLostEarnings", "");
+  const [propertyDamage, setPropertyDamage] = useSessionState("tool:pi-damages:propertyDamage", "");
+  const [multiplier, setMultiplier] = useSessionState("tool:pi-damages:multiplier", 3);
 
-  const [committed, setCommitted] = useState({
+  const [committed, setCommitted] = useSessionState("tool:pi-damages:committed", {
     medicalToDate: "",
     futureMedical: "",
     lostEarningsToDate: "",
@@ -61,6 +62,7 @@ export default function PersonalInjuryClient() {
       propertyDamage: "",
       multiplier: 3,
     });
+    clearSessionKeys("tool:pi-damages:");
   }
 
   const calc = useMemo(() => {

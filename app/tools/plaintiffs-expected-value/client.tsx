@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
+import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,15 +22,15 @@ const plainInputClass =
   "w-full px-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
 
 export default function PlaintiffsExpectedValueClient() {
-  const [damages, setDamages] = useState("");
-  const [fees, setFees] = useState("");
-  const [litigationCosts, setLitigationCosts] = useState("");
-  const [intangibleCosts, setIntangibleCosts] = useState("");
-  const [probability, setProbability] = useState(100);
-  const [yearsToPayment, setYearsToPayment] = useState("");
-  const [discountRate, setDiscountRate] = useState(4);
+  const [damages, setDamages] = useSessionState("tool:plaintiff-ev:damages", "");
+  const [fees, setFees] = useSessionState("tool:plaintiff-ev:fees", "");
+  const [litigationCosts, setLitigationCosts] = useSessionState("tool:plaintiff-ev:litigationCosts", "");
+  const [intangibleCosts, setIntangibleCosts] = useSessionState("tool:plaintiff-ev:intangibleCosts", "");
+  const [probability, setProbability] = useSessionState("tool:plaintiff-ev:probability", 100);
+  const [yearsToPayment, setYearsToPayment] = useSessionState("tool:plaintiff-ev:yearsToPayment", "");
+  const [discountRate, setDiscountRate] = useSessionState("tool:plaintiff-ev:discountRate", 4);
 
-  const [committed, setCommitted] = useState({
+  const [committed, setCommitted] = useSessionState("tool:plaintiff-ev:committed", {
     damages: "",
     fees: "",
     litigationCosts: "",
@@ -68,6 +69,7 @@ export default function PlaintiffsExpectedValueClient() {
       yearsToPayment: "",
       discountRate: 4,
     });
+    clearSessionKeys("tool:plaintiff-ev:");
   }
 
   const calc = useMemo(() => {

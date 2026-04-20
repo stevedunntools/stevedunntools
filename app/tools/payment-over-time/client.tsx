@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
+import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -55,22 +56,22 @@ const selectClass =
 // ---------------------------------------------------------------------------
 
 export default function PaymentOverTimeClient() {
-  const [totalSettlement, setTotalSettlement] = useState("");
-  const [upfronts, setUpfronts] = useState<UpfrontPayment[]>([
+  const [totalSettlement, setTotalSettlement] = useSessionState("tool:payment-time:totalSettlement", "");
+  const [upfronts, setUpfronts] = useSessionState<UpfrontPayment[]>("tool:payment-time:upfronts", [
     { id: makeId(), amount: "", timing: "At signing" },
   ]);
-  const [numPayments, setNumPayments] = useState("");
-  const [installmentAmount, setInstallmentAmount] = useState("");
-  const [frequency, setFrequency] = useState<Frequency>("monthly");
-  const [customIntervalDays, setCustomIntervalDays] = useState("");
-  const [interestScope, setInterestScope] = useState<InterestScope>("none");
-  const [interestStart, setInterestStart] = useState<InterestStart>("first-installment");
-  const [annualRate, setAnnualRate] = useState(5);
+  const [numPayments, setNumPayments] = useSessionState("tool:payment-time:numPayments", "");
+  const [installmentAmount, setInstallmentAmount] = useSessionState("tool:payment-time:installmentAmount", "");
+  const [frequency, setFrequency] = useSessionState<Frequency>("tool:payment-time:frequency", "monthly");
+  const [customIntervalDays, setCustomIntervalDays] = useSessionState("tool:payment-time:customIntervalDays", "");
+  const [interestScope, setInterestScope] = useSessionState<InterestScope>("tool:payment-time:interestScope", "none");
+  const [interestStart, setInterestStart] = useSessionState<InterestStart>("tool:payment-time:interestStart", "first-installment");
+  const [annualRate, setAnnualRate] = useSessionState("tool:payment-time:annualRate", 5);
 
   // Track which field the user last edited to determine calculation direction
-  const [installmentMode, setInstallmentMode] = useState<"count" | "amount">("count");
+  const [installmentMode, setInstallmentMode] = useSessionState<"count" | "amount">("tool:payment-time:installmentMode", "count");
 
-  const [committed, setCommitted] = useState({
+  const [committed, setCommitted] = useSessionState("tool:payment-time:committed", {
     totalSettlement: "",
     upfronts: [] as UpfrontPayment[],
     numPayments: "",
@@ -139,6 +140,7 @@ export default function PaymentOverTimeClient() {
       interestStart: "first-installment",
       annualRate: 5,
     });
+    clearSessionKeys("tool:payment-time:");
   }
 
   // ---------------------------------------------------------------------------

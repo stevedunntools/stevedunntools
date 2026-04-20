@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useLayoutEffect } from "react";
+import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,9 +12,9 @@ import { fmt, commaFmt, parseNumOrNull } from "@/lib/format";
 type Field = "upper" | "lower" | "mid";
 
 export default function BracketGeneratorClient() {
-  const [upperStr, setUpperStr] = useState("");
-  const [lowerStr, setLowerStr] = useState("");
-  const [midStr, setMidStr] = useState("");
+  const [upperStr, setUpperStr] = useSessionState("tool:bracket:upper", "");
+  const [lowerStr, setLowerStr] = useSessionState("tool:bracket:lower", "");
+  const [midStr, setMidStr] = useSessionState("tool:bracket:mid", "");
   const [autoField, setAutoField] = useState<Field | null>(null);
   const upperRef = useRef<HTMLInputElement>(null);
   const midRef = useRef<HTMLInputElement>(null);
@@ -109,6 +110,7 @@ export default function BracketGeneratorClient() {
     setLowerStr("");
     setMidStr("");
     setAutoField(null);
+    clearSessionKeys("tool:bracket:");
   }
 
   return (

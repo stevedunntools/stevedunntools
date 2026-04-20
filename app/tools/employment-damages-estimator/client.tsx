@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
+import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -45,19 +46,19 @@ const monthInputClass =
 // ---------------------------------------------------------------------------
 
 export default function EmploymentDamagesClient() {
-  const [monthlyComp, setMonthlyComp] = useState("");
-  const [monthlyBenefits, setMonthlyBenefits] = useState("");
-  const [monthsSinceTermination, setMonthsSinceTermination] = useState("");
-  const [frontPayMonths, setFrontPayMonths] = useState("");
-  const [jobs, setJobs] = useState<MitigationJob[]>([
+  const [monthlyComp, setMonthlyComp] = useSessionState("tool:emp-damages:monthlyComp", "");
+  const [monthlyBenefits, setMonthlyBenefits] = useSessionState("tool:emp-damages:monthlyBenefits", "");
+  const [monthsSinceTermination, setMonthsSinceTermination] = useSessionState("tool:emp-damages:monthsSinceTermination", "");
+  const [frontPayMonths, setFrontPayMonths] = useSessionState("tool:emp-damages:frontPayMonths", "");
+  const [jobs, setJobs] = useSessionState<MitigationJob[]>("tool:emp-damages:jobs", [
     { id: makeJobId(), months: "", monthlyComp: "", current: false },
   ]);
-  const [compensatory, setCompensatory] = useState("");
-  const [liquidatedType, setLiquidatedType] = useState<LiquidatedType>("none");
-  const [punitive, setPunitive] = useState("");
-  const [otherDamages, setOtherDamages] = useState("");
+  const [compensatory, setCompensatory] = useSessionState("tool:emp-damages:compensatory", "");
+  const [liquidatedType, setLiquidatedType] = useSessionState<LiquidatedType>("tool:emp-damages:liquidatedType", "none");
+  const [punitive, setPunitive] = useSessionState("tool:emp-damages:punitive", "");
+  const [otherDamages, setOtherDamages] = useSessionState("tool:emp-damages:otherDamages", "");
 
-  const [committed, setCommitted] = useState({
+  const [committed, setCommitted] = useSessionState("tool:emp-damages:committed", {
     monthlyComp: "",
     monthlyBenefits: "",
     monthsSinceTermination: "",
@@ -122,6 +123,7 @@ export default function EmploymentDamagesClient() {
       punitive: "",
       otherDamages: "",
     });
+    clearSessionKeys("tool:emp-damages:");
   }
 
   const calc = useMemo(() => {

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
+import { useSessionState, clearSessionKeys, dateSerializer } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,14 +22,14 @@ const selectClass =
   "w-full px-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
 
 export default function AddSubtractDateClient() {
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [direction, setDirection] = useState<Direction>("add");
-  const [years, setYears] = useState("");
-  const [months, setMonths] = useState("");
-  const [weeks, setWeeks] = useState("");
-  const [days, setDays] = useState("");
-  const [businessDays, setBusinessDays] = useState(false);
-  const [holidayMode, setHolidayMode] = useState<HolidayMode>("federal");
+  const [startDate, setStartDate] = useSessionState<Date | null>("tool:add-subtract:start", null, dateSerializer);
+  const [direction, setDirection] = useSessionState<Direction>("tool:add-subtract:direction", "add");
+  const [years, setYears] = useSessionState("tool:add-subtract:years", "");
+  const [months, setMonths] = useSessionState("tool:add-subtract:months", "");
+  const [weeks, setWeeks] = useSessionState("tool:add-subtract:weeks", "");
+  const [days, setDays] = useSessionState("tool:add-subtract:days", "");
+  const [businessDays, setBusinessDays] = useSessionState("tool:add-subtract:businessDays", false);
+  const [holidayMode, setHolidayMode] = useSessionState<HolidayMode>("tool:add-subtract:holidayMode", "federal");
 
   const result = useMemo(() => {
     if (!startDate) return null;
@@ -92,6 +93,7 @@ export default function AddSubtractDateClient() {
     setDays("");
     setBusinessDays(false);
     setHolidayMode("federal");
+    clearSessionKeys("tool:add-subtract:");
   }
 
   const hasAny = startDate !== null || years !== "" || months !== "" || weeks !== "" || days !== "";
