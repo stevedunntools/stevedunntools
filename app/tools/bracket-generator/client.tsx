@@ -6,7 +6,7 @@ import {
   Card,
   CardContent,
 } from "@/components/ui/card";
-import { fmt, parseNumOrNull } from "@/lib/format";
+import { fmt, commaFmt, parseNumOrNull } from "@/lib/format";
 
 type Field = "upper" | "lower" | "mid";
 
@@ -23,32 +23,32 @@ export default function BracketGeneratorClient() {
 
     if (field === "upper") {
       if (u !== null && l !== null) {
-        setMidStr(((u + l) / 2).toFixed(0));
+        setMidStr(commaFmt(((u + l) / 2).toFixed(0)));
         setAutoField("mid");
       } else if (u !== null && m !== null) {
-        setLowerStr((2 * m - u).toFixed(0));
+        setLowerStr(commaFmt((2 * m - u).toFixed(0)));
         setAutoField("lower");
       }
     } else if (field === "lower") {
       if (u !== null && l !== null) {
-        setMidStr(((u + l) / 2).toFixed(0));
+        setMidStr(commaFmt(((u + l) / 2).toFixed(0)));
         setAutoField("mid");
       } else if (l !== null && m !== null) {
-        setUpperStr((2 * m - l).toFixed(0));
+        setUpperStr(commaFmt((2 * m - l).toFixed(0)));
         setAutoField("upper");
       }
     } else if (field === "mid") {
       if (u !== null && l !== null && m !== null) {
         const currentMid = (u + l) / 2;
         const delta = m - currentMid;
-        setUpperStr((u + delta).toFixed(0));
-        setLowerStr((l + delta).toFixed(0));
+        setUpperStr(commaFmt((u + delta).toFixed(0)));
+        setLowerStr(commaFmt((l + delta).toFixed(0)));
         setAutoField(null);
       } else if (m !== null && u !== null) {
-        setLowerStr((2 * m - u).toFixed(0));
+        setLowerStr(commaFmt((2 * m - u).toFixed(0)));
         setAutoField("lower");
       } else if (m !== null && l !== null) {
-        setUpperStr((2 * m - l).toFixed(0));
+        setUpperStr(commaFmt((2 * m - l).toFixed(0)));
         setAutoField("upper");
       }
     }
@@ -61,6 +61,9 @@ export default function BracketGeneratorClient() {
   }
 
   function handleCommit(field: Field) {
+    if (field === "upper") setUpperStr(commaFmt(upperStr));
+    else if (field === "lower") setLowerStr(commaFmt(lowerStr));
+    else setMidStr(commaFmt(midStr));
     recalc(field);
   }
 

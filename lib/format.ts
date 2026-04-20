@@ -6,6 +6,19 @@ export function fmt(n: number) {
 }
 
 /**
+ * Format a raw numeric string with commas for readability.
+ * Strips existing formatting first, returns empty string for empty input.
+ * Preserves decimals if present.
+ */
+export function commaFmt(s: string): string {
+  const cleaned = s.replace(/[$,\s]/g, "");
+  if (cleaned === "" || cleaned === "-") return cleaned;
+  const n = parseFloat(cleaned);
+  if (isNaN(n)) return s;
+  return n.toLocaleString("en-US", { maximumFractionDigits: 2 });
+}
+
+/**
  * Parse a dollar/number string, returning 0 for empty or invalid input.
  * Strips $, commas, and whitespace before parsing.
  */

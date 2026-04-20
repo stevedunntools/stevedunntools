@@ -1,5 +1,7 @@
 "use client";
 
+import { commaFmt } from "@/lib/format";
+
 interface DollarInputProps {
   value: string;
   onChange: (value: string) => void;
@@ -28,7 +30,7 @@ export default function DollarInput({
         inputMode="numeric"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        onBlur={onCommit}
+        onBlur={() => { onChange(commaFmt(value)); onCommit(); }}
         onKeyDown={(e) => e.key === "Enter" && onCommit()}
         placeholder={placeholder}
         className={className ?? baseClass}

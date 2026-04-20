@@ -6,7 +6,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { fmt, parseNumOrNull } from "@/lib/format";
+import { fmt, commaFmt, parseNumOrNull } from "@/lib/format";
 import { generateYTicks, formatTickLabel } from "@/lib/chart-utils";
 
 // ---------------------------------------------------------------------------
@@ -215,6 +215,10 @@ export default function ConvergenceCalculatorClient() {
   const [committed, setCommitted] = useState({ p1: "", p2: "", d1: "", d2: "" });
 
   function commit() {
+    setP1Str(commaFmt(p1Str));
+    setP2Str(commaFmt(p2Str));
+    setD1Str(commaFmt(d1Str));
+    setD2Str(commaFmt(d2Str));
     setCommitted({ p1: p1Str, p2: p2Str, d1: d1Str, d2: d2Str });
   }
 
