@@ -479,15 +479,15 @@ export default function NegotiationVisualizerClient() {
     const parts = raw.split("-");
     const formatted = parts.map((p) => commaFmt(p.trim()) || p.trim()).join(parts.length > 1 ? "-" : "");
 
-    // Track cursor using digit count
-    const digitsBefore = raw.slice(0, cursor).replace(/[^0-9]/g, "").length;
+    // Track cursor using digits and dashes (both are significant characters)
+    const significantBefore = raw.slice(0, cursor).replace(/[^0-9\-]/g, "").length;
     let newCursor = 0;
-    let digits = 0;
+    let significant = 0;
     for (let i = 0; i < formatted.length; i++) {
-      if (/[0-9]/.test(formatted[i])) digits++;
-      if (digits === digitsBefore) { newCursor = i + 1; break; }
+      if (/[0-9\-]/.test(formatted[i])) significant++;
+      if (significant === significantBefore) { newCursor = i + 1; break; }
     }
-    if (digitsBefore === 0) newCursor = 0;
+    if (significantBefore === 0) newCursor = 0;
 
     offerCursorRef.current = newCursor;
     setInput(formatted);
