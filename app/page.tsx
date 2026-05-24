@@ -41,6 +41,8 @@ const toolDescriptions: Record<string, string> = {
     "Calculate net recovery with wage and non-wage allocation for employment settlements.",
   "/tools/simple-interest-calculator":
     "Calculate simple interest on any amount over any time period at any rate.",
+  "/tools/take-home-after-taxes":
+    "Estimate take-home pay after federal and state taxes for W-2, 1099, and tax-free personal injury income.",
   "/tools/payment-over-time":
     "Build a complete payment schedule for settlements paid in installments.",
   "/tools/days-between-dates":

@@ -17,6 +17,7 @@ export const navGroups = [
       { href: "/tools/contingency-calculator", label: "Contingency Calculator" },
       { href: "/tools/employment-contingency-calculator", label: "Employment Contingency Calculator" },
       { href: "/tools/simple-interest-calculator", label: "Simple Interest Calculator" },
+      { href: "/tools/take-home-after-taxes", label: "Take-Home After Taxes Calculator" },
       { href: "/tools/payment-over-time", label: "Payment Over Time Calculator" },
       { href: "/tools/days-between-dates", label: "Days Between Dates" },
       { href: "/tools/add-subtract-date", label: "Add/Subtract from Date" },

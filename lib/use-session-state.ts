@@ -1,10 +1,15 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 
 /**
  * Drop-in replacement for useState that persists to sessionStorage.
- * Falls back to initialValue when no stored value exists or on SSR.
+ *
+ * The initial render (both SSR and the first client render) always returns
+ * `initialValue` so server and client agree. The stored value is loaded in a
+ * post-mount effect, which schedules a re-render with the persisted state.
+ * This briefly shows empty inputs on first paint but avoids hydration
+ * mismatches.
  */
 export function useSessionState<T>(
   key: string,
@@ -17,17 +22,27 @@ export function useSessionState<T>(
   const serialize = options?.serialize ?? JSON.stringify;
   const deserialize = options?.deserialize ?? JSON.parse;
 
-  const [value, setValue] = useState<T>(() => {
-    if (typeof window === "undefined") return initialValue;
+  const [value, setValue] = useState<T>(initialValue);
+  const skipNextWrite = useRef(true);
+
+  // Load the stored value once after mount.
+  useEffect(() => {
     try {
       const stored = sessionStorage.getItem(key);
-      return stored !== null ? deserialize(stored) : initialValue;
+      if (stored !== null) setValue(deserialize(stored));
     } catch {
-      return initialValue;
+      // Storage unavailable — keep initialValue
     }
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
 
+  // Persist on change. Skip the very first run so the initialValue from the
+  // pre-load render does not overwrite the stored value.
   useEffect(() => {
+    if (skipNextWrite.current) {
+      skipNextWrite.current = false;
+      return;
+    }
     try {
       sessionStorage.setItem(key, serialize(value));
     } catch {
