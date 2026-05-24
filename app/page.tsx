@@ -24,7 +24,7 @@ const toolDescriptions: Record<string, string> = {
   "/tools/bracket-generator":
     "Automatically calculate bracketed offer ranges.",
   "/tools/convergence-calculator":
-    "Enter two offers from each party to project where their trends would intersect.",
+    "Enter two offers from each party. The tool shows where the lines would intersect if the pattern continued.",
 
   // Calculators
   "/tools/employment-damages-estimator":
