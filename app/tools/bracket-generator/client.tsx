@@ -103,7 +103,8 @@ export default function BracketGeneratorClient() {
   const mid = parseNumOrNull(midStr);
   const allFilled = upper !== null && lower !== null && mid !== null;
   const hasAny = upperStr !== "" || lowerStr !== "" || midStr !== "";
-  const invalidRange = upper !== null && lower !== null && lower > upper;
+  const bracketLow = upper !== null && lower !== null ? Math.min(upper, lower) : null;
+  const bracketHigh = upper !== null && lower !== null ? Math.max(upper, lower) : null;
 
   function clearAll() {
     setUpperStr("");
@@ -116,10 +117,10 @@ export default function BracketGeneratorClient() {
   return (
     <Card className="bg-white border-brand-border max-w-md">
       <CardContent className="pt-6 space-y-5">
-        {/* Upper */}
+        {/* Our number */}
         <div>
           <label className="block text-sm font-medium text-brand-primary mb-1.5">
-            Upper
+            Our number
           </label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
@@ -162,10 +163,10 @@ export default function BracketGeneratorClient() {
           </div>
         </div>
 
-        {/* Lower */}
+        {/* Their number */}
         <div>
           <label className="block text-sm font-medium text-brand-primary mb-1.5">
-            Lower
+            Their number
           </label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
@@ -186,15 +187,10 @@ export default function BracketGeneratorClient() {
         </div>
 
         {/* Summary */}
-        {invalidRange && (
-          <div className="pt-2 border-t border-brand-border text-sm text-brand-caution">
-            <p>Lower value should be less than upper value</p>
-          </div>
-        )}
-        {allFilled && !invalidRange && (
+        {allFilled && bracketLow !== null && bracketHigh !== null && (
           <div className="pt-2 border-t border-brand-border text-sm text-brand-muted space-y-1">
             <p>
-              Bracket: <span className="font-medium text-brand-primary">{fmt(lower)}</span> &ndash; <span className="font-medium text-brand-primary">{fmt(upper)}</span>
+              Bracket: <span className="font-medium text-brand-primary">{fmt(bracketLow)}</span> &ndash; <span className="font-medium text-brand-primary">{fmt(bracketHigh)}</span>
             </p>
             <p>
               Midpoint: <span className="font-medium text-brand-primary">{fmt(mid)}</span>

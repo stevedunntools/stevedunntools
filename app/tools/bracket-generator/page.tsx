@@ -5,7 +5,7 @@ import SteveNote from "@/components/steve-note";
 export const metadata: Metadata = {
   title: "Bracket Generator",
   description:
-    "Generate a bracketed offer range by entering any two of upper, lower, and midpoint.",
+    "Generate a bracketed offer range by entering any two of our number, their number, and midpoint.",
   alternates: { canonical: "/tools/bracket-generator" },
 };
 
@@ -22,12 +22,12 @@ export default function BracketGeneratorPage() {
           </h1>
           <p className="mt-2 text-brand-muted max-w-2xl">
             Enter any two of the three values and the third will calculate
-            automatically. Changing the upper or lower value recalculates the
-            midpoint. Changing the midpoint shifts the upper and lower values
-            by equal amounts, keeping the spread the same.
+            automatically. Changing an endpoint recalculates the midpoint.
+            Changing the midpoint shifts both endpoints by equal amounts,
+            keeping the spread the same.
           </p>
         </div>
-        <SteveNote note="How many lawyers does it take to do simple arithmetic? Brackets are tricky enough as it is – this tool takes the guesswork out of the math. Enter any two of three values — upper, lower, or midpoint — and this fills in the third. Use this to quickly test different bracket positions and see how the midpoint shifts." />
+        <SteveNote note="How many lawyers does it take to do simple arithmetic? Brackets are tricky enough as it is – this tool takes the guesswork out of the math. Enter any two of three values — our number, their number, or midpoint — and this fills in the third. Use this to quickly test different bracket positions and see how the midpoint shifts." />
       </div>
       <BracketGeneratorClient />
     </>
