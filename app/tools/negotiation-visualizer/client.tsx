@@ -31,6 +31,28 @@ interface Offer {
   high: number;
 }
 
+interface Convergence {
+  round: number;
+  value: number;
+  pStart: { round: number; value: number };
+  dStart: { round: number; value: number };
+}
+
+type HoverInfo =
+  | {
+      kind: "offer";
+      party: Party;
+      round: number;
+      type: OfferType;
+      value: number;
+      low: number;
+      high: number;
+      x: number;
+      y: number;
+    }
+  | { kind: "midpoint"; round: number; value: number; x: number; y: number }
+  | { kind: "convergence"; round: number; value: number; x: number; y: number };
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -71,6 +93,54 @@ function parseInput(raw: string): { type: OfferType; value: number; low: number;
   return { type: "number", value: num, low: 0, high: 0 };
 }
 
+// Linear projection through the last two offers of each party.
+// Returns null if there are fewer than two offers per party, the lines are
+// parallel, or the intersection is not in the future / has a negative value.
+function computeConvergence(offers: Offer[]): Convergence | null {
+  const pOffers = offers
+    .filter((m) => m.party === "plaintiff")
+    .sort((a, b) => a.round - b.round);
+  const dOffers = offers
+    .filter((m) => m.party === "defendant")
+    .sort((a, b) => a.round - b.round);
+  if (pOffers.length < 2 || dOffers.length < 2) return null;
+
+  const p1 = pOffers[pOffers.length - 2];
+  const p2 = pOffers[pOffers.length - 1];
+  const d1 = dOffers[dOffers.length - 2];
+  const d2 = dOffers[dOffers.length - 1];
+
+  if (p1.round === p2.round || d1.round === d2.round) return null;
+
+  const pV1 = offerValues(p1).mid;
+  const pV2 = offerValues(p2).mid;
+  const dV1 = offerValues(d1).mid;
+  const dV2 = offerValues(d2).mid;
+
+  const pSlope = (pV2 - pV1) / (p2.round - p1.round);
+  const dSlope = (dV2 - dV1) / (d2.round - d1.round);
+
+  const slopeDiff = pSlope - dSlope;
+  if (Math.abs(slopeDiff) < 1e-9) return null;
+
+  const pIntercept = pV2 - pSlope * p2.round;
+  const dIntercept = dV2 - dSlope * d2.round;
+
+  const x = (dIntercept - pIntercept) / slopeDiff;
+  const lastRound = Math.max(p2.round, d2.round);
+  if (x <= lastRound) return null;
+
+  const y = pSlope * x + pIntercept;
+  if (y < 0) return null;
+
+  return {
+    round: x,
+    value: y,
+    pStart: { round: p2.round, value: pV2 },
+    dStart: { round: d2.round, value: dV2 },
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Chart constants
 // ---------------------------------------------------------------------------
@@ -87,13 +157,53 @@ const BLUE_STROKE = "rgba(74,144,217,0.4)";
 const RED = "#DC2626";
 const RED_FILL = "rgba(220,38,38,0.15)";
 const RED_STROKE = "rgba(220,38,38,0.4)";
+const GREEN = "#16A34A";
 const GREEN_FILL = "rgba(22,163,74,0.30)";
 
 // ---------------------------------------------------------------------------
 // Chart component
 // ---------------------------------------------------------------------------
 
-function NegotiationChart({ offers }: { offers: Offer[] }) {
+interface NegotiationChartProps {
+  offers: Offer[];
+  showMidpoint: boolean;
+  showConvergence: boolean;
+  convergence: Convergence | null;
+}
+
+function NegotiationChart({
+  offers,
+  showMidpoint,
+  showConvergence,
+  convergence,
+}: NegotiationChartProps) {
+  const [hover, setHover] = useState<HoverInfo | null>(null);
+
+  const pOffers = useMemo(
+    () => offers.filter((m) => m.party === "plaintiff").sort((a, b) => a.round - b.round),
+    [offers]
+  );
+  const dOffers = useMemo(
+    () => offers.filter((m) => m.party === "defendant").sort((a, b) => a.round - b.round),
+    [offers]
+  );
+
+  // Per-round midpoints between the two parties (only rounds where both have offered)
+  const roundMidpoints = useMemo(() => {
+    const list: { round: number; value: number }[] = [];
+    if (offers.length === 0) return list;
+    const lastRound = Math.max(...offers.map((m) => m.round));
+    for (let r = 1; r <= lastRound; r++) {
+      const p = pOffers.find((m) => m.round === r);
+      const d = dOffers.find((m) => m.round === r);
+      if (p && d) {
+        const v = (offerValues(p).mid + offerValues(d).mid) / 2;
+        list.push({ round: r, value: v });
+      }
+    }
+    return list;
+  }, [offers, pOffers, dOffers]);
+
   const { rounds, yMin, yMax, xScale, yScale } = useMemo(() => {
     if (offers.length === 0) {
       const mn = 0;
@@ -107,12 +217,23 @@ function NegotiationChart({ offers }: { offers: Offer[] }) {
       };
     }
 
-    const rs = Math.max(...offers.map((m) => m.round));
+    const actualRounds = Math.max(...offers.map((m) => m.round));
     const allVals: number[] = [];
     for (const m of offers) {
       const e = offerValues(m);
       allVals.push(e.low, e.high);
     }
+
+    // Extend axis bounds when convergence/midpoint visuals are shown
+    let projRounds = actualRounds;
+    if (showConvergence && convergence) {
+      projRounds = Math.max(actualRounds, Math.ceil(convergence.round));
+      allVals.push(convergence.value);
+    }
+    if (showMidpoint) {
+      for (const m of roundMidpoints) allVals.push(m.value);
+    }
+
     const rawMin = Math.min(...allVals);
     const rawMax = Math.max(...allVals);
     const padding = Math.max((rawMax - rawMin) * 0.15, rawMax * 0.1, 1);
@@ -120,19 +241,16 @@ function NegotiationChart({ offers }: { offers: Offer[] }) {
     const mx = rawMax + padding;
 
     return {
-      rounds: rs,
+      rounds: projRounds,
       yMin: mn,
       yMax: mx,
       xScale: (r: number) => {
-        if (rs <= 1) return PAD.left + INNER_W / 2;
-        return PAD.left + ((r - 1) / (rs - 1)) * INNER_W;
+        if (projRounds <= 1) return PAD.left + INNER_W / 2;
+        return PAD.left + ((r - 1) / (projRounds - 1)) * INNER_W;
       },
       yScale: (v: number) => PAD.top + INNER_H - ((v - mn) / (mx - mn)) * INNER_H,
     };
-  }, [offers]);
-
-  const pOffers = offers.filter((m) => m.party === "plaintiff").sort((a, b) => a.round - b.round);
-  const dOffers = offers.filter((m) => m.party === "defendant").sort((a, b) => a.round - b.round);
+  }, [offers, showConvergence, convergence, showMidpoint, roundMidpoints]);
 
   function buildBand(partyOffers: Offer[]): { polygon: Pt[]; upperEdge: Pt[]; lowerEdge: Pt[] } {
     if (partyOffers.length === 0) return { polygon: [], upperEdge: [], lowerEdge: [] };
@@ -151,7 +269,6 @@ function NegotiationChart({ offers }: { offers: Offer[] }) {
     return { polygon, upperEdge, lowerEdge };
   }
 
-  // Build line segments: solid between consecutive numbers, dotted when a bracket is involved
   function buildLineSegments(partyOffers: Offer[]): { solid: Pt[][]; dotted: Pt[][] } {
     const solid: Pt[][] = [];
     const dotted: Pt[][] = [];
@@ -172,21 +289,19 @@ function NegotiationChart({ offers }: { offers: Offer[] }) {
     return { solid, dotted };
   }
 
-  // Build dot positions at midpoints
-  function buildMidpoints(partyOffers: Offer[]): Pt[] {
+  function buildOfferMidpoints(partyOffers: Offer[]): Pt[] {
     return partyOffers.map((m) => {
       const v = offerValues(m);
       return { x: xScale(m.round), y: yScale(v.mid) };
     });
   }
 
-  const pBand = useMemo(() => buildBand(pOffers), [offers]);
-  const dBand = useMemo(() => buildBand(dOffers), [offers]);
-  const pLines = useMemo(() => buildLineSegments(pOffers), [offers]);
-  const dLines = useMemo(() => buildLineSegments(dOffers), [offers]);
+  const pBand = useMemo(() => buildBand(pOffers), [pOffers, xScale, yScale]);
+  const dBand = useMemo(() => buildBand(dOffers), [dOffers, xScale, yScale]);
+  const pLines = useMemo(() => buildLineSegments(pOffers), [pOffers, xScale, yScale]);
+  const dLines = useMemo(() => buildLineSegments(dOffers), [dOffers, xScale, yScale]);
 
-  // Compute green overlap: the geometric intersection of the two band polygons.
-  // Dense sampling across the x-range to catch all overlapping areas.
+  // Geometric intersection of the two band polygons
   const overlapPolygon = useMemo(() => {
     if (pBand.upperEdge.length < 2 || dBand.upperEdge.length < 2) return [];
 
@@ -211,7 +326,6 @@ function NegotiationChart({ offers }: { offers: Offer[] }) {
       return edge[edge.length - 1].y;
     }
 
-    // Sample densely across the range (every 2 pixels)
     const STEP = 2;
     const samples: { x: number; topY: number; botY: number; has: boolean }[] = [];
 
@@ -227,7 +341,6 @@ function NegotiationChart({ offers }: { offers: Offer[] }) {
       samples.push({ x, topY, botY, has: topY < botY - 0.5 });
     }
 
-    // Ensure we include the exact end point
     if (samples.length > 0 && samples[samples.length - 1].x < rangeMaxX) {
       const x = rangeMaxX;
       const pTopY = interpEdge(pBand.upperEdge, x);
@@ -239,7 +352,6 @@ function NegotiationChart({ offers }: { offers: Offer[] }) {
       samples.push({ x, topY, botY, has: topY < botY - 0.5 });
     }
 
-    // Build polygon segments from consecutive overlapping samples
     const polygons: Pt[][] = [];
     let currentUpper: Pt[] = [];
     let currentLower: Pt[] = [];
@@ -263,10 +375,41 @@ function NegotiationChart({ offers }: { offers: Offer[] }) {
     return polygons;
   }, [pBand, dBand]);
 
-  const pMidpoints = useMemo(() => buildMidpoints(pOffers), [offers]);
-  const dMidpoints = useMemo(() => buildMidpoints(dOffers), [offers]);
+  const pMidpoints = useMemo(() => buildOfferMidpoints(pOffers), [pOffers, xScale, yScale]);
+  const dMidpoints = useMemo(() => buildOfferMidpoints(dOffers), [dOffers, xScale, yScale]);
+
+  const midpointPts = useMemo(
+    () =>
+      roundMidpoints.map((m) => ({
+        x: xScale(m.round),
+        y: yScale(m.value),
+        round: m.round,
+        value: m.value,
+      })),
+    [roundMidpoints, xScale, yScale]
+  );
 
   const yTicks = useMemo(() => generateYTicks(yMin, yMax), [yMin, yMax]);
+
+  const xTicks = useMemo(() => {
+    if (rounds === 0) return [];
+    const maxTicks = 12;
+    const stride = Math.max(1, Math.ceil(rounds / maxTicks));
+    const ticks: number[] = [];
+    for (let r = 1; r <= rounds; r += stride) ticks.push(r);
+    if (ticks[ticks.length - 1] !== rounds) ticks.push(rounds);
+    return ticks;
+  }, [rounds]);
+
+  const TOOLTIP_W = 200;
+  const TOOLTIP_H = 76;
+  function tooltipPos(x: number, y: number): { tx: number; ty: number } {
+    let tx = x + 12;
+    let ty = y - TOOLTIP_H - 8;
+    if (tx + TOOLTIP_W > CHART_W) tx = x - TOOLTIP_W - 12;
+    if (ty < 0) ty = y + 12;
+    return { tx, ty };
+  }
 
   return (
     <svg
@@ -300,7 +443,7 @@ function NegotiationChart({ offers }: { offers: Offer[] }) {
       ))}
 
       {/* X-axis labels */}
-      {Array.from({ length: rounds }, (_, i) => i + 1).map((r) => (
+      {xTicks.map((r) => (
         <text
           key={`xtick-${r}`}
           x={xScale(r)}
@@ -349,14 +492,16 @@ function NegotiationChart({ offers }: { offers: Offer[] }) {
         <defs>
           <clipPath id="clip-no-overlap">
             <path
-              d={`M0,0 H${CHART_W} V${CHART_H} H0 Z ${overlapPolygon.map((poly) => pointsToPath(poly, true)).join(" ")}`}
+              d={`M0,0 H${CHART_W} V${CHART_H} H0 Z ${overlapPolygon
+                .map((poly) => pointsToPath(poly, true))
+                .join(" ")}`}
               clipRule="evenodd"
             />
           </clipPath>
         </defs>
       )}
 
-      {/* Plaintiff band (clipped to exclude overlap) */}
+      {/* Plaintiff band */}
       {pBand.polygon.length >= 3 && (
         <path
           d={pointsToPath(pBand.polygon, true)}
@@ -372,7 +517,7 @@ function NegotiationChart({ offers }: { offers: Offer[] }) {
         <path d={pointsToPath(pBand.lowerEdge)} fill="none" stroke={BLUE_STROKE} strokeWidth="1" />
       )}
 
-      {/* Defendant band (clipped to exclude overlap) */}
+      {/* Defendant band */}
       {dBand.polygon.length >= 3 && (
         <path
           d={pointsToPath(dBand.polygon, true)}
@@ -388,52 +533,208 @@ function NegotiationChart({ offers }: { offers: Offer[] }) {
         <path d={pointsToPath(dBand.lowerEdge)} fill="none" stroke={RED_STROKE} strokeWidth="1" />
       )}
 
-      {/* Green overlap zones (clean, no red/blue underneath) */}
+      {/* Green overlap zones */}
       {overlapPolygon.map((poly, i) => (
-        <path key={`overlap-${i}`} d={pointsToPath(poly, true)} fill="#16A34A" fillOpacity="0.2" stroke="none" />
+        <path
+          key={`overlap-${i}`}
+          d={pointsToPath(poly, true)}
+          fill="#16A34A"
+          fillOpacity="0.2"
+          stroke="none"
+        />
       ))}
 
-      {/* Plaintiff lines: solid between numbers, dotted when brackets involved */}
+      {/* Plaintiff lines */}
       {pLines.solid.map((seg, i) => (
         <path key={`p-solid-${i}`} d={pointsToPath(seg)} fill="none" stroke={BLUE} strokeWidth="1.5" />
       ))}
       {pLines.dotted.map((seg, i) => (
-        <path key={`p-dot-${i}`} d={pointsToPath(seg)} fill="none" stroke={BLUE} strokeWidth="1.5" strokeDasharray="5 3" />
+        <path
+          key={`p-dot-${i}`}
+          d={pointsToPath(seg)}
+          fill="none"
+          stroke={BLUE}
+          strokeWidth="1.5"
+          strokeDasharray="5 3"
+        />
       ))}
 
-      {/* Defendant lines: solid between numbers, dotted when brackets involved */}
+      {/* Defendant lines */}
       {dLines.solid.map((seg, i) => (
         <path key={`d-solid-${i}`} d={pointsToPath(seg)} fill="none" stroke={RED} strokeWidth="1.5" />
       ))}
       {dLines.dotted.map((seg, i) => (
-        <path key={`d-dot-${i}`} d={pointsToPath(seg)} fill="none" stroke={RED} strokeWidth="1.5" strokeDasharray="5 3" />
-      ))}
-
-      {/* Plaintiff dots at midpoints */}
-      {pMidpoints.map((p, i) => (
-        <circle
-          key={`p-circ-${i}`}
-          cx={p.x}
-          cy={p.y}
-          r="4.5"
-          fill={BLUE}
-          stroke="white"
+        <path
+          key={`d-dot-${i}`}
+          d={pointsToPath(seg)}
+          fill="none"
+          stroke={RED}
           strokeWidth="1.5"
+          strokeDasharray="5 3"
         />
       ))}
 
-      {/* Defendant dots at midpoints */}
-      {dMidpoints.map((p, i) => (
+      {/* Per-round midpoint between the parties */}
+      {showMidpoint && midpointPts.length > 0 && (
+        <>
+          {midpointPts.length > 1 && (
+            <path
+              d={pointsToPath(midpointPts.map((p) => ({ x: p.x, y: p.y })))}
+              fill="none"
+              stroke={GREEN}
+              strokeWidth="1.5"
+              strokeDasharray="4 3"
+            />
+          )}
+          {midpointPts.map((p, i) => (
+            <circle
+              key={`mid-${i}`}
+              cx={p.x}
+              cy={p.y}
+              r="4"
+              fill={GREEN}
+              stroke="white"
+              strokeWidth="1.5"
+            />
+          ))}
+        </>
+      )}
+
+      {/* Projected convergence */}
+      {showConvergence && convergence && (
+        <>
+          <line
+            x1={xScale(convergence.pStart.round)}
+            y1={yScale(convergence.pStart.value)}
+            x2={xScale(convergence.round)}
+            y2={yScale(convergence.value)}
+            stroke={BLUE}
+            strokeWidth="1.5"
+            strokeDasharray="3 4"
+            opacity="0.7"
+          />
+          <line
+            x1={xScale(convergence.dStart.round)}
+            y1={yScale(convergence.dStart.value)}
+            x2={xScale(convergence.round)}
+            y2={yScale(convergence.value)}
+            stroke={RED}
+            strokeWidth="1.5"
+            strokeDasharray="3 4"
+            opacity="0.7"
+          />
+          <circle
+            cx={xScale(convergence.round)}
+            cy={yScale(convergence.value)}
+            r="5.5"
+            fill="white"
+            stroke={GREEN}
+            strokeWidth="2"
+          />
+        </>
+      )}
+
+      {/* Plaintiff dots + hit areas */}
+      {pOffers.map((m, i) => {
+        const v = offerValues(m);
+        const pt = pMidpoints[i];
+        return (
+          <g key={`p-circ-${m.id}`}>
+            <circle cx={pt.x} cy={pt.y} r="4.5" fill={BLUE} stroke="white" strokeWidth="1.5" />
+            <circle
+              cx={pt.x}
+              cy={pt.y}
+              r="12"
+              fill="transparent"
+              style={{ cursor: "pointer" }}
+              onMouseEnter={() =>
+                setHover({
+                  kind: "offer",
+                  party: "plaintiff",
+                  round: m.round,
+                  type: m.type,
+                  value: v.mid,
+                  low: v.low,
+                  high: v.high,
+                  x: pt.x,
+                  y: pt.y,
+                })
+              }
+              onMouseLeave={() => setHover(null)}
+            />
+          </g>
+        );
+      })}
+
+      {/* Defendant dots + hit areas */}
+      {dOffers.map((m, i) => {
+        const v = offerValues(m);
+        const pt = dMidpoints[i];
+        return (
+          <g key={`d-circ-${m.id}`}>
+            <circle cx={pt.x} cy={pt.y} r="4.5" fill={RED} stroke="white" strokeWidth="1.5" />
+            <circle
+              cx={pt.x}
+              cy={pt.y}
+              r="12"
+              fill="transparent"
+              style={{ cursor: "pointer" }}
+              onMouseEnter={() =>
+                setHover({
+                  kind: "offer",
+                  party: "defendant",
+                  round: m.round,
+                  type: m.type,
+                  value: v.mid,
+                  low: v.low,
+                  high: v.high,
+                  x: pt.x,
+                  y: pt.y,
+                })
+              }
+              onMouseLeave={() => setHover(null)}
+            />
+          </g>
+        );
+      })}
+
+      {/* Midpoint dot hit areas */}
+      {showMidpoint &&
+        midpointPts.map((p, i) => (
+          <circle
+            key={`mid-hit-${i}`}
+            cx={p.x}
+            cy={p.y}
+            r="12"
+            fill="transparent"
+            style={{ cursor: "pointer" }}
+            onMouseEnter={() =>
+              setHover({ kind: "midpoint", round: p.round, value: p.value, x: p.x, y: p.y })
+            }
+            onMouseLeave={() => setHover(null)}
+          />
+        ))}
+
+      {/* Convergence point hit area */}
+      {showConvergence && convergence && (
         <circle
-          key={`d-circ-${i}`}
-          cx={p.x}
-          cy={p.y}
-          r="4.5"
-          fill={RED}
-          stroke="white"
-          strokeWidth="1.5"
+          cx={xScale(convergence.round)}
+          cy={yScale(convergence.value)}
+          r="12"
+          fill="transparent"
+          style={{ cursor: "pointer" }}
+          onMouseEnter={() =>
+            setHover({
+              kind: "convergence",
+              round: convergence.round,
+              value: convergence.value,
+              x: xScale(convergence.round),
+              y: yScale(convergence.value),
+            })
+          }
+          onMouseLeave={() => setHover(null)}
         />
-      ))}
+      )}
 
       {/* Empty state */}
       {offers.length === 0 && (
@@ -447,6 +748,75 @@ function NegotiationChart({ offers }: { offers: Offer[] }) {
           Add offers below to see the chart
         </text>
       )}
+
+      {/* Tooltip */}
+      {hover &&
+        (() => {
+          const { tx, ty } = tooltipPos(hover.x, hover.y);
+          return (
+            <foreignObject
+              x={tx}
+              y={ty}
+              width={TOOLTIP_W}
+              height={TOOLTIP_H}
+              style={{ pointerEvents: "none" }}
+            >
+              <div
+                style={{
+                  background: "white",
+                  border: "1px solid #E5E7EB",
+                  borderRadius: 6,
+                  padding: "6px 10px",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                  fontSize: 12,
+                  lineHeight: 1.35,
+                  color: "#111827",
+                  fontFamily:
+                    "ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif",
+                }}
+              >
+                {hover.kind === "offer" && (
+                  <>
+                    <div
+                      style={{
+                        fontWeight: 600,
+                        color: hover.party === "plaintiff" ? BLUE : RED,
+                      }}
+                    >
+                      {hover.party === "plaintiff" ? "Plaintiff" : "Defendant"} · Round{" "}
+                      {hover.round}
+                    </div>
+                    {hover.type === "number" ? (
+                      <div>{fmt(hover.value)}</div>
+                    ) : (
+                      <>
+                        <div>Midpoint: {fmt(hover.value)}</div>
+                        <div style={{ color: "#6B7280" }}>
+                          Range: {fmt(hover.low)} – {fmt(hover.high)}
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
+                {hover.kind === "midpoint" && (
+                  <>
+                    <div style={{ fontWeight: 600, color: GREEN }}>
+                      Midpoint · Round {hover.round}
+                    </div>
+                    <div>{fmt(hover.value)}</div>
+                  </>
+                )}
+                {hover.kind === "convergence" && (
+                  <>
+                    <div style={{ fontWeight: 600, color: GREEN }}>Projected convergence</div>
+                    <div>Round {hover.round.toFixed(1)}</div>
+                    <div>{fmt(hover.value)}</div>
+                  </>
+                )}
+              </div>
+            </foreignObject>
+          );
+        })()}
     </svg>
   );
 }
@@ -459,6 +829,15 @@ export default function NegotiationVisualizerClient() {
   const [offers, setOffers] = useSessionState<Offer[]>("tool:neg-viz:offers", []);
 
   const [party, setParty] = useSessionState<Party>("tool:neg-viz:party", "plaintiff");
+  const [showMidpoint, setShowMidpoint] = useSessionState<boolean>(
+    "tool:neg-viz:showMidpoint",
+    false
+  );
+  const [showConvergence, setShowConvergence] = useSessionState<boolean>(
+    "tool:neg-viz:showConvergence",
+    false
+  );
+
   const [input, setInput] = useState("");
   const addButtonRef = useRef<HTMLButtonElement>(null);
   const offerInputRef = useRef<HTMLInputElement>(null);
@@ -475,17 +854,20 @@ export default function NegotiationVisualizerClient() {
     const raw = e.target.value;
     const cursor = e.target.selectionStart ?? 0;
 
-    // Format each side of a range dash independently
     const parts = raw.split("-");
-    const formatted = parts.map((p) => commaFmt(p.trim()) || p.trim()).join(parts.length > 1 ? "-" : "");
+    const formatted = parts
+      .map((p) => commaFmt(p.trim()) || p.trim())
+      .join(parts.length > 1 ? "-" : "");
 
-    // Track cursor using digits and dashes (both are significant characters)
     const significantBefore = raw.slice(0, cursor).replace(/[^0-9\-]/g, "").length;
     let newCursor = 0;
     let significant = 0;
     for (let i = 0; i < formatted.length; i++) {
       if (/[0-9\-]/.test(formatted[i])) significant++;
-      if (significant === significantBefore) { newCursor = i + 1; break; }
+      if (significant === significantBefore) {
+        newCursor = i + 1;
+        break;
+      }
     }
     if (significantBefore === 0) newCursor = 0;
 
@@ -507,7 +889,6 @@ export default function NegotiationVisualizerClient() {
     const parsed = parseInput(input);
     if (!parsed) return;
 
-    // Don't allow same party twice in same round
     const roundOffers = offers.filter((m) => m.round === nextRound);
     if (roundOffers.some((m) => m.party === party)) return;
 
@@ -534,7 +915,6 @@ export default function NegotiationVisualizerClient() {
     clearSessionKeys("tool:neg-viz:");
   }
 
-  // Overlap info for the text callout
   const overlapInfo = useMemo(() => {
     const pBrackets = offers
       .filter((m) => m.party === "plaintiff" && m.type === "bracket")
@@ -552,6 +932,9 @@ export default function NegotiationVisualizerClient() {
     if (overlapLow >= overlapHigh) return null;
     return { low: overlapLow, high: overlapHigh };
   }, [offers]);
+
+  const convergence = useMemo(() => computeConvergence(offers), [offers]);
+  const convergenceAvailable = convergence !== null;
 
   return (
     <div className="space-y-6">
@@ -620,7 +1003,14 @@ export default function NegotiationVisualizerClient() {
             <div className="text-xs text-brand-muted">
               Round {nextRound}
               {offers.filter((m) => m.round === nextRound).length > 0 && (
-                <> &mdash; {offers.find((m) => m.round === nextRound)?.party === "plaintiff" ? "defendant" : "plaintiff"}&apos;s turn</>
+                <>
+                  {" "}
+                  &mdash;{" "}
+                  {offers.find((m) => m.round === nextRound)?.party === "plaintiff"
+                    ? "defendant"
+                    : "plaintiff"}
+                  &apos;s turn
+                </>
               )}
             </div>
 
@@ -697,16 +1087,61 @@ export default function NegotiationVisualizerClient() {
       {/* Chart */}
       <Card className="bg-white border-brand-border">
         <CardContent className="pt-6">
-          <NegotiationChart offers={offers} />
+          {/* Display options */}
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-4 text-sm print:hidden">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={showMidpoint}
+                onChange={(e) => setShowMidpoint(e.target.checked)}
+                className="h-4 w-4 rounded border-brand-border text-brand-accent focus:ring-brand-accent"
+              />
+              <span className="text-brand-primary">Show midpoint between offers</span>
+            </label>
+            <label
+              className={`flex items-center gap-2 select-none ${
+                convergenceAvailable
+                  ? "cursor-pointer"
+                  : "cursor-not-allowed opacity-50"
+              }`}
+              title={
+                convergenceAvailable
+                  ? undefined
+                  : "Needs at least two offers from each party with a projected intersection"
+              }
+            >
+              <input
+                type="checkbox"
+                checked={showConvergence && convergenceAvailable}
+                disabled={!convergenceAvailable}
+                onChange={(e) => setShowConvergence(e.target.checked)}
+                className="h-4 w-4 rounded border-brand-border text-brand-accent focus:ring-brand-accent disabled:cursor-not-allowed"
+              />
+              <span className="text-brand-primary">Show projected convergence</span>
+            </label>
+          </div>
+
+          <NegotiationChart
+            offers={offers}
+            showMidpoint={showMidpoint}
+            showConvergence={showConvergence && convergenceAvailable}
+            convergence={convergence}
+          />
 
           {/* Legend */}
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-4 text-sm text-brand-muted">
             <span className="flex items-center gap-2">
-              <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: BLUE }} />
+              <span
+                className="inline-block w-3 h-3 rounded-full"
+                style={{ backgroundColor: BLUE }}
+              />
               Plaintiff
             </span>
             <span className="flex items-center gap-2">
-              <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: RED }} />
+              <span
+                className="inline-block w-3 h-3 rounded-full"
+                style={{ backgroundColor: RED }}
+              />
               Defendant
             </span>
             <span className="flex items-center gap-2">
@@ -720,6 +1155,24 @@ export default function NegotiationVisualizerClient() {
               <span className="inline-block w-4 border-t-2 border-dashed border-brand-muted" />
               Bracket midpoint
             </span>
+            {showMidpoint && (
+              <span className="flex items-center gap-2">
+                <span
+                  className="inline-block w-3 h-3 rounded-full"
+                  style={{ backgroundColor: GREEN }}
+                />
+                Midpoint between offers
+              </span>
+            )}
+            {showConvergence && convergenceAvailable && (
+              <span className="flex items-center gap-2">
+                <span
+                  className="inline-block w-3 h-3 rounded-full"
+                  style={{ background: "white", border: `2px solid ${GREEN}` }}
+                />
+                Projected convergence
+              </span>
+            )}
           </div>
 
           {overlapInfo && (
