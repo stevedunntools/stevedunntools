@@ -291,7 +291,7 @@ export default function TakeHomeAfterTaxesClient() {
                 decisions you make in reliance on the output.
               </p>
               <p>
-                The calculator does <strong>not</strong> account for: local (city or
+                The calculator does <strong>not</strong>{" "}account for: local (city or
                 county) income taxes; pre-tax deductions like 401(k), HSA, or health
                 premiums; itemized deductions; tax credits (child tax credit, EITC,
                 etc.); the Net Investment Income Tax; capital gains; the alternative
