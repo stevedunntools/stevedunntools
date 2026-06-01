@@ -68,19 +68,19 @@ function offerValues(m: Offer): { low: number; high: number; mid: number } {
 
 /**
  * Parse user input into an offer. Supports:
- *   "500000" or "500,000" → number offer
- *   "200000-400000" or "200,000 - 400,000" → bracket
+ *   "500000", "500,000", "-100,000", "0" → number offer
+ *   "200000-400000", "-100,000-50,000" → bracket
  */
 function parseInput(raw: string): { type: OfferType; value: number; low: number; high: number } | null {
   const trimmed = raw.trim();
   if (!trimmed) return null;
 
-  // Check for bracket (contains a dash separator between two numbers)
-  const bracketMatch = trimmed.match(/^[\s$]*([\d,]+)\s*[-–—]\s*[\s$]*([\d,]+)\s*$/);
+  // Bracket: two numbers (each optionally negative) separated by a dash / en-dash / em-dash
+  const bracketMatch = trimmed.match(/^[\s$]*(-?[\d,]+)\s*[-–—]\s*[\s$]*(-?[\d,]+)\s*$/);
   if (bracketMatch) {
     const a = parseFloat(bracketMatch[1].replace(/,/g, ""));
     const b = parseFloat(bracketMatch[2].replace(/,/g, ""));
-    if (isNaN(a) || isNaN(b) || a <= 0 || b <= 0) return null;
+    if (isNaN(a) || isNaN(b)) return null;
     const low = Math.min(a, b);
     const high = Math.max(a, b);
     if (low === high) return null;
@@ -89,13 +89,13 @@ function parseInput(raw: string): { type: OfferType; value: number; low: number;
 
   // Otherwise treat as a single number
   const num = parseFloat(trimmed.replace(/[$,]/g, ""));
-  if (isNaN(num) || num <= 0) return null;
+  if (isNaN(num)) return null;
   return { type: "number", value: num, low: 0, high: 0 };
 }
 
 // Linear projection through the last two offers of each party.
 // Returns null if there are fewer than two offers per party, the lines are
-// parallel, or the intersection is not in the future / has a negative value.
+// parallel, or the intersection is not in the future.
 function computeConvergence(offers: Offer[]): Convergence | null {
   const pOffers = offers
     .filter((m) => m.party === "plaintiff")
@@ -131,7 +131,6 @@ function computeConvergence(offers: Offer[]): Convergence | null {
   if (x <= lastRound) return null;
 
   const y = pSlope * x + pIntercept;
-  if (y < 0) return null;
 
   return {
     round: x,
@@ -236,8 +235,11 @@ function NegotiationChart({
 
     const rawMin = Math.min(...allVals);
     const rawMax = Math.max(...allVals);
-    const padding = Math.max((rawMax - rawMin) * 0.15, rawMax * 0.1, 1);
-    const mn = Math.max(0, rawMin - padding);
+    const padding = Math.max((rawMax - rawMin) * 0.15, Math.abs(rawMax) * 0.1, 1);
+    // Anchor the y-axis at zero only when all values are non-negative; otherwise
+    // let the axis extend below zero so negative offers render correctly.
+    const candidateMin = rawMin - padding;
+    const mn = rawMin >= 0 ? Math.max(0, candidateMin) : candidateMin;
     const mx = rawMax + padding;
 
     return {

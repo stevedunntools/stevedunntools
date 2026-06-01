@@ -34,13 +34,15 @@ export function generateYTicks(yMin: number, yMax: number, targetCount: number =
   return ticks.length > 0 ? ticks : [yMin];
 }
 
-/** Format a dollar value for Y-axis labels (e.g. "$500k", "$1.5M") */
+/** Format a dollar value for Y-axis labels (e.g. "$500k", "$1.5M", "-$500k") */
 export function formatTickLabel(v: number): string {
-  if (v >= 1000000) {
-    return `$${(v / 1000000).toFixed(v % 1000000 === 0 ? 0 : 1)}M`;
+  const sign = v < 0 ? "-" : "";
+  const abs = Math.abs(v);
+  if (abs >= 1000000) {
+    return `${sign}$${(abs / 1000000).toFixed(abs % 1000000 === 0 ? 0 : 1)}M`;
   }
-  if (v >= 1000) {
-    return `$${(v / 1000).toFixed(0)}k`;
+  if (abs >= 1000) {
+    return `${sign}$${(abs / 1000).toFixed(0)}k`;
   }
-  return `$${v}`;
+  return `${sign}$${abs}`;
 }
