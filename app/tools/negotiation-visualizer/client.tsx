@@ -628,10 +628,10 @@ function NegotiationChart({
           <circle
             cx={xScale(convergence.round)}
             cy={yScale(convergence.value)}
-            r="5.5"
-            fill="white"
-            stroke={GREEN}
-            strokeWidth="2"
+            r="4"
+            fill={GREEN}
+            stroke="white"
+            strokeWidth="1.5"
           />
         </>
       )}
@@ -1170,7 +1170,7 @@ export default function NegotiationVisualizerClient() {
               <span className="flex items-center gap-2">
                 <span
                   className="inline-block w-3 h-3 rounded-full"
-                  style={{ background: "white", border: `2px solid ${GREEN}` }}
+                  style={{ backgroundColor: GREEN }}
                 />
                 Projected convergence
               </span>
