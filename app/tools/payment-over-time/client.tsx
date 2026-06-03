@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +10,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Trash2 } from "lucide-react";
-import { fmt, parseNum } from "@/lib/format";
+import { fmt, parseNum, commaFmt } from "@/lib/format";
 import DollarInput from "@/components/dollar-input";
 import PercentSlider from "@/components/percent-slider";
 import ExportPdfButton from "@/components/export-pdf-button";
@@ -26,7 +26,7 @@ interface UpfrontPayment {
 }
 
 type Frequency = "monthly" | "quarterly" | "custom";
-type InterestScope = "all" | "installments" | "none";
+type InterestScope = "installments" | "none";
 type InterestStart = "immediately" | "first-installment";
 
 interface ScheduleRow {
@@ -51,6 +51,8 @@ const inputClass =
 const selectClass =
   "w-full px-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
 
+const noop = () => {};
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -71,37 +73,10 @@ export default function PaymentOverTimeClient() {
   // Track which field the user last edited to determine calculation direction
   const [installmentMode, setInstallmentMode] = useSessionState<"count" | "amount">("tool:payment-time:installmentMode", "count");
 
-  const [committed, setCommitted] = useSessionState("tool:payment-time:committed", {
-    totalSettlement: "",
-    upfronts: [] as UpfrontPayment[],
-    numPayments: "",
-    installmentAmount: "",
-    installmentMode: "count" as "count" | "amount",
-    frequency: "monthly" as Frequency,
-    customIntervalDays: "",
-    interestScope: "none" as InterestScope,
-    interestStart: "first-installment" as InterestStart,
-    annualRate: 5,
-  });
-
-  function commit() {
-    setCommitted({
-      totalSettlement,
-      upfronts: upfronts.map((u) => ({ ...u })),
-      numPayments,
-      installmentAmount,
-      installmentMode,
-      frequency,
-      customIntervalDays,
-      interestScope,
-      interestStart,
-      annualRate,
-    });
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter") commit();
-  }
+  // Migrate legacy "all" scope (removed) → "installments"
+  useEffect(() => {
+    if ((interestScope as string) === "all") setInterestScope("installments");
+  }, [interestScope, setInterestScope]);
 
   function addUpfront() {
     setUpfronts([...upfronts, { id: makeId(), amount: "", timing: "" }]);
@@ -112,9 +87,7 @@ export default function PaymentOverTimeClient() {
   }
 
   function removeUpfront(id: string) {
-    const updated = upfronts.filter((u) => u.id !== id);
-    setUpfronts(updated);
-    setCommitted((prev) => ({ ...prev, upfronts: updated }));
+    setUpfronts(upfronts.filter((u) => u.id !== id));
   }
 
   function clearAll() {
@@ -128,43 +101,29 @@ export default function PaymentOverTimeClient() {
     setInterestScope("none");
     setInterestStart("first-installment");
     setAnnualRate(5);
-    setCommitted({
-      totalSettlement: "",
-      upfronts: [],
-      numPayments: "",
-      installmentAmount: "",
-      installmentMode: "count",
-      frequency: "monthly",
-      customIntervalDays: "",
-      interestScope: "none",
-      interestStart: "first-installment",
-      annualRate: 5,
-    });
     clearSessionKeys("tool:payment-time:");
   }
 
   // ---------------------------------------------------------------------------
-  // Calculation
+  // Calculation — driven directly by live state. No deferred-commit layer.
   // ---------------------------------------------------------------------------
 
-  const { schedule, summary, calculatedPayment, calculatedCount } = useMemo(() => {
-    const total = parseNum(committed.totalSettlement);
-    const scope = committed.interestScope;
-    const startTiming = committed.interestStart;
-    const rate = committed.annualRate / 100;
-    const freq = committed.frequency;
+  const { schedule, summary, calculatedPayment, calculatedCount, warnings } = useMemo(() => {
+    const total = parseNum(totalSettlement);
+    const scope = interestScope;
+    const startTiming = interestStart;
+    const rate = annualRate / 100;
+    const freq = frequency;
 
-    // Determine periods per year
     let periodsPerYear = 12;
     if (freq === "quarterly") periodsPerYear = 4;
     else if (freq === "custom") {
-      const days = parseNum(committed.customIntervalDays);
+      const days = parseNum(customIntervalDays);
       periodsPerYear = days > 0 ? 365 / days : 12;
     }
 
     const periodRate = scope !== "none" ? rate / periodsPerYear : 0;
 
-    // Period label
     let periodLabel = "Month";
     if (freq === "quarterly") periodLabel = "Quarter";
     else if (freq === "custom") periodLabel = "Payment";
@@ -173,37 +132,45 @@ export default function PaymentOverTimeClient() {
     let balance = total;
     let totalInterest = 0;
     let totalPaid = 0;
+    const warnings: string[] = [];
 
-    // Up-front payments
-    const upfrontCount = committed.upfronts.filter((u) => parseNum(u.amount) > 0).length;
-    for (const u of committed.upfronts) {
-      const amt = parseNum(u.amount);
-      if (amt <= 0) continue;
+    // Flag (but still process) upfronts whose total exceeds the settlement
+    const upfrontTotal = upfronts.reduce(
+      (sum, u) => sum + Math.max(0, parseNum(u.amount)),
+      0
+    );
+    if (total > 0 && upfrontTotal > total + 0.005) {
+      warnings.push(
+        `Up-front payments (${fmt(upfrontTotal)}) exceed the settlement total (${fmt(total)}). The excess is not included in the schedule.`
+      );
+    }
 
-      let interest = 0;
-      if (scope === "all" && periodRate > 0) {
-        interest = balance * periodRate;
-      }
+    // Up-front payments — treated as occurring at T=0 (no interest accrual).
+    // Each upfront's principal is clamped to whatever balance remains.
+    const upfrontCount = upfronts.filter((u) => parseNum(u.amount) > 0).length;
+    for (const u of upfronts) {
+      const requested = parseNum(u.amount);
+      if (requested <= 0) continue;
 
-      const principal = amt;
-      const payment = principal + interest;
+      const principal = Math.min(requested, balance);
+      if (principal <= 0) continue;
+      const payment = principal;
       balance = Math.max(0, balance - principal);
-      totalInterest += interest;
       totalPaid += payment;
 
       rows.push({
         label: u.timing || "Up front",
         payment,
         principal,
-        interest,
+        interest: 0,
         balance,
       });
     }
 
-    // If interest starts immediately but scope is installments-only,
-    // accrue interest during the up-front period and roll into balance
+    // If interest starts immediately, accrue one period of interest on the
+    // post-upfront balance before installments begin.
     if (scope === "installments" && startTiming === "immediately" && upfrontCount > 0 && periodRate > 0) {
-      const accruedInterest = balance * periodRate * upfrontCount;
+      const accruedInterest = balance * periodRate;
       balance += accruedInterest;
       totalInterest += accruedInterest;
 
@@ -217,9 +184,9 @@ export default function PaymentOverTimeClient() {
     }
 
     // Determine installment count and payment amount
-    const mode = committed.installmentMode;
-    let n = Math.round(parseNum(committed.numPayments));
-    let fixedPayment = parseNum(committed.installmentAmount);
+    const mode = installmentMode;
+    let n = Math.round(parseNum(numPayments));
+    let fixedPayment = parseNum(installmentAmount);
     const installmentRate = scope !== "none" ? periodRate : 0;
 
     let calcPayment = 0;
@@ -227,7 +194,6 @@ export default function PaymentOverTimeClient() {
 
     if (balance > 0) {
       if (mode === "count" && n > 0) {
-        // Calculate payment from count
         if (installmentRate > 0) {
           fixedPayment = (balance * installmentRate) / (1 - Math.pow(1 + installmentRate, -n));
         } else {
@@ -236,11 +202,12 @@ export default function PaymentOverTimeClient() {
         calcPayment = fixedPayment;
         calcCount = n;
       } else if (mode === "amount" && fixedPayment > 0) {
-        // Calculate count from payment amount
         if (installmentRate > 0) {
           const minPayment = balance * installmentRate;
           if (fixedPayment <= minPayment) {
-            // Payment too small to cover interest
+            warnings.push(
+              `Payment amount (${fmt(fixedPayment)}) is at or below the interest accrued per period (${fmt(minPayment)}). Increase the payment or lower the rate to produce a schedule.`
+            );
             n = 0;
           } else {
             n = Math.ceil(
@@ -255,7 +222,6 @@ export default function PaymentOverTimeClient() {
         calcCount = n;
       }
 
-      // Generate installment rows
       for (let i = 1; i <= n; i++) {
         if (balance <= 0) break;
 
@@ -264,7 +230,6 @@ export default function PaymentOverTimeClient() {
         let payment: number;
 
         if (i === n) {
-          // Last payment: pay off remaining balance
           principal = balance;
           payment = principal + interest;
         } else {
@@ -295,14 +260,37 @@ export default function PaymentOverTimeClient() {
       },
       calculatedPayment: calcPayment,
       calculatedCount: calcCount,
+      warnings,
     };
-  }, [committed]);
+  }, [
+    totalSettlement,
+    upfronts,
+    numPayments,
+    installmentAmount,
+    installmentMode,
+    frequency,
+    customIntervalDays,
+    interestScope,
+    interestStart,
+    annualRate,
+  ]);
 
+  // Show Clear button whenever any persisted state differs from defaults
+  const upfrontsAreDefault =
+    upfronts.length === 1 &&
+    upfronts[0].amount === "" &&
+    upfronts[0].timing === "At signing";
   const hasAny =
     totalSettlement !== "" ||
-    upfronts.some((u) => u.amount !== "") ||
     numPayments !== "" ||
-    installmentAmount !== "";
+    installmentAmount !== "" ||
+    customIntervalDays !== "" ||
+    installmentMode !== "count" ||
+    frequency !== "monthly" ||
+    interestScope !== "none" ||
+    interestStart !== "first-installment" ||
+    annualRate !== 5 ||
+    !upfrontsAreDefault;
 
   return (
     <div className="space-y-6">
@@ -321,7 +309,7 @@ export default function PaymentOverTimeClient() {
             <DollarInput
               value={totalSettlement}
               onChange={setTotalSettlement}
-              onCommit={commit}
+              onCommit={noop}
               placeholder="250,000"
             />
           </CardContent>
@@ -340,26 +328,18 @@ export default function PaymentOverTimeClient() {
               </label>
               <select
                 value={interestScope}
-                onChange={(e) => {
-                  const val = e.target.value as InterestScope;
-                  setInterestScope(val);
-                  setCommitted((prev) => ({ ...prev, interestScope: val }));
-                }}
+                onChange={(e) => setInterestScope(e.target.value as InterestScope)}
                 className={selectClass}
               >
                 <option value="none">None (0% interest)</option>
                 <option value="installments">Installments only</option>
-                <option value="all">All payments</option>
               </select>
             </div>
             {interestScope !== "none" && (
               <>
                 <PercentSlider
                   value={annualRate}
-                  onChange={(val) => {
-                    setAnnualRate(val);
-                    setCommitted((prev) => ({ ...prev, annualRate: val }));
-                  }}
+                  onChange={setAnnualRate}
                   min={1}
                   max={20}
                   allowOverflow
@@ -371,11 +351,7 @@ export default function PaymentOverTimeClient() {
                   </label>
                   <select
                     value={interestStart}
-                    onChange={(e) => {
-                      const val = e.target.value as InterestStart;
-                      setInterestStart(val);
-                      setCommitted((prev) => ({ ...prev, interestStart: val }));
-                    }}
+                    onChange={(e) => setInterestStart(e.target.value as InterestStart)}
                     className={selectClass}
                   >
                     <option value="first-installment">With first installment</option>
@@ -405,7 +381,7 @@ export default function PaymentOverTimeClient() {
                 <DollarInput
                   value={u.amount}
                   onChange={(v) => updateUpfront(u.id, "amount", v)}
-                  onCommit={commit}
+                  onCommit={noop}
                   placeholder="25,000"
                 />
               </div>
@@ -417,8 +393,6 @@ export default function PaymentOverTimeClient() {
                   type="text"
                   value={u.timing}
                   onChange={(e) => updateUpfront(u.id, "timing", e.target.value)}
-                  onBlur={commit}
-                  onKeyDown={handleKeyDown}
                   placeholder="At signing"
                   className={inputClass}
                 />
@@ -456,11 +430,9 @@ export default function PaymentOverTimeClient() {
                 inputMode="numeric"
                 value={installmentMode === "amount" && calculatedCount > 0 ? calculatedCount.toString() : numPayments}
                 onChange={(e) => {
-                  setNumPayments(e.target.value);
+                  setNumPayments(e.target.value.replace(/[^0-9]/g, ""));
                   setInstallmentMode("count");
                 }}
-                onBlur={commit}
-                onKeyDown={handleKeyDown}
                 placeholder="12"
                 className={`${inputClass} ${installmentMode === "amount" && calculatedCount > 0 ? "bg-brand-bg border-brand-accent/40" : ""}`}
               />
@@ -470,12 +442,12 @@ export default function PaymentOverTimeClient() {
                 Payment amount
               </label>
               <DollarInput
-                value={installmentMode === "count" && calculatedPayment > 0 ? Math.round(calculatedPayment).toString() : installmentAmount}
+                value={installmentMode === "count" && calculatedPayment > 0 ? commaFmt(Math.round(calculatedPayment).toString()) : installmentAmount}
                 onChange={(v) => {
                   setInstallmentAmount(v);
                   setInstallmentMode("amount");
                 }}
-                onCommit={commit}
+                onCommit={noop}
                 placeholder="10,000"
                 className={`w-full pl-7 pr-3 py-2 text-sm border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent ${installmentMode === "count" && calculatedPayment > 0 ? "bg-brand-bg border-brand-accent/40" : "border-brand-border"}`}
               />
@@ -486,11 +458,7 @@ export default function PaymentOverTimeClient() {
               </label>
               <select
                 value={frequency}
-                onChange={(e) => {
-                  const val = e.target.value as Frequency;
-                  setFrequency(val);
-                  setCommitted((prev) => ({ ...prev, frequency: val }));
-                }}
+                onChange={(e) => setFrequency(e.target.value as Frequency)}
                 className={selectClass}
               >
                 <option value="monthly">Monthly</option>
@@ -508,9 +476,7 @@ export default function PaymentOverTimeClient() {
                 type="text"
                 inputMode="numeric"
                 value={customIntervalDays}
-                onChange={(e) => setCustomIntervalDays(e.target.value)}
-                onBlur={commit}
-                onKeyDown={handleKeyDown}
+                onChange={(e) => setCustomIntervalDays(e.target.value.replace(/[^0-9]/g, ""))}
                 placeholder="60"
                 className={inputClass}
               />
@@ -522,8 +488,21 @@ export default function PaymentOverTimeClient() {
       {hasAny && (
         <div className="print:hidden">
           <Button variant="outline" onClick={clearAll}>
-            Clear All
+            Clear data
           </Button>
+        </div>
+      )}
+
+      {warnings.length > 0 && (
+        <div className="space-y-2 print:hidden">
+          {warnings.map((w, i) => (
+            <div
+              key={i}
+              className="bg-amber-50 border border-amber-200 rounded-md px-4 py-3 text-sm text-amber-900"
+            >
+              {w}
+            </div>
+          ))}
         </div>
       )}
 
