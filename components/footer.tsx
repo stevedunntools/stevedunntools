@@ -11,9 +11,9 @@ export default function Footer() {
   return (
     <footer className="bg-brand-primary text-gray-400 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr] gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[2fr_repeat(4,1fr)] gap-8">
           {/* Brand */}
-          <div>
+          <div className="lg:col-span-1 md:col-span-2">
             <span className="text-lg font-semibold text-white">
               Steve Dunn <span className="text-brand-accent font-bold">TOOLS</span>
             </span>
