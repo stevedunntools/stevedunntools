@@ -10,6 +10,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import DateInput from "@/components/date-input";
+import MobileResultBar from "@/components/mobile-result-bar";
 
 export default function DaysBetweenDatesClient() {
   const [startDate, setStartDate] = useSessionState<Date | null>("tool:days-between:start", null, dateSerializer);
@@ -150,7 +151,7 @@ export default function DaysBetweenDatesClient() {
       {/* Results */}
       <div className="lg:col-span-2">
         <div className="sticky top-20 space-y-6">
-          <Card className="bg-white border-brand-accent">
+          <Card id="tool-headline-result" className="bg-white border-brand-accent">
             <CardContent className="pt-6">
               <p className="text-sm text-brand-muted mb-3">Duration</p>
               {result ? (
@@ -185,6 +186,7 @@ export default function DaysBetweenDatesClient() {
           </Card>
         </div>
       </div>
+      <MobileResultBar label="Total days" value={result ? `${result.totalDays.toLocaleString()} days` : "\u2014"} targetId="tool-headline-result" />
     </div>
   );
 }

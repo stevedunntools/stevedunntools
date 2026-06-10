@@ -15,6 +15,7 @@ import DollarInput from "@/components/dollar-input";
 import PercentSlider from "@/components/percent-slider";
 import ExportPdfButton from "@/components/export-pdf-button";
 import { textFieldClass as inputClass, selectFieldClass as selectClass } from "@/lib/field-styles";
+import MobileResultBar from "@/components/mobile-result-bar";
 import {
   buildSchedule,
   Frequency,
@@ -296,7 +297,7 @@ export default function PaymentOverTimeClient() {
                   setInstallmentMode("amount");
                 }}
                 placeholder="10,000"
-                className={`w-full pl-7 pr-3 py-2 text-sm border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent ${installmentMode === "count" && calculatedPayment > 0 ? "bg-brand-bg border-brand-accent/40" : "border-brand-border"}`}
+                className={`w-full pl-7 pr-3 py-2 text-base sm:text-sm border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent ${installmentMode === "count" && calculatedPayment > 0 ? "bg-brand-bg border-brand-accent/40" : "border-brand-border"}`}
               />
             </div>
             <div>
@@ -355,7 +356,7 @@ export default function PaymentOverTimeClient() {
 
       {/* Schedule */}
       {schedule.length > 0 && (
-        <Card className="bg-white border-brand-border">
+        <Card id="tool-headline-result" className="bg-white border-brand-border">
           <CardHeader>
             <CardTitle className="text-brand-primary text-base">
               Payment Schedule
@@ -370,8 +371,8 @@ export default function PaymentOverTimeClient() {
                     <th className="pb-2 pr-3 font-medium text-brand-muted text-right">Amount</th>
                     {summary.totalInterest > 0 && (
                       <>
-                        <th className="pb-2 pr-3 font-medium text-brand-muted text-right">Principal</th>
-                        <th className="pb-2 pr-3 font-medium text-brand-muted text-right">Interest</th>
+                        <th className="pb-2 pr-3 font-medium text-brand-muted text-right hidden sm:table-cell">Principal</th>
+                        <th className="pb-2 pr-3 font-medium text-brand-muted text-right hidden sm:table-cell">Interest</th>
                       </>
                     )}
                     <th className="pb-2 font-medium text-brand-muted text-right">Balance</th>
@@ -386,10 +387,10 @@ export default function PaymentOverTimeClient() {
                       </td>
                       {summary.totalInterest > 0 && (
                         <>
-                          <td className="py-2 pr-3 text-right text-brand-muted tabular-nums">
+                          <td className="py-2 pr-3 text-right text-brand-muted tabular-nums hidden sm:table-cell">
                             {row.principal > 0 ? fmt(row.principal) : "—"}
                           </td>
-                          <td className="py-2 pr-3 text-right text-brand-muted tabular-nums">
+                          <td className="py-2 pr-3 text-right text-brand-muted tabular-nums hidden sm:table-cell">
                             {row.interest > 0 ? fmt(row.interest) : "—"}
                           </td>
                         </>
@@ -428,6 +429,9 @@ export default function PaymentOverTimeClient() {
         <div className="print:hidden">
           <ExportPdfButton />
         </div>
+      )}
+      {schedule.length > 0 && (
+        <MobileResultBar label="Total paid" value={fmt(summary.totalPaid)} targetId="tool-headline-result" />
       )}
     </div>
   );

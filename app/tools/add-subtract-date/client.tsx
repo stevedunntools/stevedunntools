@@ -12,6 +12,7 @@ import {
 import DateInput from "@/components/date-input";
 import { addBusinessDays, countBusinessDays, MONTHS } from "@/lib/date-utils";
 import { textFieldClass as inputClass, selectFieldClass as selectClass } from "@/lib/field-styles";
+import MobileResultBar from "@/components/mobile-result-bar";
 
 type Direction = "add" | "subtract";
 type HolidayMode = "federal" | "weekends-only";
@@ -253,7 +254,7 @@ export default function AddSubtractDateClient() {
       {/* Results */}
       <div className="lg:col-span-2">
         <div className="sticky top-20 space-y-6">
-          <Card className="bg-white border-brand-accent">
+          <Card id="tool-headline-result" className="bg-white border-brand-accent">
             <CardContent className="pt-6">
               <p className="text-sm text-brand-muted mb-1">Resulting Date</p>
               {result ? (
@@ -300,6 +301,7 @@ export default function AddSubtractDateClient() {
           )}
         </div>
       </div>
+      <MobileResultBar label="Result" value={result ? formatDate(result.date) : "\u2014"} targetId="tool-headline-result" />
     </div>
   );
 }

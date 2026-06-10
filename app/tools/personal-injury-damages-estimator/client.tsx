@@ -13,6 +13,7 @@ import { Row, Separator } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
 import EstimateDisclaimer from "@/components/estimate-disclaimer";
 import ExportPdfButton from "@/components/export-pdf-button";
+import MobileResultBar from "@/components/mobile-result-bar";
 
 const MULTIPLIER_STEPS = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
 
@@ -193,7 +194,7 @@ export default function PersonalInjuryClient() {
       <div className="lg:col-span-2">
         <div className="sticky top-20 space-y-6">
           {/* Total */}
-          <Card className="bg-white border-brand-accent">
+          <Card id="tool-headline-result" className="bg-white border-brand-accent">
             <CardContent className="pt-6">
               <p className="text-sm text-brand-muted mb-1">Estimated Total Damages</p>
               <p className="text-3xl font-bold text-brand-accent">
@@ -241,6 +242,7 @@ export default function PersonalInjuryClient() {
           </div>
         </div>
       </div>
+      <MobileResultBar label="Total damages" value={fmt(total)} targetId="tool-headline-result" />
     </div>
   );
 }

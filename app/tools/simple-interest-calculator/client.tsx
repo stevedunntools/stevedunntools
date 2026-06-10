@@ -15,6 +15,7 @@ import PercentSlider from "@/components/percent-slider";
 import EstimateDisclaimer from "@/components/estimate-disclaimer";
 import ExportPdfButton from "@/components/export-pdf-button";
 import { textFieldClass, selectFieldClass } from "@/lib/field-styles";
+import MobileResultBar from "@/components/mobile-result-bar";
 
 type TimeUnit = "days" | "months" | "years";
 
@@ -146,7 +147,7 @@ export default function SimpleInterestClient() {
       {/* Results */}
       <div className="lg:col-span-2">
         <div className="sticky top-20 space-y-6">
-          <Card className="bg-white border-brand-accent">
+          <Card id="tool-headline-result" className="bg-white border-brand-accent">
             <CardContent className="pt-6">
               <p className="text-sm text-brand-muted mb-1">Total (Principal + Interest)</p>
               <p className="text-3xl font-bold text-brand-accent">
@@ -185,6 +186,7 @@ export default function SimpleInterestClient() {
           </div>
         </div>
       </div>
+      <MobileResultBar label="Total" value={fmt(total)} targetId="tool-headline-result" />
     </div>
   );
 }

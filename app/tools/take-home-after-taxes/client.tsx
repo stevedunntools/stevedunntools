@@ -16,6 +16,7 @@ import ExportPdfButton from "@/components/export-pdf-button";
 import { calculate, Income1099Type } from "./calculate";
 import { STATES, FilingStatus } from "./tax-data";
 import { selectFieldClass as selectClass } from "@/lib/field-styles";
+import MobileResultBar from "@/components/mobile-result-bar";
 
 const filingStatusOptions: { value: FilingStatus; label: string }[] = [
   { value: "single", label: "Single" },
@@ -181,7 +182,7 @@ export default function TakeHomeAfterTaxesClient() {
       {/* Results */}
       <div className="lg:col-span-2">
         <div className="sticky top-20 space-y-6">
-          <Card className="bg-white border-brand-accent">
+          <Card id="tool-headline-result" className="bg-white border-brand-accent">
             <CardContent className="pt-6">
               <p className="text-sm text-brand-muted mb-1">Estimated Take-Home</p>
               <p className="text-3xl font-bold text-brand-accent">
@@ -352,6 +353,7 @@ export default function TakeHomeAfterTaxesClient() {
           </div>
         </div>
       </div>
+      <MobileResultBar label="Take-home" value={fmt(result.totals.net)} targetId="tool-headline-result" />
     </div>
   );
 }

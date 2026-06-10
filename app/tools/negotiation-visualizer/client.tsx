@@ -596,7 +596,7 @@ function NegotiationChart({
             <circle
               cx={pt.x}
               cy={pt.y}
-              r="12"
+              r="20"
               fill="transparent"
               {...hitAreaProps(
                 {
@@ -629,7 +629,7 @@ function NegotiationChart({
             <circle
               cx={pt.x}
               cy={pt.y}
-              r="12"
+              r="20"
               fill="transparent"
               {...hitAreaProps(
                 {
@@ -659,7 +659,7 @@ function NegotiationChart({
             key={`mid-hit-${i}`}
             cx={p.x}
             cy={p.y}
-            r="12"
+            r="20"
             fill="transparent"
             {...hitAreaProps(
               { kind: "midpoint", round: p.round, value: p.value, x: p.x, y: p.y },
@@ -674,7 +674,7 @@ function NegotiationChart({
           key={`proj-hit-${proj.label}`}
           cx={xScale(proj.data.round)}
           cy={yScale(proj.data.value)}
-          r="12"
+          r="20"
           fill="transparent"
           {...hitAreaProps(
             {

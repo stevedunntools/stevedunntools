@@ -14,6 +14,7 @@ import DollarInput from "@/components/dollar-input";
 import PercentSlider from "@/components/percent-slider";
 import EstimateDisclaimer from "@/components/estimate-disclaimer";
 import ExportPdfButton from "@/components/export-pdf-button";
+import MobileResultBar from "@/components/mobile-result-bar";
 
 export default function EmploymentContingencyClient() {
   const [settlement, setSettlement] = useSessionState("tool:emp-contingency:settlement", "");
@@ -127,7 +128,7 @@ export default function EmploymentContingencyClient() {
       {/* Results */}
       <div className="lg:col-span-2">
         <div className="sticky top-20 space-y-6">
-          <Card className="bg-white border-brand-accent">
+          <Card id="tool-headline-result" className="bg-white border-brand-accent">
             <CardContent className="pt-6">
               <p className="text-sm text-brand-muted mb-1">Net to Plaintiff</p>
               <p className="text-3xl font-bold text-brand-accent">
@@ -160,6 +161,7 @@ export default function EmploymentContingencyClient() {
           </div>
         </div>
       </div>
+      <MobileResultBar label="Net to plaintiff" value={fmt(netToPlaintiff)} targetId="tool-headline-result" />
     </div>
   );
 }

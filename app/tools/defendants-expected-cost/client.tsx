@@ -14,6 +14,7 @@ import DollarInput from "@/components/dollar-input";
 import PercentSlider from "@/components/percent-slider";
 import EstimateDisclaimer from "@/components/estimate-disclaimer";
 import ExportPdfButton from "@/components/export-pdf-button";
+import MobileResultBar from "@/components/mobile-result-bar";
 
 export default function DefendantsExpectedCostClient() {
   const [damages, setDamages] = useSessionState("tool:defendant-ec:damages", "");
@@ -163,7 +164,7 @@ export default function DefendantsExpectedCostClient() {
       {/* Results */}
       <div className="lg:col-span-2">
         <div className="sticky top-20 space-y-6">
-          <Card className="bg-white border-brand-accent">
+          <Card id="tool-headline-result" className="bg-white border-brand-accent">
             <CardContent className="pt-6">
               <p className="text-sm text-brand-muted mb-1">Defendant&apos;s Total Expected Cost</p>
               <p className="text-3xl font-bold text-brand-accent">
@@ -208,6 +209,7 @@ export default function DefendantsExpectedCostClient() {
           </div>
         </div>
       </div>
+      <MobileResultBar label="Expected cost" value={fmt(totalExpectedCost)} targetId="tool-headline-result" />
     </div>
   );
 }

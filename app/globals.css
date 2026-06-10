@@ -191,3 +191,10 @@
     margin: 1.5cm;
   }
 }
+
+/* Larger touch area for range sliders on touch devices */
+@media (pointer: coarse) {
+  input[type="range"] {
+    height: 32px;
+  }
+}

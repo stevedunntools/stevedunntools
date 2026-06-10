@@ -15,6 +15,7 @@ import PercentSlider from "@/components/percent-slider";
 import EstimateDisclaimer from "@/components/estimate-disclaimer";
 import ExportPdfButton from "@/components/export-pdf-button";
 import { textFieldClass } from "@/lib/field-styles";
+import MobileResultBar from "@/components/mobile-result-bar";
 
 export default function PlaintiffsExpectedValueClient() {
   const [damages, setDamages] = useSessionState("tool:plaintiff-ev:damages", "");
@@ -181,7 +182,7 @@ export default function PlaintiffsExpectedValueClient() {
       <div className="lg:col-span-2">
         <div className="sticky top-20 space-y-6">
           {/* Total */}
-          <Card className="bg-white border-brand-accent">
+          <Card id="tool-headline-result" className="bg-white border-brand-accent">
             <CardContent className="pt-6">
               <p className="text-sm text-brand-muted mb-1">Plaintiff&apos;s Expected Value</p>
               <p className="text-3xl font-bold text-brand-accent">
@@ -227,6 +228,7 @@ export default function PlaintiffsExpectedValueClient() {
           </div>
         </div>
       </div>
+      <MobileResultBar label="Expected value" value={fmt(expectedValue)} targetId="tool-headline-result" />
     </div>
   );
 }
