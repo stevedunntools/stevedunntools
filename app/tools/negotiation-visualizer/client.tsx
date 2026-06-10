@@ -42,7 +42,22 @@ type HoverInfo =
       y: number;
     }
   | { kind: "midpoint"; round: number; value: number; x: number; y: number }
-  | { kind: "convergence"; round: number; value: number; x: number; y: number };
+  | {
+      kind: "convergence";
+      label: string;
+      color: string;
+      round: number;
+      value: number;
+      x: number;
+      y: number;
+    };
+
+/** A projection the user has toggled on, with its computed result. */
+interface ActiveProjection {
+  label: string;
+  color: string;
+  data: Convergence;
+}
 
 function makeId() {
   return crypto.randomUUID();
@@ -132,15 +147,13 @@ function buildOfferMidpoints(partyOffers: Offer[], xScale: Scale, yScale: Scale)
 interface NegotiationChartProps {
   offers: Offer[];
   showMidpoint: boolean;
-  showConvergence: boolean;
-  convergence: Convergence | null;
+  projections: ActiveProjection[];
 }
 
 function NegotiationChart({
   offers,
   showMidpoint,
-  showConvergence,
-  convergence,
+  projections,
 }: NegotiationChartProps) {
   const [hover, setHover] = useState<HoverInfo | null>(null);
 
@@ -189,11 +202,11 @@ function NegotiationChart({
       allVals.push(e.low, e.high);
     }
 
-    // Extend axis bounds when convergence/midpoint visuals are shown
+    // Extend axis bounds when projection/midpoint visuals are shown
     let projRounds = actualRounds;
-    if (showConvergence && convergence) {
-      projRounds = Math.max(actualRounds, Math.ceil(convergence.round));
-      allVals.push(convergence.value);
+    for (const proj of projections) {
+      projRounds = Math.max(projRounds, Math.ceil(proj.data.round));
+      allVals.push(proj.data.value);
     }
     if (showMidpoint) {
       for (const m of roundMidpoints) allVals.push(m.value);
@@ -218,7 +231,7 @@ function NegotiationChart({
       },
       yScale: (v: number) => PAD.top + INNER_H - ((v - mn) / (mx - mn)) * INNER_H,
     };
-  }, [offers, showConvergence, convergence, showMidpoint, roundMidpoints]);
+  }, [offers, projections, showMidpoint, roundMidpoints]);
 
   const pBand = useMemo(() => buildBand(pOffers, xScale, yScale), [pOffers, xScale, yScale]);
   const dBand = useMemo(() => buildBand(dOffers, xScale, yScale), [dOffers, xScale, yScale]);
@@ -539,39 +552,39 @@ function NegotiationChart({
         </>
       )}
 
-      {/* Projected convergence */}
-      {showConvergence && convergence && (
-        <>
+      {/* Projected convergence — one dashed pair + dot per active model */}
+      {projections.map((proj) => (
+        <g key={`proj-${proj.label}`}>
           <line
-            x1={xScale(convergence.pStart.round)}
-            y1={yScale(convergence.pStart.value)}
-            x2={xScale(convergence.round)}
-            y2={yScale(convergence.value)}
-            stroke={BLUE}
+            x1={xScale(proj.data.pStart.round)}
+            y1={yScale(proj.data.pStart.value)}
+            x2={xScale(proj.data.round)}
+            y2={yScale(proj.data.value)}
+            stroke={proj.color}
             strokeWidth="1.5"
             strokeDasharray="3 4"
             opacity="0.7"
           />
           <line
-            x1={xScale(convergence.dStart.round)}
-            y1={yScale(convergence.dStart.value)}
-            x2={xScale(convergence.round)}
-            y2={yScale(convergence.value)}
-            stroke={RED}
+            x1={xScale(proj.data.dStart.round)}
+            y1={yScale(proj.data.dStart.value)}
+            x2={xScale(proj.data.round)}
+            y2={yScale(proj.data.value)}
+            stroke={proj.color}
             strokeWidth="1.5"
             strokeDasharray="3 4"
             opacity="0.7"
           />
           <circle
-            cx={xScale(convergence.round)}
-            cy={yScale(convergence.value)}
+            cx={xScale(proj.data.round)}
+            cy={yScale(proj.data.value)}
             r="4"
-            fill={GREEN}
+            fill={proj.color}
             stroke="white"
             strokeWidth="1.5"
           />
-        </>
-      )}
+        </g>
+      ))}
 
       {/* Plaintiff dots + hit areas */}
       {pOffers.map((m, i) => {
@@ -655,25 +668,28 @@ function NegotiationChart({
           />
         ))}
 
-      {/* Convergence point hit area */}
-      {showConvergence && convergence && (
+      {/* Convergence point hit areas */}
+      {projections.map((proj) => (
         <circle
-          cx={xScale(convergence.round)}
-          cy={yScale(convergence.value)}
+          key={`proj-hit-${proj.label}`}
+          cx={xScale(proj.data.round)}
+          cy={yScale(proj.data.value)}
           r="12"
           fill="transparent"
           {...hitAreaProps(
             {
               kind: "convergence",
-              round: convergence.round,
-              value: convergence.value,
-              x: xScale(convergence.round),
-              y: yScale(convergence.value),
+              label: proj.label,
+              color: proj.color,
+              round: proj.data.round,
+              value: proj.data.value,
+              x: xScale(proj.data.round),
+              y: yScale(proj.data.value),
             },
-            `Projected convergence: ${fmt(convergence.value)} at round ${convergence.round.toFixed(1)}`,
+            `${proj.label}: ${fmt(proj.data.value)} at round ${proj.data.round.toFixed(1)}`,
           )}
         />
-      )}
+      ))}
 
       {/* Empty state */}
       {offers.length === 0 && (
@@ -747,7 +763,9 @@ function NegotiationChart({
                 )}
                 {hover.kind === "convergence" && (
                   <>
-                    <div style={{ fontWeight: 600, color: GREEN }}>Projected convergence</div>
+                    <div style={{ fontWeight: 600, color: hover.color }}>
+                      {hover.label}
+                    </div>
                     <div>Round {hover.round.toFixed(1)}</div>
                     <div>{fmt(hover.value)}</div>
                   </>
@@ -861,6 +879,7 @@ export default function NegotiationVisualizerClient() {
     setParty("plaintiff");
     setInput("");
     setInputError(null);
+    setShowConvergence(false);
     clearSessionKeys("tool:neg-viz:");
   }
 
@@ -884,6 +903,11 @@ export default function NegotiationVisualizerClient() {
 
   const convergence = useMemo(() => computeConvergence(offers), [offers]);
   const convergenceAvailable = convergence !== null;
+
+  const activeProjections: ActiveProjection[] =
+    showConvergence && convergence
+      ? [{ label: "Projected convergence", color: GREEN, data: convergence }]
+      : [];
 
   return (
     <div className="space-y-6">
@@ -1051,8 +1075,8 @@ export default function NegotiationVisualizerClient() {
       <Card className="bg-white border-brand-border">
         <CardContent className="pt-6">
           {/* Display options */}
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-4 text-sm print:hidden">
-            <label className="flex items-center gap-2 cursor-pointer select-none">
+          <div className="mb-4 space-y-3 print:hidden">
+            <label className="flex items-center gap-2 cursor-pointer select-none text-sm">
               <input
                 type="checkbox"
                 checked={showMidpoint}
@@ -1061,34 +1085,30 @@ export default function NegotiationVisualizerClient() {
               />
               <span className="text-brand-primary">Show midpoint between offers</span>
             </label>
-            <label
-              className={`flex items-center gap-2 select-none ${
-                convergenceAvailable
-                  ? "cursor-pointer"
-                  : "cursor-not-allowed opacity-50"
-              }`}
-              title={
-                convergenceAvailable
-                  ? undefined
-                  : "Needs at least two offers from each party with a projected intersection"
-              }
-            >
-              <input
-                type="checkbox"
-                checked={showConvergence && convergenceAvailable}
-                disabled={!convergenceAvailable}
-                onChange={(e) => setShowConvergence(e.target.checked)}
-                className="h-4 w-4 rounded border-brand-border text-brand-accent focus:ring-brand-accent disabled:cursor-not-allowed"
-              />
-              <span className="text-brand-primary">Show projected convergence</span>
-            </label>
+
+            {convergenceAvailable && (
+              <label className="flex items-start gap-2 select-none text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showConvergence}
+                  onChange={(e) => setShowConvergence(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-brand-border text-brand-accent focus:ring-brand-accent"
+                />
+                <span>
+                  <span className="text-brand-primary">Show projected convergence</span>
+                  <span className="block text-xs text-brand-muted">
+                    A straight-line projection based on each side&apos;s three most
+                    recent moves, extended to where the trends meet.
+                  </span>
+                </span>
+              </label>
+            )}
           </div>
 
           <NegotiationChart
             offers={offers}
             showMidpoint={showMidpoint}
-            showConvergence={showConvergence && convergenceAvailable}
-            convergence={convergence}
+            projections={activeProjections}
           />
 
           {/* Legend */}
@@ -1127,15 +1147,15 @@ export default function NegotiationVisualizerClient() {
                 Midpoint between offers
               </span>
             )}
-            {showConvergence && convergenceAvailable && (
-              <span className="flex items-center gap-2">
+            {activeProjections.map((proj) => (
+              <span key={proj.label} className="flex items-center gap-2">
                 <span
                   className="inline-block w-3 h-3 rounded-full"
-                  style={{ backgroundColor: GREEN }}
+                  style={{ backgroundColor: proj.color }}
                 />
-                Projected convergence
+                {proj.label}
               </span>
-            )}
+            ))}
           </div>
 
           {overlapInfo && (

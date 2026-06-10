@@ -55,50 +55,62 @@ export function parseInput(
   return { type: "number", value: num, low: 0, high: 0 };
 }
 
-// Linear projection through the last two offers of each party.
-// Returns null if there are fewer than two offers per party, the lines are
-// parallel, or the intersection is not in the future.
+/** Each party's offers as (round, midpoint-value) points, sorted by round. */
+function partySeries(offers: Offer[], party: Party): { round: number; value: number }[] {
+  return offers
+    .filter((m) => m.party === party)
+    .sort((a, b) => a.round - b.round)
+    .map((m) => ({ round: m.round, value: offerValues(m).mid }));
+}
+
+/** Ordinary least-squares fit of value vs. round. Null if degenerate. */
+function fitLine(
+  pts: { round: number; value: number }[],
+): { slope: number; intercept: number } | null {
+  if (pts.length < 2) return null;
+  const n = pts.length;
+  const meanX = pts.reduce((s, p) => s + p.round, 0) / n;
+  const meanY = pts.reduce((s, p) => s + p.value, 0) / n;
+  let cov = 0;
+  let varX = 0;
+  for (const p of pts) {
+    cov += (p.round - meanX) * (p.value - meanY);
+    varX += (p.round - meanX) ** 2;
+  }
+  if (varX === 0) return null;
+  const slope = cov / varX;
+  return { slope, intercept: meanY - slope * meanX };
+}
+
+/**
+ * Projected convergence: a least-squares straight line through each party's
+ * THREE most recent offers (bracket midpoints), extended forward to where the
+ * two lines intersect. Returns null when either side has fewer than three
+ * offers, the lines are parallel, or the intersection is not in the future.
+ */
 export function computeConvergence(offers: Offer[]): Convergence | null {
-  const pOffers = offers
-    .filter((m) => m.party === "plaintiff")
-    .sort((a, b) => a.round - b.round);
-  const dOffers = offers
-    .filter((m) => m.party === "defendant")
-    .sort((a, b) => a.round - b.round);
-  if (pOffers.length < 2 || dOffers.length < 2) return null;
+  const p = partySeries(offers, "plaintiff").slice(-3);
+  const d = partySeries(offers, "defendant").slice(-3);
+  if (p.length < 3 || d.length < 3) return null;
 
-  const p1 = pOffers[pOffers.length - 2];
-  const p2 = pOffers[pOffers.length - 1];
-  const d1 = dOffers[dOffers.length - 2];
-  const d2 = dOffers[dOffers.length - 1];
+  const pFit = fitLine(p);
+  const dFit = fitLine(d);
+  if (!pFit || !dFit) return null;
 
-  if (p1.round === p2.round || d1.round === d2.round) return null;
-
-  const pV1 = offerValues(p1).mid;
-  const pV2 = offerValues(p2).mid;
-  const dV1 = offerValues(d1).mid;
-  const dV2 = offerValues(d2).mid;
-
-  const pSlope = (pV2 - pV1) / (p2.round - p1.round);
-  const dSlope = (dV2 - dV1) / (d2.round - d1.round);
-
-  const slopeDiff = pSlope - dSlope;
+  const slopeDiff = pFit.slope - dFit.slope;
   if (Math.abs(slopeDiff) < 1e-9) return null;
 
-  const pIntercept = pV2 - pSlope * p2.round;
-  const dIntercept = dV2 - dSlope * d2.round;
-
-  const x = (dIntercept - pIntercept) / slopeDiff;
-  const lastRound = Math.max(p2.round, d2.round);
+  const x = (dFit.intercept - pFit.intercept) / slopeDiff;
+  const pLast = p[p.length - 1];
+  const dLast = d[d.length - 1];
+  const lastRound = Math.max(pLast.round, dLast.round);
   if (x <= lastRound) return null;
-
-  const y = pSlope * x + pIntercept;
 
   return {
     round: x,
-    value: y,
-    pStart: { round: p2.round, value: pV2 },
-    dStart: { round: d2.round, value: dV2 },
+    value: pFit.slope * x + pFit.intercept,
+    pStart: { round: pLast.round, value: pLast.value },
+    dStart: { round: dLast.round, value: dLast.value },
   };
 }
 
