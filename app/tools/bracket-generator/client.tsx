@@ -7,7 +7,7 @@ import {
   Card,
   CardContent,
 } from "@/components/ui/card";
-import { fmt, commaFmt, commaFmtWithCursor, parseNumOrNull } from "@/lib/format";
+import { fmt, commaFmtNum, commaFmtWithCursor, parseNumOrNull } from "@/lib/format";
 
 type Field = "upper" | "lower" | "mid";
 
@@ -35,32 +35,32 @@ export default function BracketGeneratorClient() {
 
     if (field === "upper") {
       if (u !== null && l !== null) {
-        setMidStr(commaFmt(((u + l) / 2).toFixed(0)));
+        setMidStr(commaFmtNum(((u + l) / 2)));
         setAutoField("mid");
       } else if (u !== null && m !== null) {
-        setLowerStr(commaFmt((2 * m - u).toFixed(0)));
+        setLowerStr(commaFmtNum((2 * m - u)));
         setAutoField("lower");
       }
     } else if (field === "lower") {
       if (u !== null && l !== null) {
-        setMidStr(commaFmt(((u + l) / 2).toFixed(0)));
+        setMidStr(commaFmtNum(((u + l) / 2)));
         setAutoField("mid");
       } else if (l !== null && m !== null) {
-        setUpperStr(commaFmt((2 * m - l).toFixed(0)));
+        setUpperStr(commaFmtNum((2 * m - l)));
         setAutoField("upper");
       }
     } else if (field === "mid") {
       if (u !== null && l !== null && m !== null) {
         const currentMid = (u + l) / 2;
         const delta = m - currentMid;
-        setUpperStr(commaFmt((u + delta).toFixed(0)));
-        setLowerStr(commaFmt((l + delta).toFixed(0)));
+        setUpperStr(commaFmtNum((u + delta)));
+        setLowerStr(commaFmtNum((l + delta)));
         setAutoField(null);
       } else if (m !== null && u !== null) {
-        setLowerStr(commaFmt((2 * m - u).toFixed(0)));
+        setLowerStr(commaFmtNum((2 * m - u)));
         setAutoField("lower");
       } else if (m !== null && l !== null) {
-        setUpperStr(commaFmt((2 * m - l).toFixed(0)));
+        setUpperStr(commaFmtNum((2 * m - l)));
         setAutoField("upper");
       }
     }

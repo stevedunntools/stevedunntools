@@ -1,9 +1,27 @@
-/** Format a number as a dollar amount with commas, e.g. "$1,234,567" */
+/**
+ * Format a number as a dollar amount with commas, rounded to the nearest
+ * cent. Whole-dollar amounts show no decimals ("$1,234,567"); fractional
+ * amounts show cents ("$1,234.56").
+ */
 export function fmt(n: number) {
   if (!isFinite(n)) return "$0";
-  const abs = Math.round(Math.abs(n));
-  const formatted = "$" + abs.toLocaleString("en-US");
+  const abs = Math.round(Math.abs(n) * 100) / 100;
+  const formatted =
+    "$" +
+    abs.toLocaleString("en-US", {
+      minimumFractionDigits: Number.isInteger(abs) ? 0 : 2,
+      maximumFractionDigits: 2,
+    });
   return n < 0 && abs > 0 ? "-" + formatted : formatted;
+}
+
+/**
+ * Format a number for display inside a text input: commas, cents kept when
+ * present ("10,661.86"), dropped when the amount is whole ("10,000").
+ */
+export function commaFmtNum(n: number): string {
+  const fixed = n.toFixed(2);
+  return commaFmt(fixed.endsWith(".00") ? fixed.slice(0, -3) : fixed);
 }
 
 /**

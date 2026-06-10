@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { fmt, commaFmt, commaFmtWithCursor, parseNum, parseNumOrNull } from "./format";
+import {
+  fmt,
+  commaFmt,
+  commaFmtNum,
+  commaFmtWithCursor,
+  parseNum,
+  parseNumOrNull,
+} from "./format";
 
 describe("fmt", () => {
   it("formats whole dollar amounts with commas", () => {
@@ -12,13 +19,20 @@ describe("fmt", () => {
     expect(fmt(-50000)).toBe("-$50,000");
   });
 
-  it("rounds to whole dollars", () => {
-    expect(fmt(1234.56)).toBe("$1,235");
-    expect(fmt(1234.4)).toBe("$1,234");
+  it("shows cents for fractional amounts, rounded to the nearest cent", () => {
+    expect(fmt(1234.56)).toBe("$1,234.56");
+    expect(fmt(1234.4)).toBe("$1,234.40");
+    expect(fmt(1234.567)).toBe("$1,234.57");
+    expect(fmt(-1234.5)).toBe("-$1,234.50");
   });
 
-  it("does not render -$0 for small negative values", () => {
-    expect(fmt(-0.4)).toBe("$0");
+  it("omits cents for whole-dollar amounts", () => {
+    expect(fmt(250000)).toBe("$250,000");
+    expect(fmt(1234.001)).toBe("$1,234");
+  });
+
+  it("does not render -$0 for sub-cent negative values", () => {
+    expect(fmt(-0.001)).toBe("$0");
     expect(fmt(-0)).toBe("$0");
   });
 
@@ -64,6 +78,17 @@ describe("commaFmt", () => {
 
   it("returns unparseable input unchanged", () => {
     expect(commaFmt("abc")).toBe("abc");
+  });
+});
+
+describe("commaFmtNum", () => {
+  it("keeps cents when present", () => {
+    expect(commaFmtNum(10661.856)).toBe("10,661.86");
+    expect(commaFmtNum(250000.5)).toBe("250,000.50");
+  });
+
+  it("drops cents for whole amounts", () => {
+    expect(commaFmtNum(10000)).toBe("10,000");
   });
 });
 

@@ -10,7 +10,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Trash2 } from "lucide-react";
-import { fmt, parseNum, commaFmt } from "@/lib/format";
+import { fmt, parseNum, commaFmtNum } from "@/lib/format";
 import DollarInput from "@/components/dollar-input";
 import PercentSlider from "@/components/percent-slider";
 import ExportPdfButton from "@/components/export-pdf-button";
@@ -290,7 +290,7 @@ export default function PaymentOverTimeClient() {
                 Payment amount
               </label>
               <DollarInput
-                value={installmentMode === "count" && calculatedPayment > 0 ? commaFmt(Math.round(calculatedPayment).toString()) : installmentAmount}
+                value={installmentMode === "count" && calculatedPayment > 0 ? commaFmtNum(calculatedPayment) : installmentAmount}
                 onChange={(v) => {
                   setInstallmentAmount(v);
                   setInstallmentMode("amount");
