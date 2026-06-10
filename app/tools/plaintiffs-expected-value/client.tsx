@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,13 +12,9 @@ import { fmt, parseNum } from "@/lib/format";
 import { Row, Separator } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
 import PercentSlider from "@/components/percent-slider";
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const plainInputClass =
-  "w-full px-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
+import EstimateDisclaimer from "@/components/estimate-disclaimer";
+import ExportPdfButton from "@/components/export-pdf-button";
+import { textFieldClass } from "@/lib/field-styles";
 
 export default function PlaintiffsExpectedValueClient() {
   const [damages, setDamages] = useSessionState("tool:plaintiff-ev:damages", "");
@@ -30,28 +25,6 @@ export default function PlaintiffsExpectedValueClient() {
   const [yearsToPayment, setYearsToPayment] = useSessionState("tool:plaintiff-ev:yearsToPayment", "");
   const [discountRate, setDiscountRate] = useSessionState("tool:plaintiff-ev:discountRate", 4);
 
-  const [committed, setCommitted] = useSessionState("tool:plaintiff-ev:committed", {
-    damages: "",
-    fees: "",
-    litigationCosts: "",
-    intangibleCosts: "",
-    probability: 100,
-    yearsToPayment: "",
-    discountRate: 4,
-  });
-
-  function commit() {
-    setCommitted({
-      damages,
-      fees,
-      litigationCosts,
-      intangibleCosts,
-      probability,
-      yearsToPayment,
-      discountRate,
-    });
-  }
-
   function clearAll() {
     setDamages("");
     setFees("");
@@ -60,47 +33,19 @@ export default function PlaintiffsExpectedValueClient() {
     setProbability(100);
     setYearsToPayment("");
     setDiscountRate(4);
-    setCommitted({
-      damages: "",
-      fees: "",
-      litigationCosts: "",
-      intangibleCosts: "",
-      probability: 100,
-      yearsToPayment: "",
-      discountRate: 4,
-    });
     clearSessionKeys("tool:plaintiff-ev:");
   }
 
-  const calc = useMemo(() => {
-    const dmg = parseNum(committed.damages);
-    const f = parseNum(committed.fees);
-    const lit = parseNum(committed.litigationCosts);
-    const intang = parseNum(committed.intangibleCosts);
-    const prob = committed.probability / 100;
-    const years = parseNum(committed.yearsToPayment);
-    const rate = committed.discountRate / 100;
+  const dmg = parseNum(damages);
+  const f = parseNum(fees);
+  const lit = parseNum(litigationCosts);
+  const intang = parseNum(intangibleCosts);
+  const years = parseNum(yearsToPayment);
 
-    const probabilityAdjusted = dmg * prob;
-    const discountFactor = years > 0 ? 1 / Math.pow(1 + rate, years) : 1;
-    const discountedValue = probabilityAdjusted * discountFactor;
-    const totalDeductions = f + lit + intang;
-    const expectedValue = discountedValue - totalDeductions;
-
-    return {
-      damages: dmg,
-      probability: committed.probability,
-      probabilityAdjusted,
-      years,
-      discountRate: committed.discountRate,
-      discountedValue,
-      fees: f,
-      litigationCosts: lit,
-      intangibleCosts: intang,
-      totalDeductions,
-      expectedValue,
-    };
-  }, [committed]);
+  const probabilityAdjusted = dmg * (probability / 100);
+  const discountFactor = years > 0 ? 1 / Math.pow(1 + discountRate / 100, years) : 1;
+  const discountedValue = probabilityAdjusted * discountFactor;
+  const expectedValue = discountedValue - f - lit - intang;
 
   const hasAny =
     damages !== "" ||
@@ -112,7 +57,7 @@ export default function PlaintiffsExpectedValueClient() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
       {/* Inputs */}
-      <div className="lg:col-span-3 space-y-6">
+      <div className="lg:col-span-3 space-y-6 print:hidden">
         {/* Damages */}
         <Card className="bg-white border-brand-border">
           <CardHeader>
@@ -128,7 +73,6 @@ export default function PlaintiffsExpectedValueClient() {
               <DollarInput
                 value={damages}
                 onChange={setDamages}
-                onCommit={commit}
                 placeholder="250,000"
               />
             </div>
@@ -145,10 +89,7 @@ export default function PlaintiffsExpectedValueClient() {
           <CardContent>
             <PercentSlider
               value={probability}
-              onChange={(val) => {
-                setProbability(val);
-                setCommitted((prev) => ({ ...prev, probability: val }));
-              }}
+              onChange={setProbability}
               min={1}
               max={100}
             />
@@ -172,19 +113,14 @@ export default function PlaintiffsExpectedValueClient() {
                 inputMode="numeric"
                 value={yearsToPayment}
                 onChange={(e) => setYearsToPayment(e.target.value)}
-                onBlur={commit}
-                onKeyDown={(e) => e.key === "Enter" && commit()}
                 placeholder="2"
-                className={plainInputClass}
+                className={textFieldClass}
               />
             </div>
 
             <PercentSlider
               value={discountRate}
-              onChange={(val) => {
-                setDiscountRate(val);
-                setCommitted((prev) => ({ ...prev, discountRate: val }));
-              }}
+              onChange={setDiscountRate}
               min={1}
               max={10}
               allowOverflow
@@ -208,7 +144,6 @@ export default function PlaintiffsExpectedValueClient() {
               <DollarInput
                 value={fees}
                 onChange={setFees}
-                onCommit={commit}
                 placeholder="25,000"
               />
             </div>
@@ -219,7 +154,6 @@ export default function PlaintiffsExpectedValueClient() {
               <DollarInput
                 value={litigationCosts}
                 onChange={setLitigationCosts}
-                onCommit={commit}
                 placeholder="10,000"
               />
             </div>
@@ -230,7 +164,6 @@ export default function PlaintiffsExpectedValueClient() {
               <DollarInput
                 value={intangibleCosts}
                 onChange={setIntangibleCosts}
-                onCommit={commit}
                 placeholder="5,000"
               />
             </div>
@@ -252,7 +185,7 @@ export default function PlaintiffsExpectedValueClient() {
             <CardContent className="pt-6">
               <p className="text-sm text-brand-muted mb-1">Plaintiff&apos;s Expected Value</p>
               <p className="text-3xl font-bold text-brand-accent">
-                {fmt(calc.expectedValue)}
+                {fmt(expectedValue)}
               </p>
             </CardContent>
           </Card>
@@ -265,22 +198,22 @@ export default function PlaintiffsExpectedValueClient() {
             <CardContent>
               <table className="w-full text-sm">
                 <tbody>
-                  <Row label="Total damages" value={calc.damages} />
-                  <Row label="Probability of success" value={`${calc.probability}%`} />
-                  <Row label="Probability-adjusted value" value={calc.probabilityAdjusted} bold />
+                  <Row label="Total damages" value={dmg} />
+                  <Row label="Probability of success" value={`${probability}%`} />
+                  <Row label="Probability-adjusted value" value={probabilityAdjusted} bold />
                   <Separator />
-                  <Row label="Years to payment" value={calc.years > 0 ? `${calc.years}` : "\u2014"} />
-                  <Row label="Annual discount rate" value={`${calc.discountRate}%`} />
-                  <Row label="Discounted value" value={calc.discountedValue} bold />
+                  <Row label="Years to payment" value={years > 0 ? `${years}` : "—"} />
+                  <Row label="Annual discount rate" value={`${discountRate}%`} />
+                  <Row label="Discounted value" value={discountedValue} bold />
                   <Separator />
-                  <Row label="Attorneys fees" value={calc.fees} negative />
-                  <Row label="Litigation costs" value={calc.litigationCosts} negative />
-                  <Row label="Intangible costs" value={calc.intangibleCosts} negative />
+                  <Row label="Attorneys fees" value={f} negative />
+                  <Row label="Litigation costs" value={lit} negative />
+                  <Row label="Intangible costs" value={intang} negative />
                   <Separator />
                   <tr>
                     <td className="py-2 font-semibold text-brand-primary">Expected value</td>
                     <td className="py-2 text-right font-semibold text-brand-accent">
-                      {fmt(calc.expectedValue)}
+                      {fmt(expectedValue)}
                     </td>
                   </tr>
                 </tbody>
@@ -288,10 +221,10 @@ export default function PlaintiffsExpectedValueClient() {
             </CardContent>
           </Card>
 
-          <p className="text-xs text-brand-muted">
-            This is an estimate for settlement discussion purposes only. It is
-            not legal advice and does not account for all possible factors.
-          </p>
+          <EstimateDisclaimer />
+          <div className="print:hidden">
+            <ExportPdfButton />
+          </div>
         </div>
       </div>
     </div>

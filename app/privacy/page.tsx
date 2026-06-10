@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Steve Dunn Tools",
+  title: "Privacy Policy",
   description: "Privacy policy for Steve Dunn Tools.",
   alternates: { canonical: "/privacy" },
 };

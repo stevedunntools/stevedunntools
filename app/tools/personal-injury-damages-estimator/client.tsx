@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,12 +11,10 @@ import {
 import { fmt, parseNum } from "@/lib/format";
 import { Row, Separator } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
+import EstimateDisclaimer from "@/components/estimate-disclaimer";
+import ExportPdfButton from "@/components/export-pdf-button";
 
 const MULTIPLIER_STEPS = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
 
 export default function PersonalInjuryClient() {
   const [medicalToDate, setMedicalToDate] = useSessionState("tool:pi-damages:medicalToDate", "");
@@ -27,26 +24,6 @@ export default function PersonalInjuryClient() {
   const [propertyDamage, setPropertyDamage] = useSessionState("tool:pi-damages:propertyDamage", "");
   const [multiplier, setMultiplier] = useSessionState("tool:pi-damages:multiplier", 3);
 
-  const [committed, setCommitted] = useSessionState("tool:pi-damages:committed", {
-    medicalToDate: "",
-    futureMedical: "",
-    lostEarningsToDate: "",
-    futureLostEarnings: "",
-    propertyDamage: "",
-    multiplier: 3,
-  });
-
-  function commit() {
-    setCommitted({
-      medicalToDate,
-      futureMedical,
-      lostEarningsToDate,
-      futureLostEarnings,
-      propertyDamage,
-      multiplier,
-    });
-  }
-
   function clearAll() {
     setMedicalToDate("");
     setFutureMedical("");
@@ -54,41 +31,18 @@ export default function PersonalInjuryClient() {
     setFutureLostEarnings("");
     setPropertyDamage("");
     setMultiplier(3);
-    setCommitted({
-      medicalToDate: "",
-      futureMedical: "",
-      lostEarningsToDate: "",
-      futureLostEarnings: "",
-      propertyDamage: "",
-      multiplier: 3,
-    });
     clearSessionKeys("tool:pi-damages:");
   }
 
-  const calc = useMemo(() => {
-    const medTo = parseNum(committed.medicalToDate);
-    const medFuture = parseNum(committed.futureMedical);
-    const earnTo = parseNum(committed.lostEarningsToDate);
-    const earnFuture = parseNum(committed.futureLostEarnings);
-    const prop = parseNum(committed.propertyDamage);
-    const mult = committed.multiplier;
+  const medTo = parseNum(medicalToDate);
+  const medFuture = parseNum(futureMedical);
+  const earnTo = parseNum(lostEarningsToDate);
+  const earnFuture = parseNum(futureLostEarnings);
+  const prop = parseNum(propertyDamage);
 
-    const totalMedical = medTo + medFuture;
-    const painAndSuffering = totalMedical * mult;
-    const total = totalMedical + painAndSuffering + earnTo + earnFuture + prop;
-
-    return {
-      medicalToDate: medTo,
-      futureMedical: medFuture,
-      totalMedical,
-      multiplier: mult,
-      painAndSuffering,
-      lostEarningsToDate: earnTo,
-      futureLostEarnings: earnFuture,
-      propertyDamage: prop,
-      total,
-    };
-  }, [committed]);
+  const totalMedical = medTo + medFuture;
+  const painAndSuffering = totalMedical * multiplier;
+  const total = totalMedical + painAndSuffering + earnTo + earnFuture + prop;
 
   const hasAny =
     medicalToDate !== "" ||
@@ -100,7 +54,7 @@ export default function PersonalInjuryClient() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
       {/* Inputs */}
-      <div className="lg:col-span-3 space-y-6">
+      <div className="lg:col-span-3 space-y-6 print:hidden">
         {/* Medical Expenses */}
         <Card className="bg-white border-brand-border">
           <CardHeader>
@@ -117,7 +71,6 @@ export default function PersonalInjuryClient() {
                 <DollarInput
                   value={medicalToDate}
                   onChange={setMedicalToDate}
-                  onCommit={commit}
                   placeholder="25,000"
                 />
               </div>
@@ -128,7 +81,6 @@ export default function PersonalInjuryClient() {
                 <DollarInput
                   value={futureMedical}
                   onChange={setFutureMedical}
-                  onCommit={commit}
                   placeholder="10,000"
                 />
               </div>
@@ -155,11 +107,7 @@ export default function PersonalInjuryClient() {
               max="5"
               step="0.5"
               value={multiplier}
-              onChange={(e) => {
-                const val = parseFloat(e.target.value);
-                setMultiplier(val);
-                setCommitted((prev) => ({ ...prev, multiplier: val }));
-              }}
+              onChange={(e) => setMultiplier(parseFloat(e.target.value))}
               className="w-full accent-brand-accent"
             />
             <div className="flex justify-between px-1">
@@ -196,7 +144,6 @@ export default function PersonalInjuryClient() {
                 <DollarInput
                   value={lostEarningsToDate}
                   onChange={setLostEarningsToDate}
-                  onCommit={commit}
                   placeholder="15,000"
                 />
               </div>
@@ -207,7 +154,6 @@ export default function PersonalInjuryClient() {
                 <DollarInput
                   value={futureLostEarnings}
                   onChange={setFutureLostEarnings}
-                  onCommit={commit}
                   placeholder="20,000"
                 />
               </div>
@@ -230,7 +176,6 @@ export default function PersonalInjuryClient() {
               <DollarInput
                 value={propertyDamage}
                 onChange={setPropertyDamage}
-                onCommit={commit}
                 placeholder="5,000"
               />
             </div>
@@ -252,7 +197,7 @@ export default function PersonalInjuryClient() {
             <CardContent className="pt-6">
               <p className="text-sm text-brand-muted mb-1">Estimated Total Damages</p>
               <p className="text-3xl font-bold text-brand-accent">
-                {fmt(calc.total)}
+                {fmt(total)}
               </p>
             </CardContent>
           </Card>
@@ -265,24 +210,24 @@ export default function PersonalInjuryClient() {
             <CardContent>
               <table className="w-full text-sm">
                 <tbody>
-                  <Row label="Medical expenses to date" value={calc.medicalToDate} />
-                  <Row label="Future medical expenses" value={calc.futureMedical} />
-                  <Row label="Total medical expenses" value={calc.totalMedical} bold />
+                  <Row label="Medical expenses to date" value={medTo} />
+                  <Row label="Future medical expenses" value={medFuture} />
+                  <Row label="Total medical expenses" value={totalMedical} bold />
                   <Separator />
                   <Row
-                    label={`Non-economic damages (${calc.multiplier}× medical)`}
-                    value={calc.painAndSuffering}
+                    label={`Non-economic damages (${multiplier}× medical)`}
+                    value={painAndSuffering}
                     bold
                   />
                   <Separator />
-                  <Row label="Lost earnings to date" value={calc.lostEarningsToDate} />
-                  <Row label="Future lost earnings" value={calc.futureLostEarnings} />
-                  <Row label="Property damage" value={calc.propertyDamage} />
+                  <Row label="Lost earnings to date" value={earnTo} />
+                  <Row label="Future lost earnings" value={earnFuture} />
+                  <Row label="Property damage" value={prop} />
                   <Separator />
                   <tr>
                     <td className="py-2 font-semibold text-brand-primary">Total</td>
                     <td className="py-2 text-right font-semibold text-brand-accent">
-                      {fmt(calc.total)}
+                      {fmt(total)}
                     </td>
                   </tr>
                 </tbody>
@@ -290,10 +235,10 @@ export default function PersonalInjuryClient() {
             </CardContent>
           </Card>
 
-          <p className="text-xs text-brand-muted">
-            This is an estimate for settlement discussion purposes only. It is
-            not legal advice and does not account for all possible factors.
-          </p>
+          <EstimateDisclaimer />
+          <div className="print:hidden">
+            <ExportPdfButton />
+          </div>
         </div>
       </div>
     </div>

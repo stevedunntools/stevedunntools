@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +12,8 @@ import { fmt, parseNum } from "@/lib/format";
 import { Row, Separator } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
 import PercentSlider from "@/components/percent-slider";
+import EstimateDisclaimer from "@/components/estimate-disclaimer";
+import ExportPdfButton from "@/components/export-pdf-button";
 
 export default function DefendantsExpectedCostClient() {
   const [damages, setDamages] = useSessionState("tool:defendant-ec:damages", "");
@@ -23,28 +24,6 @@ export default function DefendantsExpectedCostClient() {
   const [defendantCosts, setDefendantCosts] = useSessionState("tool:defendant-ec:defendantCosts", "");
   const [intangibleCosts, setIntangibleCosts] = useSessionState("tool:defendant-ec:intangibleCosts", "");
 
-  const [committed, setCommitted] = useSessionState("tool:defendant-ec:committed", {
-    damages: "",
-    damagesProbability: 100,
-    plaintiffFees: "",
-    feeProbability: 100,
-    defendantFees: "",
-    defendantCosts: "",
-    intangibleCosts: "",
-  });
-
-  function commit() {
-    setCommitted({
-      damages,
-      damagesProbability,
-      plaintiffFees,
-      feeProbability,
-      defendantFees,
-      defendantCosts,
-      intangibleCosts,
-    });
-  }
-
   function clearAll() {
     setDamages("");
     setDamagesProbability(100);
@@ -53,44 +32,18 @@ export default function DefendantsExpectedCostClient() {
     setDefendantFees("");
     setDefendantCosts("");
     setIntangibleCosts("");
-    setCommitted({
-      damages: "",
-      damagesProbability: 100,
-      plaintiffFees: "",
-      feeProbability: 100,
-      defendantFees: "",
-      defendantCosts: "",
-      intangibleCosts: "",
-    });
     clearSessionKeys("tool:defendant-ec:");
   }
 
-  const calc = useMemo(() => {
-    const dmg = parseNum(committed.damages);
-    const dmgProb = committed.damagesProbability / 100;
-    const pFees = parseNum(committed.plaintiffFees);
-    const feeProb = committed.feeProbability / 100;
-    const dFees = parseNum(committed.defendantFees);
-    const dCosts = parseNum(committed.defendantCosts);
-    const intang = parseNum(committed.intangibleCosts);
+  const dmg = parseNum(damages);
+  const pFees = parseNum(plaintiffFees);
+  const dFees = parseNum(defendantFees);
+  const dCosts = parseNum(defendantCosts);
+  const intang = parseNum(intangibleCosts);
 
-    const expectedDamages = dmg * dmgProb;
-    const expectedFeeExposure = pFees * feeProb;
-    const totalExpectedCost = expectedDamages + expectedFeeExposure + dFees + dCosts + intang;
-
-    return {
-      damages: dmg,
-      damagesProbability: committed.damagesProbability,
-      expectedDamages,
-      plaintiffFees: pFees,
-      feeProbability: committed.feeProbability,
-      expectedFeeExposure,
-      defendantFees: dFees,
-      defendantCosts: dCosts,
-      intangibleCosts: intang,
-      totalExpectedCost,
-    };
-  }, [committed]);
+  const expectedDamages = dmg * (damagesProbability / 100);
+  const expectedFeeExposure = pFees * (feeProbability / 100);
+  const totalExpectedCost = expectedDamages + expectedFeeExposure + dFees + dCosts + intang;
 
   const hasAny =
     damages !== "" ||
@@ -102,7 +55,7 @@ export default function DefendantsExpectedCostClient() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
       {/* Inputs */}
-      <div className="lg:col-span-3 space-y-6">
+      <div className="lg:col-span-3 space-y-6 print:hidden">
         {/* Plaintiff's Damages */}
         <Card className="bg-white border-brand-border">
           <CardHeader>
@@ -118,16 +71,12 @@ export default function DefendantsExpectedCostClient() {
               <DollarInput
                 value={damages}
                 onChange={setDamages}
-                onCommit={commit}
                 placeholder="250,000"
               />
             </div>
             <PercentSlider
               value={damagesProbability}
-              onChange={(val) => {
-                setDamagesProbability(val);
-                setCommitted((prev) => ({ ...prev, damagesProbability: val }));
-              }}
+              onChange={setDamagesProbability}
               min={1}
               max={100}
               label="Probability of plaintiff prevailing on damages"
@@ -150,16 +99,12 @@ export default function DefendantsExpectedCostClient() {
               <DollarInput
                 value={plaintiffFees}
                 onChange={setPlaintiffFees}
-                onCommit={commit}
                 placeholder="75,000"
               />
             </div>
             <PercentSlider
               value={feeProbability}
-              onChange={(val) => {
-                setFeeProbability(val);
-                setCommitted((prev) => ({ ...prev, feeProbability: val }));
-              }}
+              onChange={setFeeProbability}
               min={1}
               max={100}
               label="Probability of fee shifting — use the same percentage as above if fee shifting is presumed"
@@ -182,7 +127,6 @@ export default function DefendantsExpectedCostClient() {
               <DollarInput
                 value={defendantFees}
                 onChange={setDefendantFees}
-                onCommit={commit}
                 placeholder="100,000"
               />
             </div>
@@ -193,7 +137,6 @@ export default function DefendantsExpectedCostClient() {
               <DollarInput
                 value={defendantCosts}
                 onChange={setDefendantCosts}
-                onCommit={commit}
                 placeholder="25,000"
               />
             </div>
@@ -204,7 +147,6 @@ export default function DefendantsExpectedCostClient() {
               <DollarInput
                 value={intangibleCosts}
                 onChange={setIntangibleCosts}
-                onCommit={commit}
                 placeholder="10,000"
               />
             </div>
@@ -225,7 +167,7 @@ export default function DefendantsExpectedCostClient() {
             <CardContent className="pt-6">
               <p className="text-sm text-brand-muted mb-1">Defendant&apos;s Total Expected Cost</p>
               <p className="text-3xl font-bold text-brand-accent">
-                {fmt(calc.totalExpectedCost)}
+                {fmt(totalExpectedCost)}
               </p>
             </CardContent>
           </Card>
@@ -237,22 +179,22 @@ export default function DefendantsExpectedCostClient() {
             <CardContent>
               <table className="w-full text-sm">
                 <tbody>
-                  <Row label="Plaintiff's damages" value={calc.damages} />
-                  <Row label="Probability" value={`${calc.damagesProbability}%`} />
-                  <Row label="Expected damages" value={calc.expectedDamages} bold />
+                  <Row label="Plaintiff's damages" value={dmg} />
+                  <Row label="Probability" value={`${damagesProbability}%`} />
+                  <Row label="Expected damages" value={expectedDamages} bold />
                   <Separator />
-                  <Row label="Plaintiff's fees & costs" value={calc.plaintiffFees} />
-                  <Row label="Fee shifting probability" value={`${calc.feeProbability}%`} />
-                  <Row label="Expected fee exposure" value={calc.expectedFeeExposure} bold />
+                  <Row label="Plaintiff's fees & costs" value={pFees} />
+                  <Row label="Fee shifting probability" value={`${feeProbability}%`} />
+                  <Row label="Expected fee exposure" value={expectedFeeExposure} bold />
                   <Separator />
-                  <Row label="Defendant's attorneys fees" value={calc.defendantFees} />
-                  <Row label="Defendant's litigation costs" value={calc.defendantCosts} />
-                  <Row label="Intangible costs" value={calc.intangibleCosts} />
+                  <Row label="Defendant's attorneys fees" value={dFees} />
+                  <Row label="Defendant's litigation costs" value={dCosts} />
+                  <Row label="Intangible costs" value={intang} />
                   <Separator />
                   <tr>
                     <td className="py-2 font-semibold text-brand-primary">Total expected cost</td>
                     <td className="py-2 text-right font-semibold text-brand-accent">
-                      {fmt(calc.totalExpectedCost)}
+                      {fmt(totalExpectedCost)}
                     </td>
                   </tr>
                 </tbody>
@@ -260,10 +202,10 @@ export default function DefendantsExpectedCostClient() {
             </CardContent>
           </Card>
 
-          <p className="text-xs text-brand-muted">
-            This is an estimate for settlement discussion purposes only. It is
-            not legal advice and does not account for all possible factors.
-          </p>
+          <EstimateDisclaimer />
+          <div className="print:hidden">
+            <ExportPdfButton />
+          </div>
         </div>
       </div>
     </div>

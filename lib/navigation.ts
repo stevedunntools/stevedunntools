@@ -44,3 +44,8 @@ export const navGroups = [
 export const allToolLinks = navGroups
   .filter((g) => g.label !== "About")
   .flatMap((g) => g.links);
+
+/** Category label for a tool route, derived from the nav so it can't go stale. */
+export function toolCategory(href: string): string {
+  return navGroups.find((g) => g.links.some((l) => l.href === href))?.label ?? "Tools";
+}

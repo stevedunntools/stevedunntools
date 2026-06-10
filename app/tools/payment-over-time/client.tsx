@@ -14,6 +14,14 @@ import { fmt, parseNum, commaFmt } from "@/lib/format";
 import DollarInput from "@/components/dollar-input";
 import PercentSlider from "@/components/percent-slider";
 import ExportPdfButton from "@/components/export-pdf-button";
+import { textFieldClass as inputClass, selectFieldClass as selectClass } from "@/lib/field-styles";
+import {
+  buildSchedule,
+  Frequency,
+  InterestScope,
+  InterestStart,
+  InstallmentMode,
+} from "./schedule";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -25,18 +33,6 @@ interface UpfrontPayment {
   timing: string;
 }
 
-type Frequency = "monthly" | "quarterly" | "custom";
-type InterestScope = "installments" | "none";
-type InterestStart = "immediately" | "first-installment";
-
-interface ScheduleRow {
-  label: string;
-  payment: number;
-  principal: number;
-  interest: number;
-  balance: number;
-}
-
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -45,13 +41,6 @@ function makeId() {
   return crypto.randomUUID();
 }
 
-const inputClass =
-  "w-full px-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
-
-const selectClass =
-  "w-full px-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
-
-const noop = () => {};
 
 // ---------------------------------------------------------------------------
 // Component
@@ -71,7 +60,7 @@ export default function PaymentOverTimeClient() {
   const [annualRate, setAnnualRate] = useSessionState("tool:payment-time:annualRate", 5);
 
   // Track which field the user last edited to determine calculation direction
-  const [installmentMode, setInstallmentMode] = useSessionState<"count" | "amount">("tool:payment-time:installmentMode", "count");
+  const [installmentMode, setInstallmentMode] = useSessionState<InstallmentMode>("tool:payment-time:installmentMode", "count");
 
   // Migrate legacy "all" scope (removed) → "installments"
   useEffect(() => {
@@ -108,172 +97,33 @@ export default function PaymentOverTimeClient() {
   // Calculation — driven directly by live state. No deferred-commit layer.
   // ---------------------------------------------------------------------------
 
-  const { schedule, summary, calculatedPayment, calculatedCount, warnings } = useMemo(() => {
-    const total = parseNum(totalSettlement);
-    const scope = interestScope;
-    const startTiming = interestStart;
-    const rate = annualRate / 100;
-    const freq = frequency;
-
-    let periodsPerYear = 12;
-    if (freq === "quarterly") periodsPerYear = 4;
-    else if (freq === "custom") {
-      const days = parseNum(customIntervalDays);
-      periodsPerYear = days > 0 ? 365 / days : 12;
-    }
-
-    const periodRate = scope !== "none" ? rate / periodsPerYear : 0;
-
-    let periodLabel = "Month";
-    if (freq === "quarterly") periodLabel = "Quarter";
-    else if (freq === "custom") periodLabel = "Payment";
-
-    const rows: ScheduleRow[] = [];
-    let balance = total;
-    let totalInterest = 0;
-    let totalPaid = 0;
-    const warnings: string[] = [];
-
-    // Flag (but still process) upfronts whose total exceeds the settlement
-    const upfrontTotal = upfronts.reduce(
-      (sum, u) => sum + Math.max(0, parseNum(u.amount)),
-      0
-    );
-    if (total > 0 && upfrontTotal > total + 0.005) {
-      warnings.push(
-        `Up-front payments (${fmt(upfrontTotal)}) exceed the settlement total (${fmt(total)}). The excess is not included in the schedule.`
-      );
-    }
-
-    // Up-front payments — treated as occurring at T=0 (no interest accrual).
-    // Each upfront's principal is clamped to whatever balance remains.
-    const upfrontCount = upfronts.filter((u) => parseNum(u.amount) > 0).length;
-    for (const u of upfronts) {
-      const requested = parseNum(u.amount);
-      if (requested <= 0) continue;
-
-      const principal = Math.min(requested, balance);
-      if (principal <= 0) continue;
-      const payment = principal;
-      balance = Math.max(0, balance - principal);
-      totalPaid += payment;
-
-      rows.push({
-        label: u.timing || "Up front",
-        payment,
-        principal,
-        interest: 0,
-        balance,
-      });
-    }
-
-    // If interest starts immediately, accrue one period of interest on the
-    // post-upfront balance before installments begin.
-    if (scope === "installments" && startTiming === "immediately" && upfrontCount > 0 && periodRate > 0) {
-      const accruedInterest = balance * periodRate;
-      balance += accruedInterest;
-      totalInterest += accruedInterest;
-
-      rows.push({
-        label: "Accrued interest",
-        payment: 0,
-        principal: 0,
-        interest: accruedInterest,
-        balance,
-      });
-    }
-
-    // Determine installment count and payment amount
-    const mode = installmentMode;
-    let n = Math.round(parseNum(numPayments));
-    let fixedPayment = parseNum(installmentAmount);
-    const installmentRate = scope !== "none" ? periodRate : 0;
-
-    let calcPayment = 0;
-    let calcCount = 0;
-
-    if (balance > 0) {
-      if (mode === "count" && n > 0) {
-        if (installmentRate > 0) {
-          fixedPayment = (balance * installmentRate) / (1 - Math.pow(1 + installmentRate, -n));
-        } else {
-          fixedPayment = balance / n;
-        }
-        calcPayment = fixedPayment;
-        calcCount = n;
-      } else if (mode === "amount" && fixedPayment > 0) {
-        if (installmentRate > 0) {
-          const minPayment = balance * installmentRate;
-          if (fixedPayment <= minPayment) {
-            warnings.push(
-              `Payment amount (${fmt(fixedPayment)}) is at or below the interest accrued per period (${fmt(minPayment)}). Increase the payment or lower the rate to produce a schedule.`
-            );
-            n = 0;
-          } else {
-            n = Math.ceil(
-              -Math.log(1 - (balance * installmentRate) / fixedPayment) /
-                Math.log(1 + installmentRate)
-            );
-          }
-        } else {
-          n = Math.ceil(balance / fixedPayment);
-        }
-        calcPayment = fixedPayment;
-        calcCount = n;
-      }
-
-      for (let i = 1; i <= n; i++) {
-        if (balance <= 0) break;
-
-        const interest = balance * installmentRate;
-        let principal: number;
-        let payment: number;
-
-        if (i === n) {
-          principal = balance;
-          payment = principal + interest;
-        } else {
-          payment = fixedPayment;
-          principal = payment - interest;
-        }
-
-        balance = Math.max(0, balance - principal);
-        totalInterest += interest;
-        totalPaid += payment;
-
-        rows.push({
-          label: `${periodLabel} ${i}`,
-          payment,
-          principal,
-          interest,
-          balance: Math.max(0, balance),
-        });
-      }
-    }
-
-    return {
-      schedule: rows,
-      summary: {
-        totalSettlement: total,
-        totalPaid,
-        totalInterest,
-      },
-      calculatedPayment: calcPayment,
-      calculatedCount: calcCount,
-      warnings,
-    };
-  }, [
-    totalSettlement,
-    upfronts,
-    numPayments,
-    installmentAmount,
-    installmentMode,
-    frequency,
-    customIntervalDays,
-    interestScope,
-    interestStart,
-    annualRate,
-  ]);
+  const { schedule, summary, calculatedPayment, calculatedCount, warnings } = useMemo(
+    () =>
+      buildSchedule({
+        totalSettlement: parseNum(totalSettlement),
+        upfronts: upfronts.map((u) => ({ amount: parseNum(u.amount), timing: u.timing })),
+        numPayments: parseNum(numPayments),
+        installmentAmount: parseNum(installmentAmount),
+        installmentMode,
+        frequency,
+        customIntervalDays: parseNum(customIntervalDays),
+        interestScope,
+        interestStart,
+        annualRate,
+      }),
+    [
+      totalSettlement,
+      upfronts,
+      numPayments,
+      installmentAmount,
+      installmentMode,
+      frequency,
+      customIntervalDays,
+      interestScope,
+      interestStart,
+      annualRate,
+    ]
+  );
 
   // Show Clear button whenever any persisted state differs from defaults
   const upfrontsAreDefault =
@@ -309,7 +159,6 @@ export default function PaymentOverTimeClient() {
             <DollarInput
               value={totalSettlement}
               onChange={setTotalSettlement}
-              onCommit={noop}
               placeholder="250,000"
             />
           </CardContent>
@@ -381,7 +230,6 @@ export default function PaymentOverTimeClient() {
                 <DollarInput
                   value={u.amount}
                   onChange={(v) => updateUpfront(u.id, "amount", v)}
-                  onCommit={noop}
                   placeholder="25,000"
                 />
               </div>
@@ -447,7 +295,6 @@ export default function PaymentOverTimeClient() {
                   setInstallmentAmount(v);
                   setInstallmentMode("amount");
                 }}
-                onCommit={noop}
                 placeholder="10,000"
                 className={`w-full pl-7 pr-3 py-2 text-sm border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent ${installmentMode === "count" && calculatedPayment > 0 ? "bg-brand-bg border-brand-accent/40" : "border-brand-border"}`}
               />

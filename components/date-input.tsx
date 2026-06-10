@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { MONTHS, daysInMonth } from "@/lib/date-utils";
 
 interface DateInputProps {
@@ -18,25 +18,46 @@ const textClass =
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 51 }, (_, i) => currentYear - 25 + i); // 25 years back, 25 forward
 
+function formatDate(d: Date): string {
+  return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+}
+
+function parseTextDate(s: string): Date | null {
+  const trimmed = s.trim();
+  if (!trimmed) return null;
+
+  // Try M/D/YYYY or M-D-YYYY
+  const match = trimmed.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{2,4})$/);
+  if (match) {
+    const m = parseInt(match[1]) - 1;
+    let d = parseInt(match[2]);
+    let y = parseInt(match[3]);
+    if (y < 100) y += 2000;
+    if (m >= 0 && m <= 11 && d >= 1 && d <= 31 && y >= 1900) {
+      const maxDay = daysInMonth(y, m);
+      d = Math.min(d, maxDay);
+      return new Date(y, m, d);
+    }
+  }
+  return null;
+}
+
 export default function DateInput({ value, onChange, label }: DateInputProps) {
   const [month, setMonth] = useState<number>(value ? value.getMonth() : -1);
   const [day, setDay] = useState<number>(value ? value.getDate() : -1);
   const [year, setYear] = useState<number>(value ? value.getFullYear() : -1);
   const [textValue, setTextValue] = useState(value ? formatDate(value) : "");
 
-  function formatDate(d: Date): string {
-    return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+  // Sync internal state when the value prop changes externally (including to
+  // null, e.g. "Clear All"). Render-phase adjustment instead of an effect.
+  const [lastValue, setLastValue] = useState<Date | null>(value);
+  if (value !== lastValue) {
+    setLastValue(value);
+    setMonth(value ? value.getMonth() : -1);
+    setDay(value ? value.getDate() : -1);
+    setYear(value ? value.getFullYear() : -1);
+    setTextValue(value ? formatDate(value) : "");
   }
-
-  // Sync dropdowns when value changes externally
-  useEffect(() => {
-    if (value) {
-      setMonth(value.getMonth());
-      setDay(value.getDate());
-      setYear(value.getFullYear());
-      setTextValue(formatDate(value));
-    }
-  }, [value]);
 
   function emitDate(m: number, d: number, y: number) {
     if (m >= 0 && d > 0 && y > 0) {
@@ -78,27 +99,16 @@ export default function DateInput({ value, onChange, label }: DateInputProps) {
     }
   }
 
-  function parseTextDate(s: string): Date | null {
-    const trimmed = s.trim();
-    if (!trimmed) return null;
-
-    // Try M/D/YYYY or M-D-YYYY
-    const match = trimmed.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{2,4})$/);
-    if (match) {
-      let m = parseInt(match[1]) - 1;
-      let d = parseInt(match[2]);
-      let y = parseInt(match[3]);
-      if (y < 100) y += 2000;
-      if (m >= 0 && m <= 11 && d >= 1 && d <= 31 && y >= 1900) {
-        const maxDay = daysInMonth(y, m);
-        d = Math.min(d, maxDay);
-        return new Date(y, m, d);
-      }
-    }
-    return null;
-  }
-
   const maxDays = month >= 0 && year > 0 ? daysInMonth(year, month) : 31;
+
+  // Include the selected year even when it falls outside the standard range
+  // (the text input accepts any year back to 1900).
+  const yearOptions = useMemo(() => {
+    if (year > 0 && !YEARS.includes(year)) {
+      return [...YEARS, year].sort((a, b) => a - b);
+    }
+    return YEARS;
+  }, [year]);
 
   return (
     <div>
@@ -145,7 +155,7 @@ export default function DateInput({ value, onChange, label }: DateInputProps) {
           className={`${selectClass} flex-[2]`}
         >
           <option value={-1}>Year</option>
-          {YEARS.map((y) => (
+          {yearOptions.map((y) => (
             <option key={y} value={y}>{y}</option>
           ))}
         </select>

@@ -11,15 +11,10 @@ import {
 } from "@/components/ui/card";
 import DateInput from "@/components/date-input";
 import { addBusinessDays, countBusinessDays, MONTHS } from "@/lib/date-utils";
+import { textFieldClass as inputClass, selectFieldClass as selectClass } from "@/lib/field-styles";
 
 type Direction = "add" | "subtract";
 type HolidayMode = "federal" | "weekends-only";
-
-const inputClass =
-  "w-full px-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
-
-const selectClass =
-  "w-full px-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
 
 export default function AddSubtractDateClient() {
   const [startDate, setStartDate] = useSessionState<Date | null>("tool:add-subtract:start", null, dateSerializer);

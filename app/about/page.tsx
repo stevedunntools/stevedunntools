@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "About Steve Dunn | Steve Dunn Tools",
+  title: "About Steve Dunn",
   description:
     "Learn about Steve Dunn, a full-time mediator and former litigator who built these settlement tools for lawyers, mediators, and parties in dispute resolution.",
   alternates: { canonical: "/about" },

@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +12,9 @@ import { Trash2 } from "lucide-react";
 import { fmt, parseNum } from "@/lib/format";
 import { Row, Separator } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
+import EstimateDisclaimer from "@/components/estimate-disclaimer";
+import ExportPdfButton from "@/components/export-pdf-button";
+import { textFieldClass, selectFieldClass } from "@/lib/field-styles";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -38,9 +40,6 @@ function makeJobId() {
   return crypto.randomUUID();
 }
 
-const monthInputClass =
-  "w-full px-3 py-2.5 sm:py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
-
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -58,36 +57,6 @@ export default function EmploymentDamagesClient() {
   const [punitive, setPunitive] = useSessionState("tool:emp-damages:punitive", "");
   const [otherDamages, setOtherDamages] = useSessionState("tool:emp-damages:otherDamages", "");
 
-  const [committed, setCommitted] = useSessionState("tool:emp-damages:committed", {
-    monthlyComp: "",
-    monthlyBenefits: "",
-    monthsSinceTermination: "",
-    frontPayMonths: "",
-    jobs: [] as MitigationJob[],
-    compensatory: "",
-    liquidatedType: "none" as LiquidatedType,
-    punitive: "",
-    otherDamages: "",
-  });
-
-  function commit() {
-    setCommitted({
-      monthlyComp,
-      monthlyBenefits,
-      monthsSinceTermination,
-      frontPayMonths,
-      jobs: jobs.map((j) => ({ ...j })),
-      compensatory,
-      liquidatedType,
-      punitive,
-      otherDamages,
-    });
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter") commit();
-  }
-
   function addJob() {
     setJobs([...jobs, { id: makeJobId(), months: "", monthlyComp: "", current: false }]);
   }
@@ -97,9 +66,7 @@ export default function EmploymentDamagesClient() {
   }
 
   function removeJob(id: string) {
-    const updated = jobs.filter((j) => j.id !== id);
-    setJobs(updated);
-    setCommitted((prev) => ({ ...prev, jobs: updated }));
+    setJobs(jobs.filter((j) => j.id !== id));
   }
 
   function clearAll() {
@@ -112,74 +79,46 @@ export default function EmploymentDamagesClient() {
     setLiquidatedType("none");
     setPunitive("");
     setOtherDamages("");
-    setCommitted({
-      monthlyComp: "",
-      monthlyBenefits: "",
-      monthsSinceTermination: "",
-      frontPayMonths: "",
-      jobs: [],
-      compensatory: "",
-      liquidatedType: "none",
-      punitive: "",
-      otherDamages: "",
-    });
     clearSessionKeys("tool:emp-damages:");
   }
 
-  const calc = useMemo(() => {
-    const comp = parseNum(committed.monthlyComp);
-    const benefits = parseNum(committed.monthlyBenefits);
-    const bpMonths = parseNum(committed.monthsSinceTermination);
-    const fpMonths = parseNum(committed.frontPayMonths);
-    const compDamages = parseNum(committed.compensatory);
-    const pun = parseNum(committed.punitive);
-    const other = parseNum(committed.otherDamages);
+  const comp = parseNum(monthlyComp);
+  const benefits = parseNum(monthlyBenefits);
+  const bpMonths = parseNum(monthsSinceTermination);
+  const fpMonths = parseNum(frontPayMonths);
+  const compDamages = parseNum(compensatory);
+  const pun = parseNum(punitive);
+  const other = parseNum(otherDamages);
 
-    // Back pay = (compensation + benefits) × months since termination
-    const backPayComp = comp * bpMonths;
-    const backPayBenefits = benefits * bpMonths;
-    const backPay = backPayComp + backPayBenefits;
+  // Back pay = (compensation + benefits) × months since termination
+  const backPayComp = comp * bpMonths;
+  const backPayBenefits = benefits * bpMonths;
+  const backPay = backPayComp + backPayBenefits;
 
-    // Mitigation = sum of all earnings from all jobs
-    const totalMitigation = committed.jobs.reduce((sum, j) => {
-      return sum + parseNum(j.months) * parseNum(j.monthlyComp);
-    }, 0);
+  // Mitigation = sum of all earnings from all jobs
+  const totalMitigation = jobs.reduce(
+    (sum, j) => sum + parseNum(j.months) * parseNum(j.monthlyComp),
+    0
+  );
 
-    const netBackPay = Math.max(0, backPay - totalMitigation);
+  const netBackPay = Math.max(0, backPay - totalMitigation);
 
-    // Front pay = months × (comp at termination - current job comp if currently employed)
-    const currentJob = committed.jobs.find((j) => j.current);
-    const currentJobComp = currentJob ? parseNum(currentJob.monthlyComp) : 0;
-    const frontPayMonthly = Math.max(0, comp - currentJobComp);
-    const frontPay = frontPayMonthly * fpMonths;
+  // Front pay = months × (comp at termination - current job comp if currently employed)
+  const currentJob = jobs.find((j) => j.current);
+  const currentJobComp = currentJob ? parseNum(currentJob.monthlyComp) : 0;
+  const frontPay = Math.max(0, comp - currentJobComp) * fpMonths;
 
-    // Liquidated damages (based on back pay only, before mitigation)
-    let liquidated = 0;
-    const liqType = committed.liquidatedType;
-    if (liqType === "2x-wages") {
-      liquidated = backPayComp;
-    } else if (liqType === "2x-wages-benefits") {
-      liquidated = backPay;
-    } else if (liqType === "3x-wages") {
-      liquidated = backPayComp * 2;
-    }
+  // Liquidated damages (based on back pay only, before mitigation)
+  let liquidated = 0;
+  if (liquidatedType === "2x-wages") {
+    liquidated = backPayComp;
+  } else if (liquidatedType === "2x-wages-benefits") {
+    liquidated = backPay;
+  } else if (liquidatedType === "3x-wages") {
+    liquidated = backPayComp * 2;
+  }
 
-    const grossTotal = netBackPay + frontPay + compDamages + liquidated + pun + other;
-
-    return {
-      backPayComp,
-      backPayBenefits,
-      backPay,
-      totalMitigation,
-      netBackPay,
-      frontPay,
-      compensatory: compDamages,
-      liquidated,
-      punitive: pun,
-      other,
-      grossTotal,
-    };
-  }, [committed]);
+  const grossTotal = netBackPay + frontPay + compDamages + liquidated + pun + other;
 
   const hasAny =
     monthlyComp !== "" ||
@@ -194,7 +133,7 @@ export default function EmploymentDamagesClient() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
       {/* Inputs */}
-      <div className="lg:col-span-3 space-y-6">
+      <div className="lg:col-span-3 space-y-6 print:hidden">
         {/* Back Pay */}
         <Card className="bg-white border-brand-border">
           <CardHeader>
@@ -211,7 +150,6 @@ export default function EmploymentDamagesClient() {
                 <DollarInput
                   value={monthlyComp}
                   onChange={setMonthlyComp}
-                  onCommit={commit}
                   placeholder="7,000"
                 />
               </div>
@@ -222,7 +160,6 @@ export default function EmploymentDamagesClient() {
                 <DollarInput
                   value={monthlyBenefits}
                   onChange={setMonthlyBenefits}
-                  onCommit={commit}
                   placeholder="1,500"
                 />
               </div>
@@ -236,10 +173,8 @@ export default function EmploymentDamagesClient() {
                 inputMode="numeric"
                 value={monthsSinceTermination}
                 onChange={(e) => setMonthsSinceTermination(e.target.value)}
-                onBlur={commit}
-                onKeyDown={handleKeyDown}
                 placeholder="12"
-                className={monthInputClass}
+                className={textFieldClass}
               />
             </div>
           </CardContent>
@@ -265,10 +200,8 @@ export default function EmploymentDamagesClient() {
                       inputMode="numeric"
                       value={job.months}
                       onChange={(e) => updateJob(job.id, "months", e.target.value)}
-                      onBlur={commit}
-                      onKeyDown={handleKeyDown}
                       placeholder="6"
-                      className={monthInputClass}
+                      className={textFieldClass}
                     />
                   </div>
                   <div>
@@ -278,7 +211,6 @@ export default function EmploymentDamagesClient() {
                     <DollarInput
                       value={job.monthlyComp}
                       onChange={(v) => updateJob(job.id, "monthlyComp", v)}
-                      onCommit={commit}
                       placeholder="5,000"
                     />
                   </div>
@@ -294,13 +226,7 @@ export default function EmploymentDamagesClient() {
                   <input
                     type="checkbox"
                     checked={job.current}
-                    onChange={(e) => {
-                      const updatedJobs = jobs.map((j) =>
-                        j.id === job.id ? { ...j, current: e.target.checked } : j
-                      );
-                      setJobs(updatedJobs);
-                      setCommitted((prev) => ({ ...prev, jobs: updatedJobs }));
-                    }}
+                    onChange={(e) => updateJob(job.id, "current", e.target.checked)}
                     className="h-5 w-5 sm:h-4 sm:w-4 rounded border-brand-border text-brand-accent focus:ring-brand-accent"
                   />
                   <span className="text-xs text-brand-muted">Currently employed</span>
@@ -334,10 +260,8 @@ export default function EmploymentDamagesClient() {
                 inputMode="numeric"
                 value={frontPayMonths}
                 onChange={(e) => setFrontPayMonths(e.target.value)}
-                onBlur={commit}
-                onKeyDown={handleKeyDown}
                 placeholder="6"
-                className={monthInputClass}
+                className={textFieldClass}
               />
               <p className="mt-1 text-xs text-brand-muted">
                 Offset by current compensation if applicable
@@ -361,7 +285,6 @@ export default function EmploymentDamagesClient() {
               <DollarInput
                 value={compensatory}
                 onChange={setCompensatory}
-                onCommit={commit}
                 placeholder="50,000"
               />
             </div>
@@ -372,15 +295,8 @@ export default function EmploymentDamagesClient() {
               </label>
               <select
                 value={liquidatedType}
-                onChange={(e) => {
-                  const val = e.target.value as LiquidatedType;
-                  setLiquidatedType(val);
-                  setCommitted((prev) => ({
-                    ...prev,
-                    liquidatedType: val,
-                  }));
-                }}
-                className="w-full px-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent"
+                onChange={(e) => setLiquidatedType(e.target.value as LiquidatedType)}
+                className={selectFieldClass}
               >
                 {liquidatedOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -397,7 +313,6 @@ export default function EmploymentDamagesClient() {
               <DollarInput
                 value={punitive}
                 onChange={setPunitive}
-                onCommit={commit}
                 placeholder="0"
               />
             </div>
@@ -409,7 +324,6 @@ export default function EmploymentDamagesClient() {
               <DollarInput
                 value={otherDamages}
                 onChange={setOtherDamages}
-                onCommit={commit}
                 placeholder="0"
               />
             </div>
@@ -431,7 +345,7 @@ export default function EmploymentDamagesClient() {
             <CardContent className="pt-6">
               <p className="text-sm text-brand-muted mb-1">Estimated Total Damages</p>
               <p className="text-3xl font-bold text-brand-accent">
-                {fmt(calc.grossTotal)}
+                {fmt(grossTotal)}
               </p>
             </CardContent>
           </Card>
@@ -444,23 +358,23 @@ export default function EmploymentDamagesClient() {
             <CardContent>
               <table className="w-full text-sm">
                 <tbody>
-                  <Row label="Back pay (compensation)" value={calc.backPayComp} />
-                  <Row label="Back pay (benefits)" value={calc.backPayBenefits} />
-                  <Row label="Gross back pay" value={calc.backPay} bold />
-                  <Row label="Less: mitigation" value={calc.totalMitigation} negative />
-                  <Row label="Net back pay" value={calc.netBackPay} bold />
+                  <Row label="Back pay (compensation)" value={backPayComp} />
+                  <Row label="Back pay (benefits)" value={backPayBenefits} />
+                  <Row label="Gross back pay" value={backPay} bold />
+                  <Row label="Less: mitigation" value={totalMitigation} negative />
+                  <Row label="Net back pay" value={netBackPay} bold />
                   <Separator />
-                  <Row label="Front pay" value={calc.frontPay} />
+                  <Row label="Front pay" value={frontPay} />
                   <Separator />
-                  <Row label="Compensatory damages" value={calc.compensatory} />
-                  <Row label="Liquidated damages" value={calc.liquidated} />
-                  <Row label="Punitive damages" value={calc.punitive} />
-                  <Row label="Other damages" value={calc.other} />
+                  <Row label="Compensatory damages" value={compDamages} />
+                  <Row label="Liquidated damages" value={liquidated} />
+                  <Row label="Punitive damages" value={pun} />
+                  <Row label="Other damages" value={other} />
                   <Separator />
                   <tr>
                     <td className="py-2 font-semibold text-brand-primary">Total</td>
                     <td className="py-2 text-right font-semibold text-brand-accent">
-                      {fmt(calc.grossTotal)}
+                      {fmt(grossTotal)}
                     </td>
                   </tr>
                 </tbody>
@@ -468,10 +382,10 @@ export default function EmploymentDamagesClient() {
             </CardContent>
           </Card>
 
-          <p className="text-xs text-brand-muted">
-            This is an estimate for settlement discussion purposes only. It is
-            not legal advice and does not account for all possible factors.
-          </p>
+          <EstimateDisclaimer />
+          <div className="print:hidden">
+            <ExportPdfButton />
+          </div>
         </div>
       </div>
     </div>

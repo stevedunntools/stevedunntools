@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Disclaimer | Steve Dunn Tools",
+  title: "Disclaimer",
   description:
     "Legal disclaimer for Steve Dunn Tools mediation calculators and utilities.",
   alternates: { canonical: "/disclaimer" },

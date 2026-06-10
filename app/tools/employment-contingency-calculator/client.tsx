@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +12,8 @@ import { fmt, parseNum } from "@/lib/format";
 import { Row, Separator } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
 import PercentSlider from "@/components/percent-slider";
+import EstimateDisclaimer from "@/components/estimate-disclaimer";
+import ExportPdfButton from "@/components/export-pdf-button";
 
 export default function EmploymentContingencyClient() {
   const [settlement, setSettlement] = useSessionState("tool:emp-contingency:settlement", "");
@@ -20,67 +21,28 @@ export default function EmploymentContingencyClient() {
   const [costs, setCosts] = useSessionState("tool:emp-contingency:costs", "");
   const [wagesPct, setWagesPct] = useSessionState("tool:emp-contingency:wagesPct", 50);
 
-  const [committed, setCommitted] = useSessionState("tool:emp-contingency:committed", {
-    settlement: "",
-    contingencyPct: 1,
-    costs: "",
-    wagesPct: 50,
-  });
-
-  function commit() {
-    setCommitted({
-      settlement,
-      contingencyPct,
-      costs,
-      wagesPct,
-    });
-  }
-
   function clearAll() {
     setSettlement("");
-    setContingencyPct(33);
+    setContingencyPct(1);
     setCosts("");
     setWagesPct(50);
-    setCommitted({
-      settlement: "",
-      contingencyPct: 1,
-      costs: "",
-      wagesPct: 50,
-    });
     clearSessionKeys("tool:emp-contingency:");
   }
 
-  const calc = useMemo(() => {
-    const s = parseNum(committed.settlement);
-    const feePct = committed.contingencyPct / 100;
-    const c = parseNum(committed.costs);
-    const wPct = committed.wagesPct / 100;
-
-    const attorneyFee = s * feePct;
-    const feeAndCosts = attorneyFee + c;
-    const netToPlaintiff = s - feeAndCosts;
-    const wages = netToPlaintiff * wPct;
-    const nonWage = netToPlaintiff * (1 - wPct);
-
-    return {
-      settlement: s,
-      contingencyPct: committed.contingencyPct,
-      attorneyFee,
-      costs: c,
-      feeAndCosts,
-      netToPlaintiff,
-      wagesPct: committed.wagesPct,
-      wages,
-      nonWage,
-    };
-  }, [committed]);
+  const s = parseNum(settlement);
+  const c = parseNum(costs);
+  const attorneyFee = s * (contingencyPct / 100);
+  const feeAndCosts = attorneyFee + c;
+  const netToPlaintiff = s - feeAndCosts;
+  const wages = netToPlaintiff * (wagesPct / 100);
+  const nonWage = netToPlaintiff - wages;
 
   const hasAny = settlement !== "" || costs !== "";
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
       {/* Inputs */}
-      <div className="lg:col-span-3 space-y-6">
+      <div className="lg:col-span-3 space-y-6 print:hidden">
         <Card className="bg-white border-brand-border">
           <CardHeader>
             <CardTitle className="text-brand-primary text-base">
@@ -95,7 +57,6 @@ export default function EmploymentContingencyClient() {
               <DollarInput
                 value={settlement}
                 onChange={setSettlement}
-                onCommit={commit}
                 placeholder="250,000"
               />
             </div>
@@ -111,10 +72,7 @@ export default function EmploymentContingencyClient() {
           <CardContent>
             <PercentSlider
               value={contingencyPct}
-              onChange={(val) => {
-                setContingencyPct(val);
-                setCommitted((prev) => ({ ...prev, contingencyPct: val }));
-              }}
+              onChange={setContingencyPct}
               min={1}
               max={100}
               label="Use slider or type exact percentage"
@@ -136,7 +94,6 @@ export default function EmploymentContingencyClient() {
               <DollarInput
                 value={costs}
                 onChange={setCosts}
-                onCommit={commit}
                 placeholder="10,000"
               />
             </div>
@@ -152,10 +109,7 @@ export default function EmploymentContingencyClient() {
           <CardContent>
             <PercentSlider
               value={wagesPct}
-              onChange={(val) => {
-                setWagesPct(val);
-                setCommitted((prev) => ({ ...prev, wagesPct: val }));
-              }}
+              onChange={setWagesPct}
               min={0}
               max={100}
               label="Percentage of net recovery allocated to wages for tax purposes"
@@ -177,7 +131,7 @@ export default function EmploymentContingencyClient() {
             <CardContent className="pt-6">
               <p className="text-sm text-brand-muted mb-1">Net to Plaintiff</p>
               <p className="text-3xl font-bold text-brand-accent">
-                {fmt(calc.netToPlaintiff)}
+                {fmt(netToPlaintiff)}
               </p>
             </CardContent>
           </Card>
@@ -189,21 +143,21 @@ export default function EmploymentContingencyClient() {
             <CardContent>
               <table className="w-full text-sm">
                 <tbody>
-                  <Row label="Settlement amount" value={calc.settlement} />
-                  <Row label={`Attorney fee (${calc.contingencyPct}%) + costs`} value={calc.feeAndCosts} negative />
-                  <Row label="Net to plaintiff" value={calc.netToPlaintiff} bold />
+                  <Row label="Settlement amount" value={s} />
+                  <Row label={`Attorney fee (${contingencyPct}%) + costs`} value={feeAndCosts} negative />
+                  <Row label="Net to plaintiff" value={netToPlaintiff} bold />
                   <Separator />
-                  <Row label={`Plaintiff's wages (${calc.wagesPct}%)`} value={calc.wages} />
-                  <Row label={`Plaintiff's non-wage income (${100 - calc.wagesPct}%)`} value={calc.nonWage} />
+                  <Row label={`Plaintiff's wages (${wagesPct}%)`} value={wages} />
+                  <Row label={`Plaintiff's non-wage income (${100 - wagesPct}%)`} value={nonWage} />
                 </tbody>
               </table>
             </CardContent>
           </Card>
 
-          <p className="text-xs text-brand-muted">
-            This is an estimate for settlement discussion purposes only. It is
-            not legal advice and does not account for all possible factors.
-          </p>
+          <EstimateDisclaimer />
+          <div className="print:hidden">
+            <ExportPdfButton />
+          </div>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import BracketGeneratorClient from "./client";
-import SteveNote from "@/components/steve-note";
+import ToolPageHeader from "@/components/tool-page-header";
 
 export const metadata: Metadata = {
   title: "Bracket Generator",
@@ -12,23 +12,12 @@ export const metadata: Metadata = {
 export default function BracketGeneratorPage() {
   return (
     <>
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
-        <div>
-          <p className="text-sm font-medium text-brand-accent mb-1">
-            Negotiation Tools
-          </p>
-          <h1 className="text-3xl font-bold text-brand-primary">
-            Bracket Generator
-          </h1>
-          <p className="mt-2 text-brand-muted max-w-2xl">
-            Enter any two of the three values and the third will calculate
-            automatically. Changing an endpoint recalculates the midpoint.
-            Changing the midpoint shifts both endpoints by equal amounts,
-            keeping the spread the same.
-          </p>
-        </div>
-        <SteveNote note="How many lawyers does it take to do simple arithmetic? Brackets are tricky enough as it is – this tool takes the guesswork out of the math. Enter any two of three values — our number, their number, or midpoint — and this fills in the third. Use this to quickly test different bracket positions and see how the midpoint shifts." />
-      </div>
+      <ToolPageHeader
+        href="/tools/bracket-generator"
+        title="Bracket Generator"
+        description="Enter any two of the three values and the third will calculate automatically. Changing an endpoint recalculates the midpoint. Changing the midpoint shifts both endpoints by equal amounts, keeping the spread the same."
+        note="How many lawyers does it take to do simple arithmetic? Brackets are tricky enough as it is – this tool takes the guesswork out of the math. Enter any two of three values — our number, their number, or midpoint — and this fills in the third. Use this to quickly test different bracket positions and see how the midpoint shifts."
+      />
       <BracketGeneratorClient />
     </>
   );

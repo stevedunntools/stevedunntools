@@ -7,7 +7,7 @@ import {
   Card,
   CardContent,
 } from "@/components/ui/card";
-import { fmt, commaFmt, parseNumOrNull } from "@/lib/format";
+import { fmt, commaFmt, commaFmtWithCursor, parseNumOrNull } from "@/lib/format";
 
 type Field = "upper" | "lower" | "mid";
 
@@ -67,25 +67,14 @@ export default function BracketGeneratorClient() {
   }
 
   function handleChange(field: Field, e: React.ChangeEvent<HTMLInputElement>) {
-    const raw = e.target.value;
-    const cursor = e.target.selectionStart ?? 0;
-    const digitsBefore = raw.slice(0, cursor).replace(/[^0-9]/g, "").length;
-    const formatted = commaFmt(raw);
-
-    let newCursor = 0;
-    let digits = 0;
-    for (let i = 0; i < formatted.length; i++) {
-      if (/[0-9]/.test(formatted[i])) digits++;
-      if (digits === digitsBefore) { newCursor = i + 1; break; }
-    }
-    if (digitsBefore === 0) newCursor = 0;
+    const formatted = commaFmtWithCursor(e.target.value, e.target.selectionStart ?? 0);
 
     const ref = field === "upper" ? upperRef : field === "mid" ? midRef : lowerRef;
-    cursorRef.current = { ref, pos: newCursor };
+    cursorRef.current = { ref, pos: formatted.cursor };
 
-    if (field === "upper") setUpperStr(formatted);
-    else if (field === "lower") setLowerStr(formatted);
-    else setMidStr(formatted);
+    if (field === "upper") setUpperStr(formatted.value);
+    else if (field === "lower") setLowerStr(formatted.value);
+    else setMidStr(formatted.value);
   }
 
   function handleCommit(field: Field) {

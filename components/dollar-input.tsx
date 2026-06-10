@@ -1,12 +1,11 @@
 "use client";
 
 import { useRef, useLayoutEffect } from "react";
-import { commaFmt } from "@/lib/format";
+import { commaFmtWithCursor } from "@/lib/format";
 
 interface DollarInputProps {
   value: string;
   onChange: (value: string) => void;
-  onCommit: () => void;
   placeholder?: string;
   className?: string;
 }
@@ -17,7 +16,6 @@ const baseClass =
 export default function DollarInput({
   value,
   onChange,
-  onCommit,
   placeholder,
   className,
 }: DollarInputProps) {
@@ -32,29 +30,12 @@ export default function DollarInput({
   });
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const raw = e.target.value;
-    const cursor = e.target.selectionStart ?? 0;
-
-    // Count digits before cursor in the raw input
-    const digitsBefore = raw.slice(0, cursor).replace(/[^0-9]/g, "").length;
-
-    const formatted = commaFmt(raw);
-
-    // Find the cursor position in the formatted string that has the same
-    // number of digits before it
-    let digits = 0;
-    let newCursor = 0;
-    for (let i = 0; i < formatted.length; i++) {
-      if (/[0-9]/.test(formatted[i])) digits++;
-      if (digits === digitsBefore) {
-        newCursor = i + 1;
-        break;
-      }
-    }
-    if (digitsBefore === 0) newCursor = 0;
-
-    cursorRef.current = newCursor;
-    onChange(formatted);
+    const formatted = commaFmtWithCursor(
+      e.target.value,
+      e.target.selectionStart ?? 0,
+    );
+    cursorRef.current = formatted.cursor;
+    onChange(formatted.value);
   }
 
   return (
@@ -65,11 +46,9 @@ export default function DollarInput({
       <input
         ref={inputRef}
         type="text"
-        inputMode="numeric"
+        inputMode="decimal"
         value={value}
         onChange={handleChange}
-        onBlur={onCommit}
-        onKeyDown={(e) => e.key === "Enter" && onCommit()}
         placeholder={placeholder}
         className={className ?? baseClass}
       />

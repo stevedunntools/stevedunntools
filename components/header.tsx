@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Menu, ChevronDown } from "lucide-react";
 import {
   Sheet,
@@ -42,6 +42,25 @@ function Logo() {
 
 function DesktopNav() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const triggerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const menuRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  function menuItems(label: string): HTMLAnchorElement[] {
+    const menu = menuRefs.current[label];
+    return menu ? Array.from(menu.querySelectorAll<HTMLAnchorElement>("[role=menuitem]")) : [];
+  }
+
+  function focusItem(label: string, index: number) {
+    const items = menuItems(label);
+    if (items.length === 0) return;
+    const i = ((index % items.length) + items.length) % items.length;
+    items[i].focus();
+  }
+
+  function closeAndRefocus(label: string) {
+    setOpenMenu(null);
+    triggerRefs.current[label]?.focus();
+  }
 
   return (
     <nav className="hidden lg:flex items-center gap-1">
@@ -55,12 +74,21 @@ function DesktopNav() {
             onMouseLeave={() => setOpenMenu(null)}
           >
             <button
+              ref={(el) => {
+                triggerRefs.current[group.label] = el;
+              }}
               className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-300 hover:text-white rounded-md transition-colors"
               aria-haspopup="true"
               aria-expanded={isOpen}
               onClick={() => setOpenMenu(isOpen ? null : group.label)}
               onKeyDown={(e) => {
                 if (e.key === "Escape") setOpenMenu(null);
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  setOpenMenu(group.label);
+                  // Menu is rendered (hidden) before opening, so items exist
+                  requestAnimationFrame(() => focusItem(group.label, 0));
+                }
               }}
             >
               {group.label}
@@ -73,14 +101,34 @@ function DesktopNav() {
                   : "opacity-0 invisible group-focus-within:opacity-100 group-focus-within:visible"
               }`}
             >
-              <div className="bg-white rounded-lg shadow-lg border border-brand-border py-2 min-w-[220px]" role="menu">
+              <div
+                ref={(el) => {
+                  menuRefs.current[group.label] = el;
+                }}
+                className="bg-white rounded-lg shadow-lg border border-brand-border py-2 min-w-[220px]"
+                role="menu"
+                onKeyDown={(e) => {
+                  const items = menuItems(group.label);
+                  const current = items.indexOf(document.activeElement as HTMLAnchorElement);
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    focusItem(group.label, current + 1);
+                  } else if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    focusItem(group.label, current - 1);
+                  } else if (e.key === "Escape") {
+                    e.preventDefault();
+                    closeAndRefocus(group.label);
+                  }
+                }}
+              >
                 {group.links.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
                     role="menuitem"
                     onClick={() => setOpenMenu(null)}
-                    className="block px-4 py-2 text-sm text-brand-primary hover:bg-brand-card transition-colors"
+                    className="block px-4 py-2 text-sm text-brand-primary hover:bg-brand-card transition-colors focus-visible:outline-none focus-visible:bg-brand-card"
                   >
                     {link.label}
                   </Link>

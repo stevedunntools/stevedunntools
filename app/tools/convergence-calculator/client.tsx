@@ -1,14 +1,15 @@
 "use client";
 
-import { useMemo, useRef, useLayoutEffect } from "react";
+import { useMemo } from "react";
 import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
 import {
   Card,
   CardContent,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { fmt, commaFmt, parseNumOrNull } from "@/lib/format";
+import { fmt, parseNumOrNull } from "@/lib/format";
 import { generateYTicks, formatTickLabel } from "@/lib/chart-utils";
+import DollarInput from "@/components/dollar-input";
 
 // ---------------------------------------------------------------------------
 // Chart constants
@@ -211,57 +212,12 @@ export default function ConvergenceCalculatorClient() {
   const [p2Str, setP2Str] = useSessionState("tool:convergence:p2", "");
   const [d1Str, setD1Str] = useSessionState("tool:convergence:d1", "");
   const [d2Str, setD2Str] = useSessionState("tool:convergence:d2", "");
-  const p1Ref = useRef<HTMLInputElement>(null);
-  const p2Ref = useRef<HTMLInputElement>(null);
-  const d1Ref = useRef<HTMLInputElement>(null);
-  const d2Ref = useRef<HTMLInputElement>(null);
-  const cursorRef = useRef<{ ref: React.RefObject<HTMLInputElement | null>; pos: number } | null>(null);
-
-  useLayoutEffect(() => {
-    if (cursorRef.current) {
-      cursorRef.current.ref.current?.setSelectionRange(cursorRef.current.pos, cursorRef.current.pos);
-      cursorRef.current = null;
-    }
-  });
-
-  function handleInput(
-    e: React.ChangeEvent<HTMLInputElement>,
-    setter: (v: string) => void,
-    ref: React.RefObject<HTMLInputElement | null>,
-  ) {
-    const raw = e.target.value;
-    const cursor = e.target.selectionStart ?? 0;
-    const digitsBefore = raw.slice(0, cursor).replace(/[^0-9]/g, "").length;
-    const formatted = commaFmt(raw);
-
-    let newCursor = 0;
-    let digits = 0;
-    for (let i = 0; i < formatted.length; i++) {
-      if (/[0-9]/.test(formatted[i])) digits++;
-      if (digits === digitsBefore) { newCursor = i + 1; break; }
-    }
-    if (digitsBefore === 0) newCursor = 0;
-
-    cursorRef.current = { ref, pos: newCursor };
-    setter(formatted);
-  }
-
-  // Committed values — only these feed the chart
-  const [committed, setCommitted] = useSessionState("tool:convergence:committed", { p1: "", p2: "", d1: "", d2: "" });
-
-  function commit() {
-    setCommitted({ p1: p1Str, p2: p2Str, d1: d1Str, d2: d2Str });
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter") commit();
-  }
 
   const analysis = useMemo(() => {
-    const p1 = parseNumOrNull(committed.p1);
-    const p2 = parseNumOrNull(committed.p2);
-    const d1 = parseNumOrNull(committed.d1);
-    const d2 = parseNumOrNull(committed.d2);
+    const p1 = parseNumOrNull(p1Str);
+    const p2 = parseNumOrNull(p2Str);
+    const d1 = parseNumOrNull(d1Str);
+    const d2 = parseNumOrNull(d2Str);
 
     if (p1 === null || p2 === null || d1 === null || d2 === null) {
       return { ready: false as const };
@@ -299,21 +255,17 @@ export default function ConvergenceCalculatorClient() {
       converges: true as const,
       data: { p1, p2, d1, d2, intersectRound: r, intersectValue: value },
     };
-  }, [committed]);
+  }, [p1Str, p2Str, d1Str, d2Str]);
 
   function clearAll() {
     setP1Str("");
     setP2Str("");
     setD1Str("");
     setD2Str("");
-    setCommitted({ p1: "", p2: "", d1: "", d2: "" });
     clearSessionKeys("tool:convergence:");
   }
 
   const hasAny = p1Str !== "" || p2Str !== "" || d1Str !== "" || d2Str !== "";
-
-  const inputClass =
-    "w-full pl-7 pr-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
 
   return (
     <div className="space-y-6">
@@ -330,39 +282,21 @@ export default function ConvergenceCalculatorClient() {
               <label className="block text-sm font-medium text-brand-primary mb-1.5">
                 Offer 1
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
-                <input
-                  ref={p1Ref}
-                  type="text"
-                  inputMode="numeric"
-                  value={p1Str}
-                  onChange={(e) => handleInput(e, setP1Str, p1Ref)}
-                  onBlur={commit}
-                  onKeyDown={handleKeyDown}
-                  placeholder="500,000"
-                  className={inputClass}
-                />
-              </div>
+              <DollarInput
+                value={p1Str}
+                onChange={setP1Str}
+                placeholder="500,000"
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-brand-primary mb-1.5">
                 Offer 2
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
-                <input
-                  ref={p2Ref}
-                  type="text"
-                  inputMode="numeric"
-                  value={p2Str}
-                  onChange={(e) => handleInput(e, setP2Str, p2Ref)}
-                  onBlur={commit}
-                  onKeyDown={handleKeyDown}
-                  placeholder="400,000"
-                  className={inputClass}
-                />
-              </div>
+              <DollarInput
+                value={p2Str}
+                onChange={setP2Str}
+                placeholder="400,000"
+              />
             </div>
           </CardContent>
         </Card>
@@ -378,53 +312,30 @@ export default function ConvergenceCalculatorClient() {
               <label className="block text-sm font-medium text-brand-primary mb-1.5">
                 Offer 1
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
-                <input
-                  ref={d1Ref}
-                  type="text"
-                  inputMode="numeric"
-                  value={d1Str}
-                  onChange={(e) => handleInput(e, setD1Str, d1Ref)}
-                  onBlur={commit}
-                  onKeyDown={handleKeyDown}
-                  placeholder="50,000"
-                  className={inputClass}
-                />
-              </div>
+              <DollarInput
+                value={d1Str}
+                onChange={setD1Str}
+                placeholder="50,000"
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-brand-primary mb-1.5">
                 Offer 2
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
-                <input
-                  ref={d2Ref}
-                  type="text"
-                  inputMode="numeric"
-                  value={d2Str}
-                  onChange={(e) => handleInput(e, setD2Str, d2Ref)}
-                  onBlur={commit}
-                  onKeyDown={handleKeyDown}
-                  placeholder="150,000"
-                  className={inputClass}
-                />
-              </div>
+              <DollarInput
+                value={d2Str}
+                onChange={setD2Str}
+                placeholder="150,000"
+              />
             </div>
           </CardContent>
         </Card>
       </div>
 
       {hasAny && (
-        <div className="flex gap-3">
-          <Button onClick={commit}>
-            Update Graph
-          </Button>
-          <Button variant="outline" onClick={clearAll}>
-            Clear All
-          </Button>
-        </div>
+        <Button variant="outline" onClick={clearAll}>
+          Clear All
+        </Button>
       )}
 
       {/* Chart */}

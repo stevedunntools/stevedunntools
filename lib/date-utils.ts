@@ -56,7 +56,7 @@ export function getFederalHolidays(year: number): Date[] {
 /** Get the nth occurrence of a weekday in a month (1-indexed) */
 function nthWeekday(year: number, month: number, weekday: number, n: number): Date {
   const first = new Date(year, month, 1);
-  let dayOfWeek = first.getDay();
+  const dayOfWeek = first.getDay();
   let diff = weekday - dayOfWeek;
   if (diff < 0) diff += 7;
   const day = 1 + diff + (n - 1) * 7;
@@ -66,7 +66,7 @@ function nthWeekday(year: number, month: number, weekday: number, n: number): Da
 /** Get the last occurrence of a weekday in a month */
 function lastWeekday(year: number, month: number, weekday: number): Date {
   const last = new Date(year, month + 1, 0); // last day of month
-  let dayOfWeek = last.getDay();
+  const dayOfWeek = last.getDay();
   let diff = dayOfWeek - weekday;
   if (diff < 0) diff += 7;
   return new Date(year, month, last.getDate() - diff);
@@ -74,8 +74,14 @@ function lastWeekday(year: number, month: number, weekday: number): Date {
 
 /** Check if a date is a federal holiday */
 export function isFederalHoliday(date: Date): boolean {
-  const holidays = getFederalHolidays(date.getFullYear());
-  const dNorm = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  const year = date.getFullYear();
+  const holidays = getFederalHolidays(year);
+  // When next year's New Year's Day falls on a Saturday, it is observed on
+  // December 31 of *this* year — include it so late-December checks are right.
+  const nextNewYear = observedDate(new Date(year + 1, 0, 1));
+  if (nextNewYear.getFullYear() === year) holidays.push(nextNewYear);
+
+  const dNorm = new Date(year, date.getMonth(), date.getDate()).getTime();
   return holidays.some((h) => {
     const hNorm = new Date(h.getFullYear(), h.getMonth(), h.getDate()).getTime();
     return hNorm === dNorm;

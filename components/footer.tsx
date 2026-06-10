@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { navGroups } from "@/lib/navigation";
+import CurrentYear from "@/components/current-year";
 
 const companyLinks = [
   { href: "/about", label: "About" },
@@ -49,7 +50,7 @@ export default function Footer() {
 
         {/* Bottom bar */}
         <div className="mt-10 pt-6 border-t border-brand-secondary flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
-          <span>&copy; {new Date().getFullYear()} Steve Dunn Tools. All rights reserved.</span>
+          <span>&copy; <CurrentYear /> Steve Dunn Tools. All rights reserved.</span>
           <div className="flex gap-4">
             {companyLinks.map((link) => (
               <Link

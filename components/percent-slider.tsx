@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 interface PercentSliderProps {
   value: number;
@@ -11,6 +11,10 @@ interface PercentSliderProps {
   label?: string;
   /** Allow typing values above the slider max */
   allowOverflow?: boolean;
+}
+
+function formatPct(n: number) {
+  return Number.isInteger(n) ? n.toString() : n.toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
 }
 
 export default function PercentSlider({
@@ -24,10 +28,12 @@ export default function PercentSlider({
 }: PercentSliderProps) {
   const [textValue, setTextValue] = useState(formatPct(value));
 
-  useEffect(() => { setTextValue(formatPct(value)); }, [value]);
-
-  function formatPct(n: number) {
-    return Number.isInteger(n) ? n.toString() : n.toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
+  // Sync the text box when the value prop changes externally (slider drag,
+  // Clear All). Render-phase adjustment instead of an effect.
+  const [lastValue, setLastValue] = useState(value);
+  if (value !== lastValue) {
+    setLastValue(value);
+    setTextValue(formatPct(value));
   }
 
   function handleSlider(e: React.ChangeEvent<HTMLInputElement>) {

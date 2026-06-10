@@ -12,8 +12,10 @@ import {
 import { fmt, parseNum } from "@/lib/format";
 import { Row, Separator } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
+import ExportPdfButton from "@/components/export-pdf-button";
 import { calculate, Income1099Type } from "./calculate";
 import { STATES, FilingStatus } from "./tax-data";
+import { selectFieldClass as selectClass } from "@/lib/field-styles";
 
 const filingStatusOptions: { value: FilingStatus; label: string }[] = [
   { value: "single", label: "Single" },
@@ -22,8 +24,6 @@ const filingStatusOptions: { value: FilingStatus; label: string }[] = [
   { value: "hoh", label: "Head of Household" },
 ];
 
-const selectClass =
-  "w-full px-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
 
 export default function TakeHomeAfterTaxesClient() {
   const [filingStatus, setFilingStatus] = useSessionState<FilingStatus>(
@@ -35,28 +35,17 @@ export default function TakeHomeAfterTaxesClient() {
   const [income1099, setIncome1099] = useSessionState<string>("tool:take-home:1099", "");
   const [income1099Type, setIncome1099Type] = useSessionState<Income1099Type>(
     "tool:take-home:1099Type",
-    "se"
+    "other"
   );
   const [pi, setPi] = useSessionState<string>("tool:take-home:pi", "");
-
-  const [committed, setCommitted] = useSessionState("tool:take-home:committed", {
-    w2: "",
-    income1099: "",
-    pi: "",
-  });
-
-  function commit() {
-    setCommitted({ w2, income1099, pi });
-  }
 
   function clearAll() {
     setFilingStatus("single");
     setStateCode("NC");
     setW2("");
     setIncome1099("");
-    setIncome1099Type("se");
+    setIncome1099Type("other");
     setPi("");
-    setCommitted({ w2: "", income1099: "", pi: "" });
     clearSessionKeys("tool:take-home:");
   }
 
@@ -64,12 +53,12 @@ export default function TakeHomeAfterTaxesClient() {
     return calculate({
       filingStatus,
       stateCode,
-      w2Wages: parseNum(committed.w2),
-      income1099: parseNum(committed.income1099),
+      w2Wages: parseNum(w2),
+      income1099: parseNum(income1099),
       income1099Type,
-      piIncome: parseNum(committed.pi),
+      piIncome: parseNum(pi),
     });
-  }, [filingStatus, stateCode, income1099Type, committed]);
+  }, [filingStatus, stateCode, income1099Type, w2, income1099, pi]);
 
   const hasAny =
     w2 !== "" || income1099 !== "" || pi !== "";
@@ -79,7 +68,7 @@ export default function TakeHomeAfterTaxesClient() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
       {/* Inputs */}
-      <div className="lg:col-span-3 space-y-6">
+      <div className="lg:col-span-3 space-y-6 print:hidden">
         <Card className="bg-white border-brand-border">
           <CardHeader>
             <CardTitle className="text-brand-primary text-base">Filing Status & State</CardTitle>
@@ -129,7 +118,7 @@ export default function TakeHomeAfterTaxesClient() {
               <label className="block text-sm font-medium text-brand-primary mb-1.5">
                 W-2 wages
               </label>
-              <DollarInput value={w2} onChange={setW2} onCommit={commit} placeholder="0" />
+              <DollarInput value={w2} onChange={setW2} placeholder="0" />
               <p className="mt-1 text-xs text-brand-muted">
                 Employee compensation subject to FICA and federal/state income tax.
               </p>
@@ -142,20 +131,9 @@ export default function TakeHomeAfterTaxesClient() {
               <DollarInput
                 value={income1099}
                 onChange={setIncome1099}
-                onCommit={commit}
                 placeholder="0"
               />
               <div className="mt-2 flex flex-col sm:flex-row gap-2 sm:gap-4">
-                <label className="flex items-center gap-2 text-sm text-brand-primary cursor-pointer">
-                  <input
-                    type="radio"
-                    name="1099-type"
-                    checked={income1099Type === "se"}
-                    onChange={() => setIncome1099Type("se")}
-                    className="h-4 w-4 text-brand-accent focus:ring-brand-accent"
-                  />
-                  Self-employment (subject to SE tax)
-                </label>
                 <label className="flex items-center gap-2 text-sm text-brand-primary cursor-pointer">
                   <input
                     type="radio"
@@ -166,6 +144,16 @@ export default function TakeHomeAfterTaxesClient() {
                   />
                   Other (no SE tax)
                 </label>
+                <label className="flex items-center gap-2 text-sm text-brand-primary cursor-pointer">
+                  <input
+                    type="radio"
+                    name="1099-type"
+                    checked={income1099Type === "se"}
+                    onChange={() => setIncome1099Type("se")}
+                    className="h-4 w-4 text-brand-accent focus:ring-brand-accent"
+                  />
+                  Self-employment (subject to SE tax)
+                </label>
               </div>
             </div>
 
@@ -173,7 +161,7 @@ export default function TakeHomeAfterTaxesClient() {
               <label className="block text-sm font-medium text-brand-primary mb-1.5">
                 Tax-free personal injury settlement
               </label>
-              <DollarInput value={pi} onChange={setPi} onCommit={commit} placeholder="0" />
+              <DollarInput value={pi} onChange={setPi} placeholder="0" />
               <p className="mt-1 text-xs text-brand-muted">
                 Damages on account of physical injury, excluded under IRC §104(a)(2).
                 Punitive damages and pre-judgment interest are <em>not</em>{" "}
@@ -359,6 +347,9 @@ export default function TakeHomeAfterTaxesClient() {
               </p>
             </CardContent>
           </Card>
+          <div className="print:hidden">
+            <ExportPdfButton />
+          </div>
         </div>
       </div>
     </div>

@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +12,9 @@ import { fmt, parseNum } from "@/lib/format";
 import { Row, Separator } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
 import PercentSlider from "@/components/percent-slider";
+import EstimateDisclaimer from "@/components/estimate-disclaimer";
+import ExportPdfButton from "@/components/export-pdf-button";
+import { textFieldClass, selectFieldClass } from "@/lib/field-styles";
 
 type TimeUnit = "days" | "months" | "years";
 
@@ -28,77 +30,32 @@ export default function SimpleInterestClient() {
   const [timePeriod, setTimePeriod] = useSessionState("tool:simple-interest:timePeriod", "");
   const [timeUnit, setTimeUnit] = useSessionState<TimeUnit>("tool:simple-interest:timeUnit", "months");
 
-  const [committed, setCommitted] = useSessionState("tool:simple-interest:committed", {
-    principal: "",
-    rate: 5,
-    timePeriod: "",
-    timeUnit: "months" as TimeUnit,
-  });
-
-  function commit() {
-    setCommitted({
-      principal,
-      rate,
-      timePeriod,
-      timeUnit,
-    });
-  }
-
   function clearAll() {
     setPrincipal("");
     setRate(5);
     setTimePeriod("");
     setTimeUnit("months");
-    setCommitted({
-      principal: "",
-      rate: 5,
-      timePeriod: "",
-      timeUnit: "months",
-    });
     clearSessionKeys("tool:simple-interest:");
   }
 
-  const calc = useMemo(() => {
-    const p = parseNum(committed.principal);
-    const r = committed.rate / 100;
-    const t = parseNum(committed.timePeriod);
-    const unit = committed.timeUnit;
+  const p = parseNum(principal);
+  const t = parseNum(timePeriod);
 
-    let timeInYears = 0;
-    if (unit === "years") timeInYears = t;
-    else if (unit === "months") timeInYears = t / 12;
-    else if (unit === "days") timeInYears = t / 365;
+  let timeInYears = 0;
+  if (timeUnit === "years") timeInYears = t;
+  else if (timeUnit === "months") timeInYears = t / 12;
+  else timeInYears = t / 365;
 
-    const interest = p * r * timeInYears;
-    const total = p + interest;
-
-    return {
-      principal: p,
-      rate: committed.rate,
-      timePeriod: t,
-      timeUnit: unit,
-      timeInYears,
-      interest,
-      total,
-    };
-  }, [committed]);
+  const interest = p * (rate / 100) * timeInYears;
+  const total = p + interest;
 
   const hasAny = principal !== "" || timePeriod !== "";
-
-  const plainInputClass =
-    "w-full px-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent";
-
-  function timeLabel(): string {
-    const t = calc.timePeriod;
-    const u = calc.timeUnit;
-    if (t === 0) return "—";
-    return `${t} ${u}`;
-  }
+  const timeLabel = t === 0 ? "—" : `${t} ${timeUnit}`;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
       {/* Inputs */}
-      <div className="lg:col-span-3 space-y-6">
+      <div className="lg:col-span-3 space-y-6 print:hidden">
         <Card className="bg-white border-brand-border">
           <CardHeader>
             <CardTitle className="text-brand-primary text-base">
@@ -113,7 +70,6 @@ export default function SimpleInterestClient() {
               <DollarInput
                 value={principal}
                 onChange={setPrincipal}
-                onCommit={commit}
                 placeholder="100,000"
               />
             </div>
@@ -129,10 +85,7 @@ export default function SimpleInterestClient() {
           <CardContent>
             <PercentSlider
               value={rate}
-              onChange={(val) => {
-                setRate(val);
-                setCommitted((prev) => ({ ...prev, rate: val }));
-              }}
+              onChange={setRate}
               min={1}
               max={20}
               allowOverflow
@@ -158,10 +111,8 @@ export default function SimpleInterestClient() {
                   inputMode="numeric"
                   value={timePeriod}
                   onChange={(e) => setTimePeriod(e.target.value)}
-                  onBlur={commit}
-                  onKeyDown={(e) => e.key === "Enter" && commit()}
                   placeholder="12"
-                  className={plainInputClass}
+                  className={textFieldClass}
                 />
               </div>
               <div className="flex-1">
@@ -170,12 +121,8 @@ export default function SimpleInterestClient() {
                 </label>
                 <select
                   value={timeUnit}
-                  onChange={(e) => {
-                    const val = e.target.value as TimeUnit;
-                    setTimeUnit(val);
-                    setCommitted((prev) => ({ ...prev, timeUnit: val }));
-                  }}
-                  className="w-full px-3 py-2 text-sm border border-brand-border rounded-md bg-white text-brand-primary focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent"
+                  onChange={(e) => setTimeUnit(e.target.value as TimeUnit)}
+                  className={selectFieldClass}
                 >
                   {timeUnitOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -203,7 +150,7 @@ export default function SimpleInterestClient() {
             <CardContent className="pt-6">
               <p className="text-sm text-brand-muted mb-1">Total (Principal + Interest)</p>
               <p className="text-3xl font-bold text-brand-accent">
-                {fmt(calc.total)}
+                {fmt(total)}
               </p>
             </CardContent>
           </Card>
@@ -215,16 +162,16 @@ export default function SimpleInterestClient() {
             <CardContent>
               <table className="w-full text-sm">
                 <tbody>
-                  <Row label="Principal" value={calc.principal} />
-                  <Row label="Interest rate" value={`${calc.rate}%`} />
-                  <Row label="Time period" value={timeLabel()} />
+                  <Row label="Principal" value={p} />
+                  <Row label="Interest rate" value={`${rate}%`} />
+                  <Row label="Time period" value={timeLabel} />
                   <Separator />
-                  <Row label="Interest earned" value={calc.interest} />
+                  <Row label="Interest earned" value={interest} />
                   <Separator />
                   <tr>
                     <td className="py-2 font-semibold text-brand-primary">Total</td>
                     <td className="py-2 text-right font-semibold text-brand-accent">
-                      {fmt(calc.total)}
+                      {fmt(total)}
                     </td>
                   </tr>
                 </tbody>
@@ -232,10 +179,10 @@ export default function SimpleInterestClient() {
             </CardContent>
           </Card>
 
-          <p className="text-xs text-brand-muted">
-            This is an estimate for settlement discussion purposes only. It is
-            not legal advice and does not account for all possible factors.
-          </p>
+          <EstimateDisclaimer />
+          <div className="print:hidden">
+            <ExportPdfButton />
+          </div>
         </div>
       </div>
     </div>

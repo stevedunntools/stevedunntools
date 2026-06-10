@@ -143,9 +143,28 @@ const categoryStyles: Record<string, CategoryStyle> = {
 
 const toolCategories = navGroups.filter((g) => g.label !== "About");
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Steve Dunn Tools",
+  url: "https://stevedunntools.com",
+  description:
+    "Practical settlement tools built by a mediator. Free calculators and utilities for lawyers, mediators, and parties in dispute resolution.",
+  author: {
+    "@type": "Person",
+    name: "Steve Dunn",
+    jobTitle: "Mediator",
+    url: "https://stevedunntools.com/about",
+  },
+};
+
 export default function Home() {
   return (
     <div className="bg-brand-bg">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Hero */}
       <section className="py-12 sm:py-20 lg:py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
