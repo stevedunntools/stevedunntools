@@ -8,9 +8,42 @@ export const metadata: Metadata = {
   alternates: { canonical: "/about" },
 };
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: "Steve Dunn",
+  alternateName: "Stephen J. Dunn",
+  jobTitle: "Mediator & Arbitrator",
+  description:
+    "Senior Neutral at Miles Mediation & Arbitration. Full-time mediator since 2019 after more than 20 years of litigation practice in business and employment disputes.",
+  url: "https://stevedunntools.com/about",
+  image: "https://stevedunntools.com/steve-dunn-headshot.png",
+  worksFor: {
+    "@type": "Organization",
+    name: "Miles Mediation & Arbitration",
+    url: "https://milesmediation.com",
+  },
+  alumniOf: [
+    { "@type": "CollegeOrUniversity", name: "University of North Carolina School of Law" },
+    { "@type": "CollegeOrUniversity", name: "Duke University" },
+  ],
+  knowsAbout: [
+    "Mediation",
+    "Arbitration",
+    "Employment law",
+    "Business litigation",
+    "Settlement negotiation",
+  ],
+  sameAs: ["https://milesmediation.com/neutrals/stephen-j-dunn/"],
+};
+
 export default function AboutPage() {
   return (
     <div className="bg-brand-bg min-h-full">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="flex flex-col sm:flex-row items-start gap-6">
           <Image

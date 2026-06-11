@@ -1,13 +1,13 @@
-import type { Metadata } from "next";
+import { toolMetadata } from "@/lib/tool-metadata";
 import SimpleInterestClient from "./client";
 import ToolPageHeader from "@/components/tool-page-header";
 
-export const metadata: Metadata = {
+export const metadata = toolMetadata({
   title: "Simple Interest Calculator",
   description:
     "Calculate simple interest on any amount over any time period at any rate.",
-  alternates: { canonical: "/tools/simple-interest-calculator" },
-};
+  path: "/tools/simple-interest-calculator",
+});
 
 export default function SimpleInterestCalculatorPage() {
   return (

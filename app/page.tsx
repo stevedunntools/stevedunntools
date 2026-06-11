@@ -17,7 +17,7 @@ import {
   Stethoscope,
   type LucideIcon,
 } from "lucide-react";
-import { navGroups } from "@/lib/navigation";
+import { navGroups, toolDescriptions } from "@/lib/navigation";
 import {
   Card,
   CardHeader,
@@ -32,44 +32,6 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
-};
-
-const toolDescriptions: Record<string, string> = {
-  // Negotiation Tools
-  "/tools/negotiation-visualizer":
-    "Visualize the negotiation process with an interactive chart of offers, counteroffers, and brackets.",
-  "/tools/bracket-generator":
-    "Automatically calculate bracketed offer ranges.",
-  "/tools/convergence-calculator":
-    "Enter two offers from each party. The tool shows where the lines would intersect if the pattern continued.",
-
-  // Damages & Case Value
-  "/tools/employment-damages-estimator":
-    "Calculate potential employment damages including lost wages, benefits, and emotional distress.",
-  "/tools/personal-injury-damages-estimator":
-    "Estimate personal injury damages including medical costs, lost earnings, and non-economic damages.",
-  "/tools/plaintiffs-expected-value":
-    "Calculate the probability-weighted expected value of a plaintiff's case, adjusted for costs and the time value of money.",
-  "/tools/defendants-expected-cost":
-    "Estimate the defendant's total expected cost including liability risk, damages exposure, and defense costs.",
-
-  // Money Math
-  "/tools/contingency-calculator":
-    "Calculate plaintiff's net recovery after fees and costs.",
-  "/tools/employment-contingency-calculator":
-    "Calculate net recovery with wage and non-wage allocation for employment settlements.",
-  "/tools/simple-interest-calculator":
-    "Calculate simple interest on any amount over any time period at any rate.",
-  "/tools/take-home-after-taxes":
-    "Estimate take-home pay after federal and state taxes for W-2, 1099, and tax-free personal injury income.",
-  "/tools/payment-over-time":
-    "Build a complete payment schedule for settlements paid in installments.",
-
-  // Date Tools
-  "/tools/days-between-dates":
-    "Calculate the number of years, months, weeks, and days between two dates.",
-  "/tools/add-subtract-date":
-    "Add or subtract years, months, weeks, and days from a date.",
 };
 
 const toolIcons: Record<string, LucideIcon> = {

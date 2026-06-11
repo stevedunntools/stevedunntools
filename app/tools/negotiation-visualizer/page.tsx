@@ -1,13 +1,14 @@
-import type { Metadata } from "next";
+import { toolMetadata } from "@/lib/tool-metadata";
 import NegotiationVisualizerClient from "./client";
 import ToolPageHeader from "@/components/tool-page-header";
 
-export const metadata: Metadata = {
+export const metadata = toolMetadata({
   title: "Negotiation Visualizer",
+  seoTitle: "Negotiation Visualizer — Settlement Offer Chart",
   description:
     "Visualize the negotiation process with an interactive chart of offers, counteroffers, and convergence patterns.",
-  alternates: { canonical: "/tools/negotiation-visualizer" },
-};
+  path: "/tools/negotiation-visualizer",
+});
 
 export default function NegotiationVisualizerPage() {
   return (

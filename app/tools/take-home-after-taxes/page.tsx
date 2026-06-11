@@ -1,13 +1,14 @@
-import type { Metadata } from "next";
+import { toolMetadata } from "@/lib/tool-metadata";
 import TakeHomeAfterTaxesClient from "./client";
 import ToolPageHeader from "@/components/tool-page-header";
 
-export const metadata: Metadata = {
+export const metadata = toolMetadata({
   title: "Rough Guess After Taxes Estimator",
+  seoTitle: "Rough Guess After Taxes — Settlement Tax Estimator",
   description:
     "Estimate take-home pay after federal and state taxes for W-2 wages, 1099 income, and tax-free personal injury proceeds. 2026 tax year.",
-  alternates: { canonical: "/tools/take-home-after-taxes" },
-};
+  path: "/tools/take-home-after-taxes",
+});
 
 export default function TakeHomeAfterTaxesPage() {
   return (

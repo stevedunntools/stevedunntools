@@ -1,13 +1,14 @@
-import type { Metadata } from "next";
+import { toolMetadata } from "@/lib/tool-metadata";
 import BracketGeneratorClient from "./client";
 import ToolPageHeader from "@/components/tool-page-header";
 
-export const metadata: Metadata = {
+export const metadata = toolMetadata({
   title: "Bracket Generator",
+  seoTitle: "Bracket Generator — Settlement Bracket Calculator",
   description:
     "Generate a bracketed offer range by entering any two of our number, their number, and midpoint.",
-  alternates: { canonical: "/tools/bracket-generator" },
-};
+  path: "/tools/bracket-generator",
+});
 
 export default function BracketGeneratorPage() {
   return (

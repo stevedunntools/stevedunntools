@@ -1,13 +1,13 @@
-import type { Metadata } from "next";
+import { toolMetadata } from "@/lib/tool-metadata";
 import PersonalInjuryClient from "./client";
 import ToolPageHeader from "@/components/tool-page-header";
 
-export const metadata: Metadata = {
+export const metadata = toolMetadata({
   title: "Personal Injury Damages Estimator",
   description:
     "Estimate personal injury damages including medical expenses, lost earnings, property damage, and non-economic damages.",
-  alternates: { canonical: "/tools/personal-injury-damages-estimator" },
-};
+  path: "/tools/personal-injury-damages-estimator",
+});
 
 export default function PersonalInjuryDamagesEstimatorPage() {
   return (

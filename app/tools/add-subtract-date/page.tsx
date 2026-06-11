@@ -1,13 +1,14 @@
-import type { Metadata } from "next";
+import { toolMetadata } from "@/lib/tool-metadata";
 import AddSubtractDateClient from "./client";
 import ToolPageHeader from "@/components/tool-page-header";
 
-export const metadata: Metadata = {
+export const metadata = toolMetadata({
   title: "Add/Subtract from Date",
+  seoTitle: "Add or Subtract from a Date — Business Day Calculator",
   description:
     "Add or subtract years, months, weeks, and days from a date, with business day support.",
-  alternates: { canonical: "/tools/add-subtract-date" },
-};
+  path: "/tools/add-subtract-date",
+});
 
 export default function AddSubtractDatePage() {
   return (

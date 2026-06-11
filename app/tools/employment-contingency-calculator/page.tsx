@@ -1,13 +1,13 @@
-import type { Metadata } from "next";
+import { toolMetadata } from "@/lib/tool-metadata";
 import EmploymentContingencyClient from "./client";
 import ToolPageHeader from "@/components/tool-page-header";
 
-export const metadata: Metadata = {
+export const metadata = toolMetadata({
   title: "Employment Contingency Calculator",
   description:
     "Calculate attorney fees, net recovery, and wage vs. non-wage allocation for employment settlements.",
-  alternates: { canonical: "/tools/employment-contingency-calculator" },
-};
+  path: "/tools/employment-contingency-calculator",
+});
 
 export default function EmploymentContingencyCalculatorPage() {
   return (

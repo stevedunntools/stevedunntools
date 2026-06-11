@@ -1,13 +1,13 @@
-import type { Metadata } from "next";
+import { toolMetadata } from "@/lib/tool-metadata";
 import DefendantsExpectedCostClient from "./client";
 import ToolPageHeader from "@/components/tool-page-header";
 
-export const metadata: Metadata = {
+export const metadata = toolMetadata({
   title: "Defendant's Expected Cost",
   description:
     "Estimate the defendant's total expected cost including liability risk, damages exposure, and defense costs.",
-  alternates: { canonical: "/tools/defendants-expected-cost" },
-};
+  path: "/tools/defendants-expected-cost",
+});
 
 export default function DefendantsExpectedCostPage() {
   return (

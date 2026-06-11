@@ -1,13 +1,13 @@
-import type { Metadata } from "next";
+import { toolMetadata } from "@/lib/tool-metadata";
 import EmploymentDamagesClient from "./client";
 import ToolPageHeader from "@/components/tool-page-header";
 
-export const metadata: Metadata = {
+export const metadata = toolMetadata({
   title: "Employment Damages Estimator",
   description:
     "Estimate employment damages including back pay, front pay, benefits, liquidated damages, and more.",
-  alternates: { canonical: "/tools/employment-damages-estimator" },
-};
+  path: "/tools/employment-damages-estimator",
+});
 
 export default function EmploymentDamagesEstimatorPage() {
   return (

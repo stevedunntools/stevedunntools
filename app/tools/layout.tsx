@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import RelatedTools from "@/components/related-tools";
 
 export default function ToolLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -36,6 +37,7 @@ export default function ToolLayout({ children }: { children: React.ReactNode }) 
           Back to all tools
         </Link>
         {children}
+        <RelatedTools />
       </div>
     </div>
   );

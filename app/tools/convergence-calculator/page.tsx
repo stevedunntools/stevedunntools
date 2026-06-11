@@ -1,13 +1,14 @@
-import type { Metadata } from "next";
+import { toolMetadata } from "@/lib/tool-metadata";
 import ConvergenceCalculatorClient from "./client";
 import ToolPageHeader from "@/components/tool-page-header";
 
-export const metadata: Metadata = {
+export const metadata = toolMetadata({
   title: "Point of Intersection",
+  seoTitle: "Point of Intersection — Negotiation Convergence Calculator",
   description:
     "Enter two offers from each party. The tool shows where the lines would intersect if the pattern continued.",
-  alternates: { canonical: "/tools/convergence-calculator" },
-};
+  path: "/tools/convergence-calculator",
+});
 
 export default function ConvergenceCalculatorPage() {
   return (

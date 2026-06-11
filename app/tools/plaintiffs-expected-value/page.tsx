@@ -1,13 +1,13 @@
-import type { Metadata } from "next";
+import { toolMetadata } from "@/lib/tool-metadata";
 import PlaintiffsExpectedValueClient from "./client";
 import ToolPageHeader from "@/components/tool-page-header";
 
-export const metadata: Metadata = {
+export const metadata = toolMetadata({
   title: "Plaintiff's Expected Value",
   description:
     "Calculate the probability-weighted expected value of a plaintiff's case, adjusted for costs and the time value of money.",
-  alternates: { canonical: "/tools/plaintiffs-expected-value" },
-};
+  path: "/tools/plaintiffs-expected-value",
+});
 
 export default function PlaintiffsExpectedValuePage() {
   return (
