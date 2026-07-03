@@ -20,7 +20,7 @@ export const navGroups = [
     label: "Money Math",
     links: [
       { href: "/tools/contingency-calculator", label: "Contingency Calculator" },
-      { href: "/tools/employment-contingency-calculator", label: "Employment Contingency Calculator" },
+      { href: "/tools/employment-contingency-calculator", label: "W-2, 1099, and Attorney Fee Calculator" },
       { href: "/tools/simple-interest-calculator", label: "Simple Interest Calculator" },
       { href: "/tools/payment-over-time", label: "Payment Over Time Calculator" },
       { href: "/tools/take-home-after-taxes", label: "Rough Guess After Taxes Estimator" },
