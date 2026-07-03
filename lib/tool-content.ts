@@ -79,9 +79,11 @@ export const toolContent: Record<string, ToolContent> = {
       `Comparing your last move to the other side’s, you have enough information to ask a simple question: if both sides keep moving at this pace, where do the numbers meet?`,
       `Enter two offers from each party. The tool treats each side's pair of offers as a straight line — the plaintiff's coming down, the defendant's going up — and extends both lines forward to the round and dollar value where they would intersect. The chart shows the actual moves as solid lines and the extrapolation as dotted lines, with the intersection marked in green.`,
       `If the lines never meet — because the parties are moving apart, or moving in parallel — the tool says so instead of inventing a number. That answer is just as useful: it means the current pattern doesn't get anyone to a deal.`,
+      `Once the tool projects an intersection, you can go a step further: enter a desired settlement number to see what it would take to land there instead. The tool works backward from your number and lays out three scenarios — both sides adjusting to meet at your figure in the same number of moves; the plaintiff's moves staying constant while the defendant adjusts; and the defendant's moves staying constant while the plaintiff adjusts. Select a scenario and the chart draws that path alongside the current projection, so you can see the pattern you have and the pattern you need side by side.`,
     ],
     example: [
       `The plaintiff demands $500,000, then $450,000 — moving $50,000. The defendant offers $50,000, then $75,000 — moving $25,000. If this pattern holds, the lines cross at $200,000.`,
+      `Now suppose you want the case to land at $250,000 instead. To get there in the same five moves, the defendant would need increments of $35,000 instead of $25,000 — and the plaintiff's moves could actually ease to $40,000. Or hold one side steady: with the plaintiff constant at $50,000 per move, the defendant needs $43,750 and the parties meet a move sooner. With the defendant constant at $25,000, the plaintiff needs about $28,600 per move and the meeting comes two moves later.`,
     ],
     whenToUse: [
       `This tool is particularly helpful for deciding whether to continue a pattern: if the intersection is a number you can accept, continuing the trend may get you there without drama. If the intersection is unacceptable, you know the pattern has to change.`,
@@ -93,7 +95,11 @@ export const toolContent: Record<string, ToolContent> = {
       },
       {
         q: `What if the trend points to a number I would not accept?`,
-        a: `When the trend is unsustainable, we must find ways to communicate this to the other side. You can let the numbers speak for themselves by adjusting your move to fit a trend that lands in an acceptable range. Or you could simply tell the other side directly, “this trend is not going to result in settlement, so we need to change course.” Or better yet, do both! One caveat: even if the trend cannot hold forever, it might work for a while to narrow the gap.`,
+        a: `When the trend is unsustainable, we must find ways to communicate this to the other side. You can let the numbers speak for themselves by adjusting your move to fit a trend that lands in an acceptable range. Or you could simply tell the other side directly, “this trend is not going to result in settlement, so we need to change course.” Or better yet, do both! One caveat: even if the trend cannot hold forever, it might work for a while to narrow the gap. The desired settlement number field below the chart does this math for you.`,
+      },
+      {
+        q: `How does the desired settlement number work?`,
+        a: `Enter the number you would like the case to land on, and the tool works backward from it. It shows what each side's moves would have to become to meet at your number in the same number of moves as the current pattern — and two alternative scenarios where one side's moves stay exactly as they are and only the other side adjusts, which changes how many moves the meeting takes. Whichever scenario you select is drawn on the chart next to the current projection.`,
       },
       {
         q: `How is this different from the Negotiation Visualizer's projection?`,
@@ -346,7 +352,7 @@ export const toolContent: Record<string, ToolContent> = {
       `An employment settlement allocates $70,000 to wages and $70,000 to non-wage 1099 income for a single filer in North Carolina. The estimator shows the federal and state income tax on the full $140,000, FICA on the wage portion only — and what actually lands in the client's account. Move the same $140,000 to a 60/40 split and watch the take-home change; that's the comparison that matters at the table.`,
     ],
     whenToUse: [
-      `Use it during settlement negotiations to compare allocations — wages versus non-wages, taxable versus §104 personal-injury dollars — and to keep a client's expectations anchored to net, not gross. It pairs naturally with the Employment Contingency Calculator.`,
+      `Use it during settlement negotiations to compare allocations — wages versus non-wages, taxable versus §104 personal-injury dollars — and to keep a client's expectations anchored to net, not gross. It pairs naturally with the W-2, 1099, and Attorney Fee Calculator.`,
     ],
     faqs: [
       {
