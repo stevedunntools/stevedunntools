@@ -9,11 +9,12 @@ import {
   CardTitle,
   CardContent,
 } from "@/components/ui/card";
-import { Trash2 } from "lucide-react";
+import { Trash2, CheckCircle2, FileJson } from "lucide-react";
 import { fmt, commaFmt } from "@/lib/format";
 import { Pt, pointsToPath, generateYTicks, formatTickLabel } from "@/lib/chart-utils";
 import { textFieldClass } from "@/lib/field-styles";
 import ExportPdfButton from "@/components/export-pdf-button";
+import DollarInput from "@/components/dollar-input";
 import {
   Party,
   OfferType,
@@ -23,6 +24,7 @@ import {
   parseInput,
   computeConvergence,
   nextRoundFor,
+  buildExportData,
 } from "./logic";
 
 // ---------------------------------------------------------------------------
@@ -81,6 +83,7 @@ const RED_FILL = "rgba(220,38,38,0.15)";
 const RED_STROKE = "rgba(220,38,38,0.4)";
 const GREEN = "#16A34A";
 const GREEN_FILL = "rgba(22,163,74,0.30)";
+const AMBER = "#B45309";
 
 // ---------------------------------------------------------------------------
 // Chart geometry helpers (pure — operate on already-scaled coordinates)
@@ -148,12 +151,14 @@ interface NegotiationChartProps {
   offers: Offer[];
   showMidpoint: boolean;
   projections: ActiveProjection[];
+  settlement: number | null;
 }
 
 function NegotiationChart({
   offers,
   showMidpoint,
   projections,
+  settlement,
 }: NegotiationChartProps) {
   const [hover, setHover] = useState<HoverInfo | null>(null);
 
@@ -211,6 +216,7 @@ function NegotiationChart({
     if (showMidpoint) {
       for (const m of roundMidpoints) allVals.push(m.value);
     }
+    if (settlement !== null) allVals.push(settlement);
 
     const rawMin = Math.min(...allVals);
     const rawMax = Math.max(...allVals);
@@ -231,7 +237,7 @@ function NegotiationChart({
       },
       yScale: (v: number) => PAD.top + INNER_H - ((v - mn) / (mx - mn)) * INNER_H,
     };
-  }, [offers, projections, showMidpoint, roundMidpoints]);
+  }, [offers, projections, showMidpoint, roundMidpoints, settlement]);
 
   const pBand = useMemo(() => buildBand(pOffers, xScale, yScale), [pOffers, xScale, yScale]);
   const dBand = useMemo(() => buildBand(dOffers, xScale, yScale), [dOffers, xScale, yScale]);
@@ -586,6 +592,35 @@ function NegotiationChart({
         </g>
       ))}
 
+      {/* Settlement line */}
+      {settlement !== null && offers.length > 0 && (
+        <g>
+          <line
+            x1={PAD.left}
+            y1={yScale(settlement)}
+            x2={PAD.left + INNER_W}
+            y2={yScale(settlement)}
+            stroke={AMBER}
+            strokeWidth="2"
+            strokeDasharray="7 4"
+          />
+          <text
+            x={PAD.left + INNER_W - 6}
+            y={
+              yScale(settlement) < PAD.top + 20
+                ? yScale(settlement) + 16
+                : yScale(settlement) - 8
+            }
+            textAnchor="end"
+            fontSize="12"
+            fontWeight="600"
+            fill={AMBER}
+          >
+            Settled: {fmt(settlement)}
+          </text>
+        </g>
+      )}
+
       {/* Plaintiff dots + hit areas */}
       {pOffers.map((m, i) => {
         const v = offerValues(m);
@@ -794,6 +829,15 @@ export default function NegotiationVisualizerClient() {
     "tool:neg-viz:showConvergence",
     false
   );
+  const [settlementInput, setSettlementInput] = useSessionState<string>(
+    "tool:neg-viz:settlement",
+    ""
+  );
+
+  const settlement = useMemo(() => {
+    const n = parseFloat(settlementInput.replace(/[$,\s]/g, ""));
+    return Number.isFinite(n) ? n : null;
+  }, [settlementInput]);
 
   const [input, setInput] = useState("");
   const [inputError, setInputError] = useState<string | null>(null);
@@ -874,12 +918,28 @@ export default function NegotiationVisualizerClient() {
     setOffers(offers.filter((m) => m.id !== id));
   }
 
+  function exportJson() {
+    const data = buildExportData(offers, settlement, new Date().toISOString());
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `negotiation-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   function clearAll() {
     setOffers([]);
     setParty("plaintiff");
     setInput("");
     setInputError(null);
     setShowConvergence(false);
+    setSettlementInput("");
     clearSessionKeys("tool:neg-viz:");
   }
 
@@ -911,6 +971,15 @@ export default function NegotiationVisualizerClient() {
 
   return (
     <div className="space-y-6">
+      {settlement !== null && (
+        <div className="flex items-center gap-2.5 px-4 py-3 bg-green-50 border border-green-300 rounded-md">
+          <CheckCircle2 className="h-5 w-5 text-green-700 shrink-0" />
+          <span className="text-sm font-semibold text-green-900">
+            Case settled for {fmt(settlement)}
+          </span>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Add offer form */}
         <Card className="bg-white border-brand-border lg:col-span-2 print:hidden">
@@ -1010,6 +1079,22 @@ export default function NegotiationVisualizerClient() {
                 Clear All
               </Button>
             )}
+
+            {/* Settlement */}
+            <div className="pt-4 border-t border-brand-border">
+              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+                Settlement Amount
+              </label>
+              <DollarInput
+                value={settlementInput}
+                onChange={setSettlementInput}
+                placeholder="450,000"
+              />
+              <p className="mt-1.5 text-xs text-brand-muted">
+                If the case settles, enter the settlement amount. It will be
+                marked on the chart and included in the PDF export.
+              </p>
+            </div>
           </CardContent>
         </Card>
 
@@ -1109,6 +1194,7 @@ export default function NegotiationVisualizerClient() {
             offers={offers}
             showMidpoint={showMidpoint}
             projections={activeProjections}
+            settlement={settlement}
           />
 
           {/* Legend */}
@@ -1156,6 +1242,15 @@ export default function NegotiationVisualizerClient() {
                 {proj.label}
               </span>
             ))}
+            {settlement !== null && (
+              <span className="flex items-center gap-2">
+                <span
+                  className="inline-block w-4 border-t-2 border-dashed"
+                  style={{ borderColor: AMBER }}
+                />
+                Settlement
+              </span>
+            )}
           </div>
 
           {overlapInfo && (
@@ -1166,8 +1261,12 @@ export default function NegotiationVisualizerClient() {
         </CardContent>
       </Card>
 
-      <div className="print:hidden">
+      <div className="print:hidden flex flex-wrap gap-3">
         <ExportPdfButton />
+        <Button variant="outline" onClick={exportJson} disabled={offers.length === 0}>
+          <FileJson className="h-4 w-4 mr-1.5" data-icon="inline-start" />
+          Export as JSON
+        </Button>
       </div>
     </div>
   );

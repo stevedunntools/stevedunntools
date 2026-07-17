@@ -114,6 +114,56 @@ export function computeConvergence(offers: Offer[]): Convergence | null {
   };
 }
 
+/** Offer as it appears in a JSON export: no internal ids, bracket midpoint included. */
+export interface ExportedOffer {
+  round: number;
+  party: Party;
+  type: OfferType;
+  amount?: number;
+  low?: number;
+  high?: number;
+  midpoint?: number;
+}
+
+export interface ExportData {
+  tool: string;
+  source: string;
+  exportedAt: string;
+  settled: boolean;
+  settlementAmount: number | null;
+  offers: ExportedOffer[];
+}
+
+/** Shape the visualizer's state for a JSON file export. */
+export function buildExportData(
+  offers: Offer[],
+  settlement: number | null,
+  exportedAt: string,
+): ExportData {
+  const sorted = [...offers].sort(
+    (a, b) => a.round - b.round || (a.party === "plaintiff" ? -1 : 1),
+  );
+  return {
+    tool: "Negotiation Visualizer",
+    source: "stevedunntools.com",
+    exportedAt,
+    settled: settlement !== null,
+    settlementAmount: settlement,
+    offers: sorted.map((m) =>
+      m.type === "number"
+        ? { round: m.round, party: m.party, type: m.type, amount: m.value }
+        : {
+            round: m.round,
+            party: m.party,
+            type: m.type,
+            low: m.low,
+            high: m.high,
+            midpoint: (m.low + m.high) / 2,
+          },
+    ),
+  };
+}
+
 /** The round the next offer belongs to: a round is open until both parties have offered. */
 export function nextRoundFor(offers: Offer[]): number {
   if (offers.length === 0) return 1;

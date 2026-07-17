@@ -6,6 +6,7 @@ import {
   computeConvergence,
   offerValues,
   nextRoundFor,
+  buildExportData,
 } from "./logic";
 
 let nextId = 0;
@@ -185,6 +186,58 @@ describe("computeConvergence", () => {
     expect(result).not.toBeNull();
     expect(result!.round).toBeCloseTo(3.5556, 3);
     expect(result!.value).toBeCloseTo(300000, 0);
+  });
+});
+
+describe("buildExportData", () => {
+  it("records a settled case with its settlement amount", () => {
+    const data = buildExportData([offer("plaintiff", 1, 500000)], 475000, "2026-07-16T12:00:00Z");
+    expect(data.settled).toBe(true);
+    expect(data.settlementAmount).toBe(475000);
+    expect(data.exportedAt).toBe("2026-07-16T12:00:00Z");
+  });
+
+  it("records an unsettled case", () => {
+    const data = buildExportData([offer("plaintiff", 1, 500000)], null, "2026-07-16T12:00:00Z");
+    expect(data.settled).toBe(false);
+    expect(data.settlementAmount).toBeNull();
+  });
+
+  it("exports number offers without internal ids", () => {
+    const data = buildExportData([offer("plaintiff", 1, 500000)], null, "2026-07-16T12:00:00Z");
+    expect(data.offers).toEqual([
+      { round: 1, party: "plaintiff", type: "number", amount: 500000 },
+    ]);
+  });
+
+  it("exports brackets with low, high, and midpoint", () => {
+    const data = buildExportData(
+      [offer("defendant", 2, [200000, 400000])],
+      null,
+      "2026-07-16T12:00:00Z",
+    );
+    expect(data.offers).toEqual([
+      { round: 2, party: "defendant", type: "bracket", low: 200000, high: 400000, midpoint: 300000 },
+    ]);
+  });
+
+  it("sorts offers by round, plaintiff first within a round", () => {
+    const data = buildExportData(
+      [
+        offer("defendant", 2, 200000),
+        offer("plaintiff", 1, 500000),
+        offer("plaintiff", 2, 400000),
+        offer("defendant", 1, 100000),
+      ],
+      null,
+      "2026-07-16T12:00:00Z",
+    );
+    expect(data.offers.map((o) => [o.round, o.party])).toEqual([
+      [1, "plaintiff"],
+      [1, "defendant"],
+      [2, "plaintiff"],
+      [2, "defendant"],
+    ]);
   });
 });
 
