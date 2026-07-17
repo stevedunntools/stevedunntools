@@ -236,9 +236,11 @@ export const toolContent: Record<string, ToolContent> = {
     howItWorks: [
       `The number that matters to a plaintiff is not the settlement figure — it's the check. This calculator does the math: enter the settlement amount, the contingency fee percentage, and litigation costs, and it shows the attorney's fee, the costs, and the plaintiff's net recovery. You can set the percentage with the slider or enter a precise number in the text box.`,
       `The fee is calculated as a percentage of the gross settlement, with costs deducted separately — the most common structure. Everything is itemized so the client can see exactly where each dollar goes.`,
+      `If only part of the settlement is subject to the fee, check "Part of the settlement is not covered by the contingency" and enter that amount. The percentage is applied only to the covered portion; the excluded portion passes through to the plaintiff undiminished, and the breakdown shows exactly what the fee was computed on.`,
     ],
     example: [
       `A $250,000 settlement with a 33.333% fee produces an attorney's fee of $83,332.50. Subtract $10,000 in litigation costs and the plaintiff nets $156,667.50 — almost $95,000 less than the headline number. Having that figure on screen before the final demand avoids the worst moment in any mediation: the client learning their net for the first time after agreeing.`,
+      `Now suppose only $150,000 of that $250,000 settlement is covered by the contingency. Check the box, enter $100,000 as the amount not covered, and the fee drops to $49,999.50 — 33.333% of $150,000 — leaving the plaintiff $190,000.50 after the same $10,000 in costs.`,
     ],
     whenToUse: [
       `Use it in every mediation involving a contingency-fee plaintiff — early, not at the end. Clients evaluate offers by their net, and showing the arithmetic at the start of the day prevents disappointment and misunderstanding.`,
@@ -256,12 +258,17 @@ export const toolContent: Record<string, ToolContent> = {
         q: `Are litigation costs the same as attorney's fees?`,
         a: `No. Fees compensate the lawyer's work; costs are out-of-pocket expenses — filing fees, depositions, experts, records. In most contingency arrangements costs are charged in addition to the fee, which is why they're entered separately here.`,
       },
+      {
+        q: `What if only part of the settlement is covered by the contingency fee?`,
+        a: `Some settlements include a component the fee agreement doesn't reach — an amount recovered under a separate arrangement, or one the parties agreed carries no fee. Check "Part of the settlement is not covered by the contingency" and enter that amount: the percentage is applied only to the covered remainder, while the excluded portion still flows to the plaintiff in full. If the excluded portion has its own, different percentage, run it through the calculator separately and add the two fees together.`,
+      },
     ],
   },
   "/tools/employment-contingency-calculator": {
     howItWorks: [
       `Employment settlements have an extra step that ordinary contingency math misses: after fees and costs, the plaintiff's net recovery has to be allocated between wages and non-wage income, and that allocation drives taxes.`,
       `This calculator runs the standard contingency arithmetic — settlement amount, fee percentage, litigation costs, net to plaintiff — and then splits the net by a wage-allocation percentage you control. The wage portion is generally treated as W-2 income subject to payroll tax withholding; the non-wage portion (for example, compensatory damages for emotional distress) is typically reported on a 1099 without payroll taxes.`,
+      `If only part of the settlement is subject to the fee, check "Part of the settlement is not covered by the contingency" and enter that amount. The percentage is applied only to the covered portion; the excluded portion still flows into the plaintiff's net and the wage/non-wage split.`,
       `Allocation must reflect the actual claims in the case — it is a characterization of what the settlement pays for, not a dial for minimizing taxes. But within the range the claims support, the split makes a real difference to what the client keeps, and it's better negotiated deliberately.`,
     ],
     example: [
@@ -282,6 +289,10 @@ export const toolContent: Record<string, ToolContent> = {
       {
         q: `Is the wage portion taxed differently from the non-wage portion?`,
         a: `Yes. Wages bear income tax plus the employee's share of FICA, with employer withholding. Non-wage damages are still ordinary income (unless for physical injury) but avoid payroll taxes. The after-tax difference is what makes the allocation worth negotiating carefully.`,
+      },
+      {
+        q: `What if only part of the settlement is covered by the contingency fee?`,
+        a: `Check "Part of the settlement is not covered by the contingency" and enter the amount the fee doesn't reach. The fee percentage is applied only to the covered remainder — the excluded amount passes to the plaintiff undiminished and is still included in the net that gets allocated between wages and non-wage income. If the excluded portion carries its own, different percentage, run it separately and add the two fees together.`,
       },
     ],
   },

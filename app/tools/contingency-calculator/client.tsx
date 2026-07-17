@@ -18,22 +18,28 @@ import MobileResultBar from "@/components/mobile-result-bar";
 
 export default function ContingencyCalculatorClient() {
   const [settlement, setSettlement] = useSessionState("tool:contingency:settlement", "");
-  const [contingencyPct, setContingencyPct] = useSessionState("tool:contingency:contingencyPct", 1);
+  const [contingencyPct, setContingencyPct] = useSessionState("tool:contingency:contingencyPct", 0);
   const [costs, setCosts] = useSessionState("tool:contingency:costs", "");
+  const [notCovered, setNotCovered] = useSessionState("tool:contingency:notCovered", "");
+  const [hasNotCovered, setHasNotCovered] = useSessionState("tool:contingency:hasNotCovered", false);
 
   function clearAll() {
     setSettlement("");
-    setContingencyPct(1);
+    setContingencyPct(0);
     setCosts("");
+    setNotCovered("");
+    setHasNotCovered(false);
     clearSessionKeys("tool:contingency:");
   }
 
   const s = parseNum(settlement);
   const c = parseNum(costs);
-  const attorneyFee = s * (contingencyPct / 100);
+  const nc = hasNotCovered ? parseNum(notCovered) : 0;
+  const covered = Math.max(0, s - nc);
+  const attorneyFee = covered * (contingencyPct / 100);
   const netToPlaintiff = s - attorneyFee - c;
 
-  const hasAny = settlement !== "" || costs !== "";
+  const hasAny = settlement !== "" || costs !== "" || notCovered !== "" || hasNotCovered;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -45,7 +51,7 @@ export default function ContingencyCalculatorClient() {
               Settlement
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <div className="max-w-[calc(50%-0.5rem)]">
               <label className="block text-sm font-medium text-brand-primary mb-1.5">
                 Settlement amount
@@ -56,6 +62,29 @@ export default function ContingencyCalculatorClient() {
                 placeholder="250,000"
               />
             </div>
+            <label className="flex items-center gap-2 cursor-pointer select-none text-sm">
+              <input
+                type="checkbox"
+                checked={hasNotCovered}
+                onChange={(e) => setHasNotCovered(e.target.checked)}
+                className="h-4 w-4 rounded border-brand-border text-brand-accent focus:ring-brand-accent"
+              />
+              <span className="text-brand-primary">
+                Part of the settlement is not covered by the contingency
+              </span>
+            </label>
+            {hasNotCovered && (
+              <div className="max-w-[calc(50%-0.5rem)]">
+                <label className="block text-sm font-medium text-brand-primary mb-1.5">
+                  Amount of settlement not covered by contingency
+                </label>
+                <DollarInput
+                  value={notCovered}
+                  onChange={setNotCovered}
+                  placeholder="100,000"
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -69,9 +98,9 @@ export default function ContingencyCalculatorClient() {
             <PercentSlider
               value={contingencyPct}
               onChange={setContingencyPct}
-              min={1}
+              min={0}
               max={100}
-              label="Use slider or type exact percentage"
+              label="Use slider or type exact percentage (ex. 33.333%)"
             />
           </CardContent>
         </Card>
@@ -123,7 +152,15 @@ export default function ContingencyCalculatorClient() {
               <table className="w-full text-sm">
                 <tbody>
                   <Row label="Settlement amount" value={s} />
-                  <Row label={`Attorney fee (${contingencyPct}%)`} value={attorneyFee} negative />
+                  <Row
+                    label={
+                      nc > 0
+                        ? `Attorney fee (${contingencyPct}% of ${fmt(covered)})`
+                        : `Attorney fee (${contingencyPct}%)`
+                    }
+                    value={attorneyFee}
+                    negative
+                  />
                   <Row label="Costs" value={c} negative />
                   <Separator />
                   <tr>
