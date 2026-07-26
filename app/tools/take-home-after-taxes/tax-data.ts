@@ -125,11 +125,12 @@ export const SE_DEDUCTIBLE_FRACTION = 0.5;    // §164(f)
 
 // QBI / Section 199A (simplified — no SSTB or W-2 wage limitations applied)
 export const QBI_RATE = 0.20;
+// 2026 thresholds per Rev. Proc. 2025-32
 export const QBI_THRESHOLD: Record<FilingStatus, number> = {
-  single: 201775,
+  single: 201750,
   mfj: 403500,
-  mfs: 201750,
-  hoh: 201775,
+  mfs: 201775,
+  hoh: 201750,
 };
 
 // ---------------------------------------------------------------------------

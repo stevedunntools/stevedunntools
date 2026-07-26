@@ -5,6 +5,7 @@ import {
   SS_WAGE_BASE_2026,
   SS_EMPLOYEE_RATE,
   MEDICARE_EMPLOYEE_RATE,
+  STATES,
   Bracket,
 } from "./tax-data";
 
@@ -156,6 +157,28 @@ describe("calculate — state income tax", () => {
       piIncome: 0,
     });
     expect(result.totals.stateIncomeTax).toBeGreaterThan(0);
+  });
+
+  it("starts state tax from federal AGI (after the half-SE deduction)", () => {
+    // NC flat rate: state taxable = (gross − halfSE) − state deduction
+    const result = calculate({
+      filingStatus: "single",
+      stateCode: "NC",
+      w2Wages: 0,
+      income1099: 50000,
+      income1099Type: "se",
+      piIncome: 0,
+    });
+    const nc = STATES.find((s) => s.code === "NC")!;
+    const halfSe = result.notes.halfSeDeduction;
+    const stateTaxable = Math.max(
+      0,
+      50000 - halfSe - nc.baseDeduction!.single
+    );
+    expect(result.totals.stateIncomeTax).toBeCloseTo(
+      stateTaxable * nc.brackets!.single[0].rate,
+      2
+    );
   });
 
   it("throws on an unknown state code", () => {

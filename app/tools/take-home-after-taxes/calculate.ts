@@ -152,8 +152,9 @@ export function calculate(input: CalcInput): CalcResult {
   // -----------------------------------------------------------------------
   let stateIncomeTax = 0;
   if (state.hasIncomeTax && state.brackets && state.baseDeduction) {
-    // States generally don't allow the half-SE deduction; use gross ordinary income
-    const stateAGI = grossOrdinaryIncome;
+    // Most income-tax states start from federal AGI, which already reflects
+    // the §164(f) half-SE deduction — so use it here too.
+    const stateAGI = federalAGI;
     const statusKey: "single" | "mfj" =
       filingStatus === "mfj" ? "mfj" : "single";
     const stateTaxable = Math.max(0, stateAGI - state.baseDeduction[statusKey]);
