@@ -28,8 +28,11 @@ export function offerValues(m: Offer): { low: number; high: number; mid: number 
 
 /**
  * Parse user input into an offer. Supports:
- *   "500000", "500,000", "-100,000", "0" → number offer
- *   "200000-400000", "-100,000-50,000" → bracket
+ *   "500000", "500,000", "-100,000", "0", "1234.56" → number offer
+ *   "200000-400000", "-100,000-50,000", "100.5-200.5" → bracket
+ * Anything else returns null (the caller shows an error) rather than being
+ * silently truncated — a half-typed bracket like "200,000-" must not be
+ * recorded as a firm $200,000 offer.
  */
 export function parseInput(
   raw: string,
@@ -37,8 +40,13 @@ export function parseInput(
   const trimmed = raw.trim();
   if (!trimmed) return null;
 
-  // Bracket: two numbers (each optionally negative) separated by a dash / en-dash / em-dash
-  const bracketMatch = trimmed.match(/^[\s$]*(-?[\d,]+)\s*[-–—]\s*[\s$]*(-?[\d,]+)\s*$/);
+  // A single offer amount: optional sign, digits/commas, optional cents
+  const amount = "-?[\\d,]+(?:\\.\\d+)?";
+
+  // Bracket: two amounts separated by a dash / en-dash / em-dash
+  const bracketMatch = trimmed.match(
+    new RegExp(`^[\\s$]*(${amount})\\s*[-–—]\\s*[\\s$]*(${amount})[\\s$]*$`),
+  );
   if (bracketMatch) {
     const a = parseFloat(bracketMatch[1].replace(/,/g, ""));
     const b = parseFloat(bracketMatch[2].replace(/,/g, ""));
@@ -49,7 +57,8 @@ export function parseInput(
     return { type: "bracket", value: 0, low, high };
   }
 
-  // Otherwise treat as a single number
+  // Otherwise the whole input must be exactly one amount
+  if (!new RegExp(`^[\\s$]*${amount}[\\s$]*$`).test(trimmed)) return null;
   const num = parseFloat(trimmed.replace(/[$,]/g, ""));
   if (isNaN(num)) return null;
   return { type: "number", value: num, low: 0, high: 0 };

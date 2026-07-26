@@ -63,6 +63,26 @@ describe("parseInput", () => {
     expect(parseInput("   ")).toBeNull();
     expect(parseInput("abc")).toBeNull();
   });
+
+  it("parses decimal amounts and brackets", () => {
+    expect(parseInput("1234.56")).toEqual({ type: "number", value: 1234.56, low: 0, high: 0 });
+    expect(parseInput("$1,234.56")?.value).toBe(1234.56);
+    expect(parseInput("100.5-200.5")).toEqual({
+      type: "bracket", value: 0, low: 100.5, high: 200.5,
+    });
+  });
+
+  it("rejects a half-typed bracket instead of truncating it to a firm offer", () => {
+    // "200,000-" used to parse as a $200,000 number offer via parseFloat
+    expect(parseInput("200,000-")).toBeNull();
+    expect(parseInput("200,000 - ")).toBeNull();
+  });
+
+  it("rejects trailing garbage and interior spaces instead of truncating", () => {
+    expect(parseInput("500 000")).toBeNull();
+    expect(parseInput("100,000abc")).toBeNull();
+    expect(parseInput("100,000-abc")).toBeNull();
+  });
 });
 
 describe("offerValues", () => {
