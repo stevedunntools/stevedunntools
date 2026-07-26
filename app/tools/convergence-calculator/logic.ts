@@ -15,6 +15,13 @@ export type IntersectionResult =
   | { converges: false; reason: string }
   | { converges: true; intersectRound: number; intersectValue: number };
 
+/**
+ * A projected intersection beyond this round is not practically meaningful —
+ * and rendering it would generate thousands of chart labels (freezing the
+ * tab) — so it is reported as non-converging instead.
+ */
+export const MAX_PROJECTED_ROUND = 50;
+
 export function computeIntersection({ p1, p2, d1, d2 }: TrendInputs): IntersectionResult {
   const pSlope = p2 - p1;
   const dSlope = d2 - d1;
@@ -28,8 +35,17 @@ export function computeIntersection({ p1, p2, d1, d2 }: TrendInputs): Intersecti
   }
 
   const r = 1 + (d1 - p1) / slopeDiff;
-  if (r < 2) {
+  if (r >= 1 && r < 2) {
+    return { converges: false, reason: "The trends have already crossed between the two rounds." };
+  }
+  if (r < 1) {
     return { converges: false, reason: "Trends are diverging — no future convergence." };
+  }
+  if (r > MAX_PROJECTED_ROUND) {
+    return {
+      converges: false,
+      reason: `Trends would not converge for over ${MAX_PROJECTED_ROUND} rounds — too far out to be meaningful.`,
+    };
   }
 
   return { converges: true, intersectRound: r, intersectValue: p1 + pSlope * (r - 1) };

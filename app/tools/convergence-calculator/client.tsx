@@ -27,6 +27,10 @@ const RED = "#DC2626";
 const GREEN = "#16A34A";
 const VIOLET = "#7C3AED";
 
+// Hard upper bound on rendered rounds — defense in depth behind the
+// MAX_PROJECTED_ROUND check in logic.ts.
+const MAX_CHART_ROUNDS = 60;
+
 // White halo rendered behind label text so it stays readable where the
 // converging lines pass underneath it.
 const LABEL_HALO = {
@@ -58,11 +62,15 @@ function TrendChart({ data, desired }: { data: ChartData; desired?: DesiredPoint
   const { p1, p2, d1, d2, intersectRound, intersectValue } = data;
 
   // Determine how many rounds to show: at least 1 past the intersection (and
-  // past the desired meeting point, which can land later), minimum 4
-  const maxRound = Math.max(
-    Math.ceil(intersectRound) + 1,
-    desired ? Math.ceil(desired.round) + 1 : 0,
-    4,
+  // past the desired meeting point, which can land later), minimum 4. Clamped
+  // so a huge projected round can never generate thousands of SVG labels.
+  const maxRound = Math.min(
+    MAX_CHART_ROUNDS,
+    Math.max(
+      Math.ceil(intersectRound) + 1,
+      desired ? Math.ceil(desired.round) + 1 : 0,
+      4,
+    ),
   );
 
   // Y-axis range

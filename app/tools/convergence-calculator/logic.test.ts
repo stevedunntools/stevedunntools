@@ -33,6 +33,28 @@ describe("computeIntersection", () => {
     const r = computeIntersection({ p1: 400000, p2: 500000, d1: 150000, d2: 50000 });
     expect(r.converges).toBe(false);
   });
+
+  it("reports trends that cross between rounds 1 and 2 as already crossed, not diverging", () => {
+    // Plaintiff drops below defendant's ascending line by round 2.
+    const r = computeIntersection({ p1: 500000, p2: 100000, d1: 50000, d2: 200000 });
+    expect(r.converges).toBe(false);
+    if (!r.converges) expect(r.reason).toMatch(/already crossed/);
+  });
+
+  it("refuses near-parallel trends that would converge thousands of rounds out", () => {
+    // Plaintiff creeps down $1/round; the naive intersection is ~500,001
+    // rounds out, which would hang the chart trying to render it.
+    const r = computeIntersection({ p1: 500000, p2: 499999, d1: 0, d2: 0 });
+    expect(r.converges).toBe(false);
+    if (!r.converges) expect(r.reason).toMatch(/too far out/);
+  });
+
+  it("still reports intersections just inside the round cap", () => {
+    // Intersection exactly at round 50: gap 490k, closing 10k/round.
+    const r = computeIntersection({ p1: 500000, p2: 490000, d1: 10000, d2: 10000 });
+    expect(r.converges).toBe(true);
+    if (r.converges) expect(r.intersectRound).toBeCloseTo(50, 5);
+  });
 });
 
 describe("desiredMoves", () => {
