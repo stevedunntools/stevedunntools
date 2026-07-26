@@ -25,9 +25,9 @@ type LiquidatedType = "none" | "2x-wages" | "2x-wages-benefits" | "3x-wages";
 
 const liquidatedOptions: { value: LiquidatedType; label: string }[] = [
   { value: "none", label: "None" },
-  { value: "2x-wages", label: "2× back pay compensation (FLSA / ADEA / EPA)" },
-  { value: "2x-wages-benefits", label: "2× back pay compensation + benefits (FMLA)" },
-  { value: "3x-wages", label: "3× back pay compensation (state statutes)" },
+  { value: "2x-wages", label: "2× net back pay compensation (FLSA / ADEA / EPA)" },
+  { value: "2x-wages-benefits", label: "2× net back pay compensation + benefits (FMLA)" },
+  { value: "3x-wages", label: "3× net back pay compensation (state statutes)" },
 ];
 
 interface MitigationJob {
@@ -105,19 +105,24 @@ export default function EmploymentDamagesClient() {
 
   const netBackPay = Math.max(0, backPay - totalMitigation);
 
-  // Front pay = months × (comp at termination - current job comp if currently employed)
+  // Front pay = months × (comp + benefits at termination - current job comp
+  // if currently employed). Benefits are included, matching back pay.
   const currentJob = jobs.find((j) => j.current);
   const currentJobComp = currentJob ? parseNum(currentJob.monthlyComp) : 0;
-  const frontPay = Math.max(0, comp - currentJobComp) * fpMonths;
+  const frontPay = Math.max(0, comp + benefits - currentJobComp) * fpMonths;
 
-  // Liquidated damages (based on back pay only, before mitigation)
+  // Liquidated damages, computed on net (post-mitigation) back pay so the
+  // multiplier reflects what is actually owed. Mitigation is allocated
+  // proportionally between the wage and benefit components.
+  const mitigationRatio = backPay > 0 ? netBackPay / backPay : 0;
+  const netBackPayComp = backPayComp * mitigationRatio;
   let liquidated = 0;
   if (liquidatedType === "2x-wages") {
-    liquidated = backPayComp;
+    liquidated = netBackPayComp;
   } else if (liquidatedType === "2x-wages-benefits") {
-    liquidated = backPay;
+    liquidated = netBackPay;
   } else if (liquidatedType === "3x-wages") {
-    liquidated = backPayComp * 2;
+    liquidated = netBackPayComp * 2;
   }
 
   const grossTotal = netBackPay + frontPay + compDamages + liquidated + pun + other;
