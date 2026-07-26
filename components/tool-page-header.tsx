@@ -1,5 +1,4 @@
 import Link from "next/link";
-import SteveNote from "@/components/steve-note";
 import { toolCategory } from "@/lib/navigation";
 
 interface ToolPageHeaderProps {
@@ -7,7 +6,6 @@ interface ToolPageHeaderProps {
   href: string;
   title: string;
   description: string;
-  note?: string;
 }
 
 const BASE_URL = "https://stevedunntools.com";
@@ -16,7 +14,6 @@ export default function ToolPageHeader({
   href,
   title,
   description,
-  note,
 }: ToolPageHeaderProps) {
   const category = toolCategory(href);
   const jsonLd = {
@@ -47,7 +44,7 @@ export default function ToolPageHeader({
   };
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8 print:hidden">
+    <div className="mb-8 print:hidden">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -82,7 +79,6 @@ export default function ToolPageHeader({
         <h1 className="text-3xl font-bold text-brand-primary">{title}</h1>
         <p className="mt-2 text-brand-muted max-w-2xl">{description}</p>
       </div>
-      {note && <SteveNote note={note} />}
     </div>
   );
 }

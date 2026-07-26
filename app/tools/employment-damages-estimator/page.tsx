@@ -16,7 +16,6 @@ export default function EmploymentDamagesEstimatorPage() {
         href="/tools/employment-damages-estimator"
         title="Employment Damages Estimator"
         description="Estimate potential employment damages including back pay, mitigation, front pay, and additional damages."
-        note="This tool estimates a plaintiff's potential recovery in an employment case. Run a few scenarios to see what the numbers look like under different assumptions. You can run the back pay and mitigation figures to date or through trial. The other categories of damages are more subjective and uncertain, so test them a few ways, keeping in mind applicable caps on compensatory damages. Note, if the plaintiff is currently employed, those earnings are a setoff against any front pay award. The best case scenario is an unlikely outcome in litigation, but it can be a useful benchmark in negotiation."
       />
       <EmploymentDamagesClient />
     </>

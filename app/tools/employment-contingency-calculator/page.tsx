@@ -17,7 +17,6 @@ export default function EmploymentContingencyCalculatorPage() {
         href="/tools/employment-contingency-calculator"
         title="W-2, 1099, and Attorney Fee Calculator"
         description="Calculate the plaintiff's net recovery under a contingency fee arrangement, with allocation between wages and non-wage income for tax purposes."
-        note="This works like a standard contingency calculator but adds a critical step for employment cases: splitting the plaintiff's net recovery into wages and non-wage income. That allocation matters for tax reporting — back wages are subject to payroll and income tax, while compensatory damages for emotional distress or other non-wage claims may not be."
       />
       <EmploymentContingencyClient />
     </>

@@ -24,7 +24,7 @@ export const toolContent: Record<string, ToolContent> = {
       `Most negotiations are easier to understand as a picture than as a list of numbers. The Negotiation Visualizer charts a settlement negotiation round by round: enter each offer as it happens, and the chart plots the plaintiff's demands and the defendant's offers as two converging lines.`,
       `The tool accepts two kinds of moves. A firm offer is a single number, like 500,000. A bracket is a range, entered like 200,000-400,000, which appears on the chart as a shaded band with a dotted line through its midpoint. When both sides have brackets on the table and the brackets overlap, the overlapping zone is highlighted in green — often the first visible sign of where a deal might land.`,
       `Once both sides have made at least three moves, you can turn on a projected convergence point. It fits a straight line through each side's three most recent moves and extends both lines to where they would intersect — the round and the dollar figure where the parties meet if the current pattern simply continues. Negotiations rarely move in straight lines, but the projection is a useful reality check on pace.`,
-      `Everything runs in your browser. No offer you enter is stored on a server or transmitted anywhere, and you can export the chart and offer history to PDF for your file.`,
+      `Everything runs in your browser. No offer you enter is stored on a server or transmitted anywhere, and you can print or save the chart and offer history as a PDF for your file.`,
     ],
     example: [
       `Suppose the plaintiff opens at $500,000 and the defendant responds at $100,000. The plaintiff comes down to $400,000; the defendant comes up to $200,000. The plaintiff then offers a bracket of $300,000–$450,000 and the defendant counters with a bracket of $225,000–$325,000. The chart shows the two paths closing, the two brackets overlapping between $300,000 and $325,000 in green, and — with three moves on each side — a projected convergence in the low $300,000s a round or two ahead.`,
@@ -333,7 +333,7 @@ export const toolContent: Record<string, ToolContent> = {
       `If interest applies, the tool uses standard amortization — each level payment contains a declining interest component and a growing principal component, exactly like a loan. The schedule shows every payment broken into principal, interest, and remaining balance, and the summary totals what the payor ultimately pays.`,
     ],
     example: [
-      `A $120,000 settlement with $20,000 at signing leaves $100,000 to amortize. Paid over 12 monthly installments at 6% interest, each payment is $8,606.64, total interest is about $3,279.71, and the payor's all-in cost is $123,279.71. At 0% the same structure is twelve flat payments of $8,333.33.`,
+      `A $120,000 settlement with $20,000 at signing leaves $100,000 to amortize. Paid over 12 monthly installments at 6% interest, each payment is $8,606.64, total interest is about $3,279.72, and the payor's all-in cost is $123,279.72. At 0% the same structure is twelve flat payments of $8,333.33.`,
     ],
     whenToUse: [
       `Use it while negotiating structure — it answers “what does $10,000 a month for two years actually total?” instantly — and when drafting, because the exported schedule can go straight into the settlement agreement as an exhibit.`,
@@ -421,7 +421,7 @@ export const toolContent: Record<string, ToolContent> = {
       `The federal holiday calendar covers all eleven federal holidays with their weekend-observation rules. State court holidays vary; if your deadline depends on a state holiday calendar, verify against the court's published list.`,
     ],
     example: [
-      `Thirty days from June 11, 2026 is July 11, 2026 — a Saturday, which matters if something is due. Thirty business days excluding federal holidays lands on July 27, 2026, because the count skips twelve weekend days, Juneteenth (Friday, June 19), and the observed Independence Day holiday on Friday, July 3.`,
+      `Thirty days from June 11, 2026 is July 11, 2026 — a Saturday, which matters if something is due. Thirty business days excluding federal holidays lands on July 27, 2026, because the count skips fourteen weekend days, Juneteenth (Friday, June 19), and the observed Independence Day holiday on Friday, July 3.`,
     ],
     whenToUse: [
       `Use it for deadline calculations, option and notice periods, and scheduling — any time an agreement or rule says “within N days” and you need the actual date, not an estimate.`,

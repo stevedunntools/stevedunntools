@@ -17,7 +17,6 @@ export default function ContingencyCalculatorPage() {
         href="/tools/contingency-calculator"
         title="Contingency Calculator"
         description="Calculate attorney fees and the plaintiff's net recovery under a contingency fee arrangement."
-        note="A straightforward split: enter the settlement amount, your contingency percentage, and litigation costs, and see how the money divides between attorney and client."
       />
       <ContingencyCalculatorClient />
     </>

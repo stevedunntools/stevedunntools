@@ -17,7 +17,6 @@ export default function DaysBetweenDatesPage() {
         href="/tools/days-between-dates"
         title="Days Between Dates"
         description="Calculate the duration between two dates, expressed in multiple formats."
-        note='This tool counts the exact number of days between two dates and breaks it down in several formats: years/months/days, total months, weeks, and total days. The "include end day" option adds one day to the count — use it when both the start and end dates should be counted, which is common in statutory deadline calculations.'
       />
       <DaysBetweenDatesClient />
     </>
