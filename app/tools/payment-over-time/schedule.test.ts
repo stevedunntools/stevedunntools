@@ -152,6 +152,21 @@ describe("buildSchedule — interest starting immediately", () => {
     expect(accrued).toBeDefined();
     expect(accrued!.interest).toBeCloseTo(60000 * 0.01, 5);
   });
+
+  it("accrues one period on the full balance when there are no up-front payments", () => {
+    const result = buildSchedule(
+      input({
+        totalSettlement: 100000,
+        numPayments: 6,
+        interestScope: "installments",
+        interestStart: "immediately",
+        annualRate: 12,
+      })
+    );
+    const accrued = result.schedule.find((r) => r.label === "Accrued interest");
+    expect(accrued).toBeDefined();
+    expect(accrued!.interest).toBeCloseTo(100000 * 0.01, 5);
+  });
 });
 
 describe("buildSchedule — installment cap", () => {

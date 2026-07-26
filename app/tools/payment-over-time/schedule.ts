@@ -88,7 +88,6 @@ export function buildSchedule(input: ScheduleInput): ScheduleResult {
 
   // Up-front payments — treated as occurring at T=0 (no interest accrual).
   // Each upfront's principal is clamped to whatever balance remains.
-  const upfrontCount = upfronts.filter((u) => u.amount > 0).length;
   for (const u of upfronts) {
     if (u.amount <= 0) continue;
 
@@ -108,8 +107,9 @@ export function buildSchedule(input: ScheduleInput): ScheduleResult {
   }
 
   // If interest starts immediately, accrue one period of interest on the
-  // post-upfront balance before installments begin.
-  if (scope === "installments" && startTiming === "immediately" && upfrontCount > 0 && periodRate > 0) {
+  // post-upfront balance before installments begin — whether or not there
+  // were any up-front payments.
+  if (scope === "installments" && startTiming === "immediately" && periodRate > 0 && balance > 0) {
     const accruedInterest = balance * periodRate;
     balance += accruedInterest;
     totalInterest += accruedInterest;
