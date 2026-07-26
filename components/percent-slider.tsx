@@ -30,6 +30,7 @@ export default function PercentSlider({
   allowOverflow = false,
 }: PercentSliderProps) {
   const [textValue, setTextValue] = useState(formatPct(value));
+  const [error, setError] = useState<string | null>(null);
 
   // Sync the text box when the value prop changes externally (slider drag,
   // Clear All). Render-phase adjustment instead of an effect.
@@ -37,28 +38,33 @@ export default function PercentSlider({
   if (value !== lastValue) {
     setLastValue(value);
     setTextValue(formatPct(value));
+    setError(null);
   }
 
   function handleSlider(e: React.ChangeEvent<HTMLInputElement>) {
     const val = parseFloat(e.target.value);
     onChange(val);
     setTextValue(formatPct(val));
+    setError(null);
   }
 
   function handleTextChange(e: React.ChangeEvent<HTMLInputElement>) {
     setTextValue(e.target.value);
+    setError(null);
   }
 
   function handleTextCommit() {
     const parsed = parseFloat(textValue);
-    if (isNaN(parsed) || parsed < min) {
+    if (isNaN(parsed) || parsed < min || (!allowOverflow && parsed > max)) {
+      setError(
+        allowOverflow
+          ? `Enter a number ${min} or greater`
+          : `Enter a number between ${min} and ${max}`
+      );
       setTextValue(formatPct(value));
       return;
     }
-    if (!allowOverflow && parsed > max) {
-      setTextValue(formatPct(value));
-      return;
-    }
+    setError(null);
     onChange(parsed);
     setTextValue(formatPct(parsed));
   }
@@ -78,12 +84,22 @@ export default function PercentSlider({
             onBlur={handleTextCommit}
             onKeyDown={(e) => e.key === "Enter" && handleTextCommit()}
             aria-label={ariaLabel}
-            className="w-16 text-center text-lg font-semibold text-brand-accent-text bg-transparent border-b border-brand-border focus:border-brand-accent focus:outline-none"
+            aria-invalid={error ? true : undefined}
+            className={`w-16 text-center text-lg font-semibold text-brand-accent-text bg-transparent border-b focus:outline-none ${
+              error
+                ? "border-brand-error"
+                : "border-brand-border focus:border-brand-accent"
+            }`}
           />
           <span className="text-lg font-semibold text-brand-accent-text">%</span>
         </div>
         <span className="text-sm text-brand-muted">{max}%</span>
       </div>
+      {error && (
+        <p role="alert" className="text-xs text-brand-error">
+          {error}
+        </p>
+      )}
       <input
         type="range"
         min={min}

@@ -1,20 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useRef } from "react";
-import { Menu, ChevronDown } from "lucide-react";
+import { useState, useRef, useId } from "react";
+import { Menu, ChevronDown, X } from "lucide-react";
 import {
   Sheet,
   SheetContent,
   SheetTrigger,
+  SheetClose,
   SheetTitle,
 } from "@/components/ui/sheet";
 
 import { navGroups } from "@/lib/navigation";
 
-function Logo() {
+function Logo({ onClick }: { onClick?: () => void }) {
   return (
-    <Link href="/" className="flex items-center gap-2.5 group">
+    <Link href="/" onClick={onClick} className="flex items-center gap-2.5 group">
       <svg
         width="32"
         height="28"
@@ -44,6 +45,11 @@ function DesktopNav() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const triggerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const menuRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const baseId = useId();
+
+  function menuId(label: string) {
+    return `${baseId}-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-menu`;
+  }
 
   function menuItems(label: string): HTMLAnchorElement[] {
     const menu = menuRefs.current[label];
@@ -78,8 +84,9 @@ function DesktopNav() {
                 triggerRefs.current[group.label] = el;
               }}
               className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-300 hover:text-white rounded-md transition-colors"
-              aria-haspopup="true"
+              aria-haspopup="menu"
               aria-expanded={isOpen}
+              aria-controls={menuId(group.label)}
               onClick={() => setOpenMenu(isOpen ? null : group.label)}
               onKeyDown={(e) => {
                 if (e.key === "Escape") setOpenMenu(null);
@@ -88,6 +95,12 @@ function DesktopNav() {
                   setOpenMenu(group.label);
                   // Menu is rendered (hidden) before opening, so items exist
                   requestAnimationFrame(() => focusItem(group.label, 0));
+                }
+                if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  setOpenMenu(group.label);
+                  // focusItem wraps with modulo, so -1 lands on the last item
+                  requestAnimationFrame(() => focusItem(group.label, -1));
                 }
               }}
             >
@@ -105,6 +118,7 @@ function DesktopNav() {
                 ref={(el) => {
                   menuRefs.current[group.label] = el;
                 }}
+                id={menuId(group.label)}
                 className="bg-white rounded-lg shadow-lg border border-brand-border py-2 min-w-[220px]"
                 role="menu"
                 onKeyDown={(e) => {
@@ -161,7 +175,13 @@ function MobileNav() {
       >
         <SheetTitle className="sr-only">Navigation menu</SheetTitle>
         <div className="flex items-center justify-between p-4 border-b border-brand-secondary">
-          <Logo />
+          <Logo onClick={() => setOpen(false)} />
+          <SheetClose
+            className="p-2.5 text-gray-300 hover:text-white transition-colors"
+            aria-label="Close menu"
+          >
+            <X className="h-6 w-6" />
+          </SheetClose>
         </div>
         <nav className="p-4 space-y-1">
           {navGroups.map((group) => (
@@ -187,7 +207,7 @@ function MobileNav() {
                       key={link.href}
                       href={link.href}
                       onClick={() => setOpen(false)}
-                      className="block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-md transition-colors"
+                      className="block px-3 py-2.5 text-sm text-gray-400 hover:text-white rounded-md transition-colors"
                     >
                       {link.label}
                     </Link>

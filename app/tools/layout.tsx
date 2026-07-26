@@ -4,7 +4,7 @@ import ToolContent from "@/components/tool-content";
 
 export default function ToolLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bg-brand-bg min-h-full">
+    <div className="bg-brand-bg min-h-full pb-16 lg:pb-0 print:pb-0">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Print-only logo */}
         <div className="hidden print:flex items-center gap-2.5 mb-6">

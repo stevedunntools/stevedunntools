@@ -17,11 +17,12 @@ export function Row({ label, value, bold, negative }: RowProps) {
 
   return (
     <tr>
-      <td
-        className={`py-1.5 ${bold ? "font-medium text-brand-primary" : "text-brand-muted"}`}
+      <th
+        scope="row"
+        className={`py-1.5 text-left ${bold ? "font-medium text-brand-primary" : "font-normal text-brand-muted"}`}
       >
         {label}
-      </td>
+      </th>
       <td
         className={`py-1.5 text-right tabular-nums ${
           bold

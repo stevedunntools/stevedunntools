@@ -58,6 +58,7 @@ export default function DateInput({
   const [day, setDay] = useState<number>(value ? value.getDate() : -1);
   const [year, setYear] = useState<number>(value ? value.getFullYear() : -1);
   const [textValue, setTextValue] = useState(value ? formatDate(value) : "");
+  const [error, setError] = useState<string | null>(null);
 
   // Sync internal state when the value prop changes externally (including to
   // null, e.g. "Clear All"). Render-phase adjustment instead of an effect.
@@ -68,6 +69,7 @@ export default function DateInput({
     setDay(value ? value.getDate() : -1);
     setYear(value ? value.getFullYear() : -1);
     setTextValue(value ? formatDate(value) : "");
+    setError(null);
   }
 
   function emitDate(m: number, d: number, y: number) {
@@ -98,15 +100,19 @@ export default function DateInput({
   function handleTextCommit() {
     const parsed = parseTextDate(textValue);
     if (parsed) {
+      setError(null);
       setMonth(parsed.getMonth());
       setDay(parsed.getDate());
       setYear(parsed.getFullYear());
       onChange(parsed);
     } else if (textValue.trim() === "") {
+      setError(null);
       setMonth(-1);
       setDay(-1);
       setYear(-1);
       onChange(null);
+    } else {
+      setError("Enter a date as MM/DD/YYYY");
     }
   }
 
@@ -136,13 +142,22 @@ export default function DateInput({
         type="text"
         id={textId}
         aria-label={label ? undefined : (ariaLabel ?? "Date")}
+        aria-invalid={error ? true : undefined}
         value={textValue}
-        onChange={(e) => setTextValue(e.target.value)}
+        onChange={(e) => {
+          setTextValue(e.target.value);
+          setError(null);
+        }}
         onBlur={handleTextCommit}
         onKeyDown={(e) => e.key === "Enter" && handleTextCommit()}
         placeholder="MM/DD/YYYY"
-        className={`${textClass} mb-2`}
+        className={`${error ? textClass.replace("border-brand-border", "border-brand-error") : textClass} mb-2`}
       />
+      {error && (
+        <p role="alert" className="mb-2 -mt-1 text-xs text-brand-error">
+          {error}
+        </p>
+      )}
       {/* Dropdowns */}
       <div className="flex gap-2">
         <select

@@ -31,13 +31,19 @@ export default function MobileResultBar({ label, value, targetId }: MobileResult
   return (
     <button
       type="button"
-      onClick={() =>
+      onClick={() => {
+        const reduced = window.matchMedia(
+          "(prefers-reduced-motion: reduce)"
+        ).matches;
         document
           .getElementById(targetId)
-          ?.scrollIntoView({ behavior: "smooth", block: "center" })
-      }
+          ?.scrollIntoView({
+            behavior: reduced ? "auto" : "smooth",
+            block: "center",
+          });
+      }}
       aria-label={`${label}: ${value}. Scroll to full results.`}
-      className={`fixed bottom-0 inset-x-0 z-40 lg:hidden print:hidden flex items-center justify-between gap-3 px-4 py-3 bg-brand-primary text-white shadow-[0_-2px_10px_rgba(0,0,0,0.2)] transition-transform duration-200 ${
+      className={`fixed bottom-0 inset-x-0 z-40 lg:hidden print:hidden flex items-center justify-between gap-3 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] bg-brand-primary text-white shadow-[0_-2px_10px_rgba(0,0,0,0.2)] motion-safe:transition-transform motion-safe:duration-200 ${
         hidden ? "translate-y-full" : ""
       }`}
     >
