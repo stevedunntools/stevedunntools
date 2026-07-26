@@ -156,7 +156,7 @@ export default function EmploymentContingencyClient() {
               onChange={setWagesPct}
               min={0}
               max={100}
-              label="Percentage of net recovery allocated to wages for tax purposes"
+              label="Percentage of plaintiff's net recovery allocated to wages"
               aria-label="Percentage of net recovery allocated to wages"
             />
           </CardContent>
@@ -204,15 +204,19 @@ export default function EmploymentContingencyClient() {
                   <Row label="Net to plaintiff" value={hydrated ? netToPlaintiff : "—"} bold />
                   <Separator />
                   <Row
-                    label={hydrated ? `Plaintiff's wages (${wagesPct}%)` : "Plaintiff's wages"}
+                    label={hydrated ? `Wage portion of plaintiff's net (W-2, ${wagesPct}%)` : "Wage portion of plaintiff's net (W-2)"}
                     value={hydrated ? wages : "—"}
                   />
                   <Row
-                    label={hydrated ? `Plaintiff's non-wage income (${100 - wagesPct}%)` : "Plaintiff's non-wage income"}
+                    label={hydrated ? `Non-wage portion of plaintiff's net (1099, ${100 - wagesPct}%)` : "Non-wage portion of plaintiff's net (1099)"}
                     value={hydrated ? nonWage : "—"}
                   />
                 </tbody>
               </table>
+              <p className="mt-3 text-xs text-brand-muted">
+                The allocation splits the plaintiff&apos;s net recovery after
+                attorney fees and costs.
+              </p>
             </CardContent>
           </Card>
 
