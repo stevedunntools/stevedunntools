@@ -6,6 +6,7 @@ import {
   isBusinessDay,
   countBusinessDays,
   addBusinessDays,
+  addMonthsClamped,
   daysInMonth,
 } from "./date-utils";
 
@@ -105,5 +106,39 @@ describe("daysInMonth", () => {
   it("handles leap years", () => {
     expect(daysInMonth(2028, 1)).toBe(29);
     expect(daysInMonth(2026, 1)).toBe(28);
+  });
+});
+
+describe("addMonthsClamped", () => {
+  it("adds months without rollover on month-end dates", () => {
+    // Jan 31, 2026 + 1 month = Feb 28, 2026 (not Mar 3)
+    const result = addMonthsClamped(d(2026, 0, 31), 0, 1);
+    expect(result).toEqual(d(2026, 1, 28));
+  });
+
+  it("clamps to Feb 29 in leap years", () => {
+    const result = addMonthsClamped(d(2028, 0, 31), 0, 1);
+    expect(result).toEqual(d(2028, 1, 29));
+  });
+
+  it("clamps when adding years across a leap day", () => {
+    // Feb 29, 2024 + 1 year = Feb 28, 2025 (not Mar 1)
+    const result = addMonthsClamped(d(2024, 1, 29), 1, 0);
+    expect(result).toEqual(d(2025, 1, 28));
+  });
+
+  it("subtracts months without moving forward", () => {
+    // Oct 31 - 1 month = Sep 30 (not Oct 1)
+    const result = addMonthsClamped(d(2026, 9, 31), 0, -1);
+    expect(result).toEqual(d(2026, 8, 30));
+  });
+
+  it("handles month arithmetic across year boundaries", () => {
+    expect(addMonthsClamped(d(2026, 11, 15), 0, 2)).toEqual(d(2027, 1, 15));
+    expect(addMonthsClamped(d(2026, 0, 15), 0, -2)).toEqual(d(2025, 10, 15));
+  });
+
+  it("leaves mid-month dates untouched", () => {
+    expect(addMonthsClamped(d(2026, 3, 15), 1, 6)).toEqual(d(2027, 9, 15));
   });
 });

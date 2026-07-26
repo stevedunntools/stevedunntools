@@ -156,3 +156,16 @@ export const MONTHS = [
 export function daysInMonth(year: number, month: number): number {
   return new Date(year, month + 1, 0).getDate();
 }
+
+/**
+ * Add calendar years and months to a date (pass negative values to subtract),
+ * clamping the day to the target month's last day instead of rolling over:
+ * Jan 31 + 1 month = Feb 28/29 (not Mar 2/3), Feb 29 + 1 year = Feb 28.
+ */
+export function addMonthsClamped(start: Date, years: number, months: number): Date {
+  const monthIndex = start.getMonth() + months;
+  const targetYear = start.getFullYear() + years + Math.floor(monthIndex / 12);
+  const targetMonth = ((monthIndex % 12) + 12) % 12;
+  const day = Math.min(start.getDate(), daysInMonth(targetYear, targetMonth));
+  return new Date(targetYear, targetMonth, day);
+}

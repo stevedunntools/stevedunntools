@@ -10,7 +10,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import DateInput from "@/components/date-input";
-import { addBusinessDays, countBusinessDays, MONTHS } from "@/lib/date-utils";
+import { addBusinessDays, addMonthsClamped, countBusinessDays, MONTHS } from "@/lib/date-utils";
 import { textFieldClass as inputClass, selectFieldClass as selectClass } from "@/lib/field-styles";
 import MobileResultBar from "@/components/mobile-result-bar";
 
@@ -39,10 +39,9 @@ export default function AddSubtractDateClient() {
 
     const sign = direction === "add" ? 1 : -1;
 
-    // Start by adding/subtracting years and months (calendar-based)
-    let resultDate = new Date(startDate);
-    resultDate.setFullYear(resultDate.getFullYear() + sign * yrs);
-    resultDate.setMonth(resultDate.getMonth() + sign * mos);
+    // Start by adding/subtracting years and months (calendar-based,
+    // clamped so Jan 31 + 1 month lands on Feb 28/29, not Mar 2/3)
+    let resultDate = addMonthsClamped(startDate, sign * yrs, sign * mos);
 
     // Add/subtract weeks as calendar days
     resultDate.setDate(resultDate.getDate() + sign * wks * 7);
