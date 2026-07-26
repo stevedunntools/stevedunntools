@@ -9,6 +9,8 @@ interface PercentSliderProps {
   max?: number;
   step?: number;
   label?: string;
+  /** Accessible name applied to both the range slider and the text box. */
+  "aria-label"?: string;
   /** Allow typing values above the slider max */
   allowOverflow?: boolean;
 }
@@ -24,6 +26,7 @@ export default function PercentSlider({
   max = 100,
   step = 1,
   label,
+  "aria-label": ariaLabel,
   allowOverflow = false,
 }: PercentSliderProps) {
   const [textValue, setTextValue] = useState(formatPct(value));
@@ -74,6 +77,7 @@ export default function PercentSlider({
             onChange={handleTextChange}
             onBlur={handleTextCommit}
             onKeyDown={(e) => e.key === "Enter" && handleTextCommit()}
+            aria-label={ariaLabel}
             className="w-16 text-center text-lg font-semibold text-brand-accent bg-transparent border-b border-brand-border focus:border-brand-accent focus:outline-none"
           />
           <span className="text-lg font-semibold text-brand-accent">%</span>
@@ -87,6 +91,7 @@ export default function PercentSlider({
         step={step}
         value={sliderValue}
         onChange={handleSlider}
+        aria-label={ariaLabel}
         className="w-full accent-brand-accent"
       />
       {label && <p className="text-xs text-brand-muted">{label}</p>}

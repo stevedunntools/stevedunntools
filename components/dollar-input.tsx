@@ -8,6 +8,8 @@ interface DollarInputProps {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  id?: string;
+  "aria-label"?: string;
 }
 
 const baseClass =
@@ -18,6 +20,8 @@ export default function DollarInput({
   onChange,
   placeholder,
   className,
+  id,
+  "aria-label": ariaLabel,
 }: DollarInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const cursorRef = useRef<number | null>(null);
@@ -47,6 +51,8 @@ export default function DollarInput({
         ref={inputRef}
         type="text"
         inputMode="decimal"
+        id={id}
+        aria-label={ariaLabel}
         value={value}
         onChange={handleChange}
         placeholder={placeholder}

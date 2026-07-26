@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useSessionState, clearSessionKeys, dateSerializer } from "@/lib/use-session-state";
+import { useSessionState, clearSessionKeys, dateSerializer, useHydrated } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,6 +18,7 @@ type Direction = "add" | "subtract";
 type HolidayMode = "federal" | "weekends-only";
 
 export default function AddSubtractDateClient() {
+  const hydrated = useHydrated();
   const [startDate, setStartDate] = useSessionState<Date | null>("tool:add-subtract:start", null, dateSerializer);
   const [direction, setDirection] = useSessionState<Direction>("tool:add-subtract:direction", "add");
   const [years, setYears] = useSessionState("tool:add-subtract:years", "");
@@ -93,6 +94,10 @@ export default function AddSubtractDateClient() {
 
   const hasAny = startDate !== null || years !== "" || months !== "" || weeks !== "" || days !== "";
 
+  // Gate the results column until mounted so session-restored values don't
+  // flash stale headline numbers on first paint.
+  const displayResult = hydrated ? result : null;
+
   function formatDate(d: Date): string {
     return `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
   }
@@ -112,7 +117,11 @@ export default function AddSubtractDateClient() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <DateInput value={startDate} onChange={setStartDate} />
+            <DateInput
+              value={startDate}
+              onChange={setStartDate}
+              aria-label="Start date"
+            />
           </CardContent>
         </Card>
 
@@ -256,13 +265,13 @@ export default function AddSubtractDateClient() {
           <Card id="tool-headline-result" className="bg-white border-brand-accent">
             <CardContent className="pt-6">
               <p className="text-sm text-brand-muted mb-1">Resulting Date</p>
-              {result ? (
+              {displayResult ? (
                 <>
                   <p className="text-2xl font-bold text-brand-accent">
-                    {formatDate(result.date)}
+                    {formatDate(displayResult.date)}
                   </p>
                   <p className="text-sm text-brand-muted mt-1">
-                    {dayOfWeek(result.date)}
+                    {dayOfWeek(displayResult.date)}
                   </p>
                 </>
               ) : (
@@ -271,7 +280,7 @@ export default function AddSubtractDateClient() {
             </CardContent>
           </Card>
 
-          {result && (
+          {displayResult && (
             <Card className="bg-white border-brand-border">
               <CardHeader>
                 <CardTitle className="text-brand-primary text-base">
@@ -284,13 +293,13 @@ export default function AddSubtractDateClient() {
                     <tr className="border-b border-brand-border/50">
                       <td className="py-2 text-brand-muted">Calendar days</td>
                       <td className="py-2 text-right font-medium text-brand-primary">
-                        {result.totalCalendarDays.toLocaleString()}
+                        {displayResult.totalCalendarDays.toLocaleString()}
                       </td>
                     </tr>
                     <tr>
                       <td className="py-2 text-brand-muted">Business days</td>
                       <td className="py-2 text-right font-medium text-brand-primary">
-                        {result.totalBusinessDays.toLocaleString()}
+                        {displayResult.totalBusinessDays.toLocaleString()}
                       </td>
                     </tr>
                   </tbody>
@@ -300,7 +309,7 @@ export default function AddSubtractDateClient() {
           )}
         </div>
       </div>
-      <MobileResultBar label="Result" value={result ? formatDate(result.date) : "\u2014"} targetId="tool-headline-result" />
+      <MobileResultBar label="Result" value={displayResult ? formatDate(displayResult.date) : "\u2014"} targetId="tool-headline-result" />
     </div>
   );
 }

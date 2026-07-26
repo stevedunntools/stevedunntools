@@ -1,6 +1,6 @@
 "use client";
 
-import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
+import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -26,6 +26,7 @@ const timeUnitOptions: { value: TimeUnit; label: string }[] = [
 ];
 
 export default function SimpleInterestClient() {
+  const hydrated = useHydrated();
   const [principal, setPrincipal] = useSessionState("tool:simple-interest:principal", "");
   const [rate, setRate] = useSessionState("tool:simple-interest:rate", 5);
   const [timePeriod, setTimePeriod] = useSessionState("tool:simple-interest:timePeriod", "");
@@ -51,7 +52,7 @@ export default function SimpleInterestClient() {
   const total = p + interest;
 
   const hasAny = principal !== "" || timePeriod !== "";
-  const timeLabel = t === 0 ? "—" : `${t} ${timeUnit}`;
+  const timeLabel = !hydrated || t === 0 ? "—" : `${t} ${timeUnit}`;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -65,10 +66,14 @@ export default function SimpleInterestClient() {
           </CardHeader>
           <CardContent>
             <div className="max-w-[calc(50%-0.5rem)]">
-              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+              <label
+                htmlFor="simple-interest-principal"
+                className="block text-sm font-medium text-brand-primary mb-1.5"
+              >
                 Principal amount
               </label>
               <DollarInput
+                id="simple-interest-principal"
                 value={principal}
                 onChange={setPrincipal}
                 placeholder="100,000"
@@ -91,6 +96,7 @@ export default function SimpleInterestClient() {
               max={20}
               allowOverflow
               label="Annual interest rate (type a value for rates above 20%)"
+              aria-label="Annual interest rate"
             />
           </CardContent>
         </Card>
@@ -151,7 +157,7 @@ export default function SimpleInterestClient() {
             <CardContent className="pt-6">
               <p className="text-sm text-brand-muted mb-1">Total (Principal + Interest)</p>
               <p className="text-3xl font-bold text-brand-accent">
-                {fmt(total)}
+                {hydrated ? fmt(total) : "—"}
               </p>
             </CardContent>
           </Card>
@@ -163,16 +169,16 @@ export default function SimpleInterestClient() {
             <CardContent>
               <table className="w-full text-sm">
                 <tbody>
-                  <Row label="Principal" value={p} />
-                  <Row label="Interest rate" value={`${rate}%`} />
+                  <Row label="Principal" value={hydrated ? p : "—"} />
+                  <Row label="Interest rate" value={hydrated ? `${rate}%` : "—"} />
                   <Row label="Time period" value={timeLabel} />
                   <Separator />
-                  <Row label="Interest earned" value={interest} />
+                  <Row label="Interest earned" value={hydrated ? interest : "—"} />
                   <Separator />
                   <tr>
                     <td className="py-2 font-semibold text-brand-primary">Total</td>
                     <td className="py-2 text-right font-semibold text-brand-accent">
-                      {fmt(total)}
+                      {hydrated ? fmt(total) : "—"}
                     </td>
                   </tr>
                 </tbody>
@@ -186,7 +192,7 @@ export default function SimpleInterestClient() {
           </div>
         </div>
       </div>
-      <MobileResultBar label="Total" value={fmt(total)} targetId="tool-headline-result" />
+      <MobileResultBar label="Total" value={hydrated ? fmt(total) : "—"} targetId="tool-headline-result" />
     </div>
   );
 }

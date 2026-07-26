@@ -1,6 +1,6 @@
 "use client";
 
-import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
+import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -46,6 +46,7 @@ function makeJobId() {
 // ---------------------------------------------------------------------------
 
 export default function EmploymentDamagesClient() {
+  const hydrated = useHydrated();
   const [monthlyComp, setMonthlyComp] = useSessionState("tool:emp-damages:monthlyComp", "");
   const [monthlyBenefits, setMonthlyBenefits] = useSessionState("tool:emp-damages:monthlyBenefits", "");
   const [monthsSinceTermination, setMonthsSinceTermination] = useSessionState("tool:emp-damages:monthsSinceTermination", "");
@@ -145,20 +146,28 @@ export default function EmploymentDamagesClient() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-brand-primary mb-1.5">
+                <label
+                  htmlFor="emp-damages-monthly-comp"
+                  className="block text-sm font-medium text-brand-primary mb-1.5"
+                >
                   Monthly compensation at termination
                 </label>
                 <DollarInput
+                  id="emp-damages-monthly-comp"
                   value={monthlyComp}
                   onChange={setMonthlyComp}
                   placeholder="7,000"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-brand-primary mb-1.5">
+                <label
+                  htmlFor="emp-damages-monthly-benefits"
+                  className="block text-sm font-medium text-brand-primary mb-1.5"
+                >
                   Monthly benefits value
                 </label>
                 <DollarInput
+                  id="emp-damages-monthly-benefits"
                   value={monthlyBenefits}
                   onChange={setMonthlyBenefits}
                   placeholder="1,500"
@@ -206,10 +215,14 @@ export default function EmploymentDamagesClient() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-brand-muted mb-1">
+                    <label
+                      htmlFor={`emp-damages-job-comp-${job.id}`}
+                      className="block text-xs font-medium text-brand-muted mb-1"
+                    >
                       Monthly compensation
                     </label>
                     <DollarInput
+                      id={`emp-damages-job-comp-${job.id}`}
                       value={job.monthlyComp}
                       onChange={(v) => updateJob(job.id, "monthlyComp", v)}
                       placeholder="5,000"
@@ -280,10 +293,14 @@ export default function EmploymentDamagesClient() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+              <label
+                htmlFor="emp-damages-compensatory"
+                className="block text-sm font-medium text-brand-primary mb-1.5"
+              >
                 Compensatory damages (emotional distress)
               </label>
               <DollarInput
+                id="emp-damages-compensatory"
                 value={compensatory}
                 onChange={setCompensatory}
                 placeholder="50,000"
@@ -308,10 +325,14 @@ export default function EmploymentDamagesClient() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+              <label
+                htmlFor="emp-damages-punitive"
+                className="block text-sm font-medium text-brand-primary mb-1.5"
+              >
                 Punitive damages
               </label>
               <DollarInput
+                id="emp-damages-punitive"
                 value={punitive}
                 onChange={setPunitive}
                 placeholder="0"
@@ -319,10 +340,14 @@ export default function EmploymentDamagesClient() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+              <label
+                htmlFor="emp-damages-other"
+                className="block text-sm font-medium text-brand-primary mb-1.5"
+              >
                 Other damages
               </label>
               <DollarInput
+                id="emp-damages-other"
                 value={otherDamages}
                 onChange={setOtherDamages}
                 placeholder="0"
@@ -346,7 +371,7 @@ export default function EmploymentDamagesClient() {
             <CardContent className="pt-6">
               <p className="text-sm text-brand-muted mb-1">Estimated Total Damages</p>
               <p className="text-3xl font-bold text-brand-accent">
-                {fmt(grossTotal)}
+                {hydrated ? fmt(grossTotal) : "—"}
               </p>
             </CardContent>
           </Card>
@@ -359,23 +384,23 @@ export default function EmploymentDamagesClient() {
             <CardContent>
               <table className="w-full text-sm">
                 <tbody>
-                  <Row label="Back pay (compensation)" value={backPayComp} />
-                  <Row label="Back pay (benefits)" value={backPayBenefits} />
-                  <Row label="Gross back pay" value={backPay} bold />
-                  <Row label="Less: mitigation" value={totalMitigation} negative />
-                  <Row label="Net back pay" value={netBackPay} bold />
+                  <Row label="Back pay (compensation)" value={hydrated ? backPayComp : "—"} />
+                  <Row label="Back pay (benefits)" value={hydrated ? backPayBenefits : "—"} />
+                  <Row label="Gross back pay" value={hydrated ? backPay : "—"} bold />
+                  <Row label="Less: mitigation" value={hydrated ? totalMitigation : "—"} negative />
+                  <Row label="Net back pay" value={hydrated ? netBackPay : "—"} bold />
                   <Separator />
-                  <Row label="Front pay" value={frontPay} />
+                  <Row label="Front pay" value={hydrated ? frontPay : "—"} />
                   <Separator />
-                  <Row label="Compensatory damages" value={compDamages} />
-                  <Row label="Liquidated damages" value={liquidated} />
-                  <Row label="Punitive damages" value={pun} />
-                  <Row label="Other damages" value={other} />
+                  <Row label="Compensatory damages" value={hydrated ? compDamages : "—"} />
+                  <Row label="Liquidated damages" value={hydrated ? liquidated : "—"} />
+                  <Row label="Punitive damages" value={hydrated ? pun : "—"} />
+                  <Row label="Other damages" value={hydrated ? other : "—"} />
                   <Separator />
                   <tr>
                     <td className="py-2 font-semibold text-brand-primary">Total</td>
                     <td className="py-2 text-right font-semibold text-brand-accent">
-                      {fmt(grossTotal)}
+                      {hydrated ? fmt(grossTotal) : "—"}
                     </td>
                   </tr>
                 </tbody>
@@ -389,7 +414,7 @@ export default function EmploymentDamagesClient() {
           </div>
         </div>
       </div>
-      <MobileResultBar label="Total damages" value={fmt(grossTotal)} targetId="tool-headline-result" />
+      <MobileResultBar label="Total damages" value={hydrated ? fmt(grossTotal) : "—"} targetId="tool-headline-result" />
     </div>
   );
 }

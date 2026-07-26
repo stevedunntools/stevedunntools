@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useSessionState, clearSessionKeys, dateSerializer } from "@/lib/use-session-state";
+import { useSessionState, clearSessionKeys, dateSerializer, useHydrated } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,6 +13,7 @@ import DateInput from "@/components/date-input";
 import MobileResultBar from "@/components/mobile-result-bar";
 
 export default function DaysBetweenDatesClient() {
+  const hydrated = useHydrated();
   const [startDate, setStartDate] = useSessionState<Date | null>("tool:days-between:start", null, dateSerializer);
   const [endDate, setEndDate] = useSessionState<Date | null>("tool:days-between:end", null, dateSerializer);
   const [includeEndDay, setIncludeEndDay] = useSessionState("tool:days-between:includeEndDay", false);
@@ -96,6 +97,10 @@ export default function DaysBetweenDatesClient() {
 
   const hasAny = startDate !== null || endDate !== null;
 
+  // Gate the results column until mounted so session-restored values don't
+  // flash stale headline numbers on first paint.
+  const displayResult = hydrated ? result : null;
+
   function formatDuration(parts: { value: number; label: string }[]): string {
     const nonZero = parts.filter((p) => p.value > 0);
     if (nonZero.length === 0) return "0 days";
@@ -154,29 +159,29 @@ export default function DaysBetweenDatesClient() {
           <Card id="tool-headline-result" className="bg-white border-brand-accent">
             <CardContent className="pt-6">
               <p className="text-sm text-brand-muted mb-3">Duration</p>
-              {result ? (
+              {displayResult ? (
                 <div className="space-y-2">
                   <p className="text-xl font-bold text-brand-accent">
                     {formatDuration([
-                      { value: result.years, label: "years" },
-                      { value: result.months, label: "months" },
-                      { value: result.days, label: "days" },
+                      { value: displayResult.years, label: "years" },
+                      { value: displayResult.months, label: "months" },
+                      { value: displayResult.days, label: "days" },
                     ])}
                   </p>
                   <p className="text-xl font-bold text-brand-accent">
                     {formatDuration([
-                      { value: result.totalMonths, label: "months" },
-                      { value: result.monthsDays, label: "days" },
+                      { value: displayResult.totalMonths, label: "months" },
+                      { value: displayResult.monthsDays, label: "days" },
                     ])}
                   </p>
                   <p className="text-xl font-bold text-brand-accent">
                     {formatDuration([
-                      { value: result.weeks, label: "weeks" },
-                      { value: result.weeksDays, label: "days" },
+                      { value: displayResult.weeks, label: "weeks" },
+                      { value: displayResult.weeksDays, label: "days" },
                     ])}
                   </p>
                   <p className="text-xl font-bold text-brand-accent">
-                    {result.totalDays.toLocaleString()} days
+                    {displayResult.totalDays.toLocaleString()} days
                   </p>
                 </div>
               ) : (
@@ -186,7 +191,7 @@ export default function DaysBetweenDatesClient() {
           </Card>
         </div>
       </div>
-      <MobileResultBar label="Total days" value={result ? `${result.totalDays.toLocaleString()} days` : "\u2014"} targetId="tool-headline-result" />
+      <MobileResultBar label="Total days" value={displayResult ? `${displayResult.totalDays.toLocaleString()} days` : "\u2014"} targetId="tool-headline-result" />
     </div>
   );
 }

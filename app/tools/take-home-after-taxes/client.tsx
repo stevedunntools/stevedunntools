@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
+import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,6 +27,7 @@ const filingStatusOptions: { value: FilingStatus; label: string }[] = [
 
 
 export default function TakeHomeAfterTaxesClient() {
+  const hydrated = useHydrated();
   const [filingStatus, setFilingStatus] = useSessionState<FilingStatus>(
     "tool:take-home:filingStatus",
     "single"
@@ -63,7 +64,7 @@ export default function TakeHomeAfterTaxesClient() {
 
   const hasAny =
     w2 !== "" || income1099 !== "" || pi !== "";
-  const hasResults = result.totals.gross > 0;
+  const hasResults = hydrated && result.totals.gross > 0;
   const state = STATES.find((s) => s.code === stateCode)!;
 
   return (
@@ -116,20 +117,27 @@ export default function TakeHomeAfterTaxesClient() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+              <label
+                htmlFor="take-home-w2"
+                className="block text-sm font-medium text-brand-primary mb-1.5"
+              >
                 W-2 wages
               </label>
-              <DollarInput value={w2} onChange={setW2} placeholder="0" />
+              <DollarInput id="take-home-w2" value={w2} onChange={setW2} placeholder="0" />
               <p className="mt-1 text-xs text-brand-muted">
                 Employee compensation subject to FICA and federal/state income tax.
               </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+              <label
+                htmlFor="take-home-1099"
+                className="block text-sm font-medium text-brand-primary mb-1.5"
+              >
                 1099 income
               </label>
               <DollarInput
+                id="take-home-1099"
                 value={income1099}
                 onChange={setIncome1099}
                 placeholder="0"
@@ -159,10 +167,13 @@ export default function TakeHomeAfterTaxesClient() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+              <label
+                htmlFor="take-home-pi"
+                className="block text-sm font-medium text-brand-primary mb-1.5"
+              >
                 Tax-free personal injury settlement
               </label>
-              <DollarInput value={pi} onChange={setPi} placeholder="0" />
+              <DollarInput id="take-home-pi" value={pi} onChange={setPi} placeholder="0" />
               <p className="mt-1 text-xs text-brand-muted">
                 Damages on account of physical injury, excluded under IRC §104(a)(2).
                 Punitive damages and pre-judgment interest are <em>not</em>{" "}
@@ -186,7 +197,7 @@ export default function TakeHomeAfterTaxesClient() {
             <CardContent className="pt-6">
               <p className="text-sm text-brand-muted mb-1">Estimated Take-Home</p>
               <p className="text-3xl font-bold text-brand-accent">
-                {fmt(result.totals.net)}
+                {hydrated ? fmt(result.totals.net) : "—"}
               </p>
               {hasResults && (
                 <p className="text-xs text-brand-muted mt-2">
@@ -353,7 +364,7 @@ export default function TakeHomeAfterTaxesClient() {
           </div>
         </div>
       </div>
-      <MobileResultBar label="Take-home" value={fmt(result.totals.net)} targetId="tool-headline-result" />
+      <MobileResultBar label="Take-home" value={hydrated ? fmt(result.totals.net) : "—"} targetId="tool-headline-result" />
     </div>
   );
 }

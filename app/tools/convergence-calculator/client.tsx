@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
+import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
 import {
   Card,
   CardContent,
@@ -290,6 +290,7 @@ function fmtMoves(n: number): string {
 // ---------------------------------------------------------------------------
 
 export default function ConvergenceCalculatorClient() {
+  const hydrated = useHydrated();
   const [p1Str, setP1Str] = useSessionState("tool:convergence:p1", "");
   const [p2Str, setP2Str] = useSessionState("tool:convergence:p2", "");
   const [d1Str, setD1Str] = useSessionState("tool:convergence:d1", "");
@@ -373,6 +374,10 @@ export default function ConvergenceCalculatorClient() {
 
   const hasAny = p1Str !== "" || p2Str !== "" || d1Str !== "" || d2Str !== "";
 
+  // Gate the results/chart area until mounted so session-restored values
+  // don't flash stale results on first paint.
+  const displayAnalysis: typeof analysis = hydrated ? analysis : { ready: false as const };
+
   return (
     <div className="space-y-6">
       {/* Inputs */}
@@ -385,20 +390,28 @@ export default function ConvergenceCalculatorClient() {
               <span className="text-sm font-semibold text-brand-primary">Plaintiff</span>
             </div>
             <div>
-              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+              <label
+                htmlFor="convergence-p1"
+                className="block text-sm font-medium text-brand-primary mb-1.5"
+              >
                 Offer 1
               </label>
               <DollarInput
+                id="convergence-p1"
                 value={p1Str}
                 onChange={setP1Str}
                 placeholder="500,000"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+              <label
+                htmlFor="convergence-p2"
+                className="block text-sm font-medium text-brand-primary mb-1.5"
+              >
                 Offer 2
               </label>
               <DollarInput
+                id="convergence-p2"
                 value={p2Str}
                 onChange={setP2Str}
                 placeholder="400,000"
@@ -415,20 +428,28 @@ export default function ConvergenceCalculatorClient() {
               <span className="text-sm font-semibold text-brand-primary">Defendant</span>
             </div>
             <div>
-              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+              <label
+                htmlFor="convergence-d1"
+                className="block text-sm font-medium text-brand-primary mb-1.5"
+              >
                 Offer 1
               </label>
               <DollarInput
+                id="convergence-d1"
                 value={d1Str}
                 onChange={setD1Str}
                 placeholder="50,000"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+              <label
+                htmlFor="convergence-d2"
+                className="block text-sm font-medium text-brand-primary mb-1.5"
+              >
                 Offer 2
               </label>
               <DollarInput
+                id="convergence-d2"
                 value={d2Str}
                 onChange={setD2Str}
                 placeholder="150,000"
@@ -449,10 +470,14 @@ export default function ConvergenceCalculatorClient() {
         <Card className="bg-white border-brand-border">
           <CardContent className="pt-6 space-y-3">
             <div className="max-w-xs">
-              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+              <label
+                htmlFor="convergence-desired"
+                className="block text-sm font-medium text-brand-primary mb-1.5"
+              >
                 Desired settlement number (optional)
               </label>
               <DollarInput
+                id="convergence-desired"
                 value={desiredStr}
                 onChange={setDesiredStr}
                 placeholder="250,000"
@@ -544,9 +569,9 @@ export default function ConvergenceCalculatorClient() {
       {/* Chart */}
       <Card className="bg-white border-brand-border">
         <CardContent className="pt-6">
-          {analysis.ready && analysis.converges ? (
+          {displayAnalysis.ready && displayAnalysis.converges ? (
             <>
-              <TrendChart data={analysis.data} desired={desiredPoint} />
+              <TrendChart data={displayAnalysis.data} desired={desiredPoint} />
 
               {/* Legend */}
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-4 text-sm text-brand-muted">
@@ -572,19 +597,19 @@ export default function ConvergenceCalculatorClient() {
 
               {/* Callout */}
               <div className="mt-3 px-3 py-2 bg-green-50 border border-green-200 rounded-md text-sm text-green-800">
-                Projected intersection: <span className="font-semibold">{fmt(Math.round(analysis.data.intersectValue))}</span> at round{" "}
+                Projected intersection: <span className="font-semibold">{fmt(Math.round(displayAnalysis.data.intersectValue))}</span> at round{" "}
                 <span className="font-semibold">
-                  {analysis.data.intersectRound % 1 === 0
-                    ? analysis.data.intersectRound
-                    : analysis.data.intersectRound.toFixed(1)}
+                  {displayAnalysis.data.intersectRound % 1 === 0
+                    ? displayAnalysis.data.intersectRound
+                    : displayAnalysis.data.intersectRound.toFixed(1)}
                 </span>
               </div>
             </>
-          ) : analysis.ready && !analysis.converges ? (
+          ) : displayAnalysis.ready && !displayAnalysis.converges ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
                 <p className="text-brand-caution font-medium">No convergence</p>
-                <p className="text-sm text-brand-muted mt-1">{analysis.reason}</p>
+                <p className="text-sm text-brand-muted mt-1">{displayAnalysis.reason}</p>
               </div>
             </div>
           ) : (

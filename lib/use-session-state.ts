@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useSyncExternalStore } from "react";
 
 /**
  * Drop-in replacement for useState that persists to sessionStorage.
@@ -51,6 +51,15 @@ export function useSessionState<T>(
   }, [key, value, serialize]);
 
   return [value, setValue];
+}
+
+/** True after the component has mounted on the client (sessionStorage readable). */
+export function useHydrated(): boolean {
+  return useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 }
 
 /** Clear all sessionStorage keys that start with the given prefix. */

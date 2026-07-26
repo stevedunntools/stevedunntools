@@ -1,6 +1,6 @@
 "use client";
 
-import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
+import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,6 +17,7 @@ import ExportPdfButton from "@/components/export-pdf-button";
 import MobileResultBar from "@/components/mobile-result-bar";
 
 export default function EmploymentContingencyClient() {
+  const hydrated = useHydrated();
   const [settlement, setSettlement] = useSessionState("tool:emp-contingency:settlement", "");
   const [contingencyPct, setContingencyPct] = useSessionState("tool:emp-contingency:contingencyPct", 0);
   const [costs, setCosts] = useSessionState("tool:emp-contingency:costs", "");
@@ -58,10 +59,14 @@ export default function EmploymentContingencyClient() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="max-w-[calc(50%-0.5rem)]">
-              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+              <label
+                htmlFor="emp-contingency-settlement"
+                className="block text-sm font-medium text-brand-primary mb-1.5"
+              >
                 Settlement amount
               </label>
               <DollarInput
+                id="emp-contingency-settlement"
                 value={settlement}
                 onChange={setSettlement}
                 placeholder="250,000"
@@ -80,10 +85,14 @@ export default function EmploymentContingencyClient() {
             </label>
             {hasNotCovered && (
               <div className="max-w-[calc(50%-0.5rem)]">
-                <label className="block text-sm font-medium text-brand-primary mb-1.5">
+                <label
+                  htmlFor="emp-contingency-not-covered"
+                  className="block text-sm font-medium text-brand-primary mb-1.5"
+                >
                   Amount of settlement not covered by contingency
                 </label>
                 <DollarInput
+                  id="emp-contingency-not-covered"
                   value={notCovered}
                   onChange={setNotCovered}
                   placeholder="100,000"
@@ -106,6 +115,7 @@ export default function EmploymentContingencyClient() {
               min={0}
               max={100}
               label="Use slider or type exact percentage (ex. 33.333%)"
+              aria-label="Contingency fee percentage"
             />
           </CardContent>
         </Card>
@@ -118,10 +128,14 @@ export default function EmploymentContingencyClient() {
           </CardHeader>
           <CardContent>
             <div className="max-w-[calc(50%-0.5rem)]">
-              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+              <label
+                htmlFor="emp-contingency-costs"
+                className="block text-sm font-medium text-brand-primary mb-1.5"
+              >
                 Litigation costs
               </label>
               <DollarInput
+                id="emp-contingency-costs"
                 value={costs}
                 onChange={setCosts}
                 placeholder="10,000"
@@ -143,6 +157,7 @@ export default function EmploymentContingencyClient() {
               min={0}
               max={100}
               label="Percentage of net recovery allocated to wages for tax purposes"
+              aria-label="Percentage of net recovery allocated to wages"
             />
           </CardContent>
         </Card>
@@ -161,7 +176,7 @@ export default function EmploymentContingencyClient() {
             <CardContent className="pt-6">
               <p className="text-sm text-brand-muted mb-1">Net to Plaintiff</p>
               <p className="text-3xl font-bold text-brand-accent">
-                {fmt(netToPlaintiff)}
+                {hydrated ? fmt(netToPlaintiff) : "—"}
               </p>
             </CardContent>
           </Card>
@@ -173,21 +188,29 @@ export default function EmploymentContingencyClient() {
             <CardContent>
               <table className="w-full text-sm">
                 <tbody>
-                  <Row label="Settlement amount" value={s} />
+                  <Row label="Settlement amount" value={hydrated ? s : "—"} />
                   <Row
                     label={
-                      nc > 0
-                        ? `Attorney fee (${contingencyPct}% of ${fmt(covered)})`
-                        : `Attorney fee (${contingencyPct}%)`
+                      !hydrated
+                        ? "Attorney fee"
+                        : nc > 0
+                          ? `Attorney fee (${contingencyPct}% of ${fmt(covered)})`
+                          : `Attorney fee (${contingencyPct}%)`
                     }
-                    value={attorneyFee}
+                    value={hydrated ? attorneyFee : "—"}
                     negative
                   />
-                  <Row label="Costs" value={c} negative />
-                  <Row label="Net to plaintiff" value={netToPlaintiff} bold />
+                  <Row label="Costs" value={hydrated ? c : "—"} negative />
+                  <Row label="Net to plaintiff" value={hydrated ? netToPlaintiff : "—"} bold />
                   <Separator />
-                  <Row label={`Plaintiff's wages (${wagesPct}%)`} value={wages} />
-                  <Row label={`Plaintiff's non-wage income (${100 - wagesPct}%)`} value={nonWage} />
+                  <Row
+                    label={hydrated ? `Plaintiff's wages (${wagesPct}%)` : "Plaintiff's wages"}
+                    value={hydrated ? wages : "—"}
+                  />
+                  <Row
+                    label={hydrated ? `Plaintiff's non-wage income (${100 - wagesPct}%)` : "Plaintiff's non-wage income"}
+                    value={hydrated ? nonWage : "—"}
+                  />
                 </tbody>
               </table>
             </CardContent>
@@ -199,7 +222,7 @@ export default function EmploymentContingencyClient() {
           </div>
         </div>
       </div>
-      <MobileResultBar label="Net to plaintiff" value={fmt(netToPlaintiff)} targetId="tool-headline-result" />
+      <MobileResultBar label="Net to plaintiff" value={hydrated ? fmt(netToPlaintiff) : "—"} targetId="tool-headline-result" />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useLayoutEffect } from "react";
-import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
+import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,6 +12,7 @@ import { fmt, commaFmtNum, commaFmtWithCursor, parseNumOrNull } from "@/lib/form
 type Field = "upper" | "lower" | "mid";
 
 export default function BracketGeneratorClient() {
+  const hydrated = useHydrated();
   const [upperStr, setUpperStr] = useSessionState("tool:bracket:upper", "");
   const [lowerStr, setLowerStr] = useSessionState("tool:bracket:lower", "");
   const [midStr, setMidStr] = useSessionState("tool:bracket:mid", "");
@@ -108,13 +109,17 @@ export default function BracketGeneratorClient() {
       <CardContent className="pt-6 space-y-5">
         {/* Our number */}
         <div>
-          <label className="block text-sm font-medium text-brand-primary mb-1.5">
+          <label
+            htmlFor="bracket-upper"
+            className="block text-sm font-medium text-brand-primary mb-1.5"
+          >
             Our number
           </label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
             <input
               ref={upperRef}
+              id="bracket-upper"
               type="text"
               inputMode="decimal"
               value={upperStr}
@@ -131,13 +136,17 @@ export default function BracketGeneratorClient() {
 
         {/* Midpoint */}
         <div>
-          <label className="block text-sm font-medium text-brand-primary mb-1.5">
+          <label
+            htmlFor="bracket-mid"
+            className="block text-sm font-medium text-brand-primary mb-1.5"
+          >
             Midpoint
           </label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
             <input
               ref={midRef}
+              id="bracket-mid"
               type="text"
               inputMode="decimal"
               value={midStr}
@@ -154,13 +163,17 @@ export default function BracketGeneratorClient() {
 
         {/* Their number */}
         <div>
-          <label className="block text-sm font-medium text-brand-primary mb-1.5">
+          <label
+            htmlFor="bracket-lower"
+            className="block text-sm font-medium text-brand-primary mb-1.5"
+          >
             Their number
           </label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm">$</span>
             <input
               ref={lowerRef}
+              id="bracket-lower"
               type="text"
               inputMode="decimal"
               value={lowerStr}
@@ -176,7 +189,7 @@ export default function BracketGeneratorClient() {
         </div>
 
         {/* Summary */}
-        {allFilled && bracketLow !== null && bracketHigh !== null && (
+        {hydrated && allFilled && bracketLow !== null && bracketHigh !== null && (
           <div className="pt-2 border-t border-brand-border text-sm text-brand-muted space-y-1">
             <p>
               Bracket: <span className="font-medium text-brand-primary">{fmt(bracketLow)}</span> &ndash; <span className="font-medium text-brand-primary">{fmt(bracketHigh)}</span>

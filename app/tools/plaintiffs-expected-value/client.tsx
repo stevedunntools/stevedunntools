@@ -1,6 +1,6 @@
 "use client";
 
-import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
+import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,6 +18,7 @@ import { textFieldClass } from "@/lib/field-styles";
 import MobileResultBar from "@/components/mobile-result-bar";
 
 export default function PlaintiffsExpectedValueClient() {
+  const hydrated = useHydrated();
   const [damages, setDamages] = useSessionState("tool:plaintiff-ev:damages", "");
   const [fees, setFees] = useSessionState("tool:plaintiff-ev:fees", "");
   const [litigationCosts, setLitigationCosts] = useSessionState("tool:plaintiff-ev:litigationCosts", "");
@@ -68,10 +69,14 @@ export default function PlaintiffsExpectedValueClient() {
           </CardHeader>
           <CardContent>
             <div className="max-w-[calc(50%-0.5rem)]">
-              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+              <label
+                htmlFor="plaintiff-ev-damages"
+                className="block text-sm font-medium text-brand-primary mb-1.5"
+              >
                 Plaintiff&apos;s total damages
               </label>
               <DollarInput
+                id="plaintiff-ev-damages"
                 value={damages}
                 onChange={setDamages}
                 placeholder="250,000"
@@ -93,6 +98,7 @@ export default function PlaintiffsExpectedValueClient() {
               onChange={setProbability}
               min={1}
               max={100}
+              aria-label="Probability of success"
             />
           </CardContent>
         </Card>
@@ -126,6 +132,7 @@ export default function PlaintiffsExpectedValueClient() {
               max={10}
               allowOverflow
               label="Annual discount rate"
+              aria-label="Annual discount rate"
             />
           </CardContent>
         </Card>
@@ -139,30 +146,42 @@ export default function PlaintiffsExpectedValueClient() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+              <label
+                htmlFor="plaintiff-ev-fees"
+                className="block text-sm font-medium text-brand-primary mb-1.5"
+              >
                 Attorneys&apos; fees (leave blank if contingency)
               </label>
               <DollarInput
+                id="plaintiff-ev-fees"
                 value={fees}
                 onChange={setFees}
                 placeholder="25,000"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+              <label
+                htmlFor="plaintiff-ev-litigation-costs"
+                className="block text-sm font-medium text-brand-primary mb-1.5"
+              >
                 Litigation costs
               </label>
               <DollarInput
+                id="plaintiff-ev-litigation-costs"
                 value={litigationCosts}
                 onChange={setLitigationCosts}
                 placeholder="10,000"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+              <label
+                htmlFor="plaintiff-ev-intangible-costs"
+                className="block text-sm font-medium text-brand-primary mb-1.5"
+              >
                 Intangible costs
               </label>
               <DollarInput
+                id="plaintiff-ev-intangible-costs"
                 value={intangibleCosts}
                 onChange={setIntangibleCosts}
                 placeholder="5,000"
@@ -186,7 +205,7 @@ export default function PlaintiffsExpectedValueClient() {
             <CardContent className="pt-6">
               <p className="text-sm text-brand-muted mb-1">Plaintiff&apos;s Expected Value</p>
               <p className="text-3xl font-bold text-brand-accent">
-                {fmt(expectedValue)}
+                {hydrated ? fmt(expectedValue) : "—"}
               </p>
             </CardContent>
           </Card>
@@ -199,22 +218,22 @@ export default function PlaintiffsExpectedValueClient() {
             <CardContent>
               <table className="w-full text-sm">
                 <tbody>
-                  <Row label="Total damages" value={dmg} />
-                  <Row label="Probability of success" value={`${probability}%`} />
-                  <Row label="Probability-adjusted value" value={probabilityAdjusted} bold />
+                  <Row label="Total damages" value={hydrated ? dmg : "—"} />
+                  <Row label="Probability of success" value={hydrated ? `${probability}%` : "—"} />
+                  <Row label="Probability-adjusted value" value={hydrated ? probabilityAdjusted : "—"} bold />
                   <Separator />
-                  <Row label="Years to payment" value={years > 0 ? `${years}` : "—"} />
-                  <Row label="Annual discount rate" value={`${discountRate}%`} />
-                  <Row label="Discounted value" value={discountedValue} bold />
+                  <Row label="Years to payment" value={hydrated && years > 0 ? `${years}` : "—"} />
+                  <Row label="Annual discount rate" value={hydrated ? `${discountRate}%` : "—"} />
+                  <Row label="Discounted value" value={hydrated ? discountedValue : "—"} bold />
                   <Separator />
-                  <Row label="Attorneys fees" value={f} negative />
-                  <Row label="Litigation costs" value={lit} negative />
-                  <Row label="Intangible costs" value={intang} negative />
+                  <Row label="Attorneys fees" value={hydrated ? f : "—"} negative />
+                  <Row label="Litigation costs" value={hydrated ? lit : "—"} negative />
+                  <Row label="Intangible costs" value={hydrated ? intang : "—"} negative />
                   <Separator />
                   <tr>
                     <td className="py-2 font-semibold text-brand-primary">Expected value</td>
                     <td className="py-2 text-right font-semibold text-brand-accent">
-                      {fmt(expectedValue)}
+                      {hydrated ? fmt(expectedValue) : "—"}
                     </td>
                   </tr>
                 </tbody>
@@ -228,7 +247,7 @@ export default function PlaintiffsExpectedValueClient() {
           </div>
         </div>
       </div>
-      <MobileResultBar label="Expected value" value={fmt(expectedValue)} targetId="tool-headline-result" />
+      <MobileResultBar label="Expected value" value={hydrated ? fmt(expectedValue) : "—"} targetId="tool-headline-result" />
     </div>
   );
 }

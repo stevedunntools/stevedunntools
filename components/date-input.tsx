@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useId } from "react";
 import { MONTHS, daysInMonth } from "@/lib/date-utils";
 
 interface DateInputProps {
   value: Date | null;
   onChange: (date: Date | null) => void;
   label?: string;
+  /** Accessible name for the field when no visible `label` is provided. */
+  "aria-label"?: string;
 }
 
 const selectClass =
@@ -42,7 +44,16 @@ function parseTextDate(s: string): Date | null {
   return null;
 }
 
-export default function DateInput({ value, onChange, label }: DateInputProps) {
+export default function DateInput({
+  value,
+  onChange,
+  label,
+  "aria-label": ariaLabel,
+}: DateInputProps) {
+  const textId = useId();
+  // Field name used to disambiguate the Month/Day/Year selects when several
+  // date inputs appear on the same page.
+  const fieldName = label ?? ariaLabel;
   const [month, setMonth] = useState<number>(value ? value.getMonth() : -1);
   const [day, setDay] = useState<number>(value ? value.getDate() : -1);
   const [year, setYear] = useState<number>(value ? value.getFullYear() : -1);
@@ -113,13 +124,18 @@ export default function DateInput({ value, onChange, label }: DateInputProps) {
   return (
     <div>
       {label && (
-        <label className="block text-sm font-medium text-brand-primary mb-1.5">
+        <label
+          htmlFor={textId}
+          className="block text-sm font-medium text-brand-primary mb-1.5"
+        >
           {label}
         </label>
       )}
       {/* Text input */}
       <input
         type="text"
+        id={textId}
+        aria-label={label ? undefined : (ariaLabel ?? "Date")}
         value={textValue}
         onChange={(e) => setTextValue(e.target.value)}
         onBlur={handleTextCommit}
@@ -132,6 +148,7 @@ export default function DateInput({ value, onChange, label }: DateInputProps) {
         <select
           value={month}
           onChange={(e) => handleMonthChange(parseInt(e.target.value))}
+          aria-label={fieldName ? `${fieldName} month` : "Month"}
           className={`${selectClass} flex-[3]`}
         >
           <option value={-1}>Month</option>
@@ -142,6 +159,7 @@ export default function DateInput({ value, onChange, label }: DateInputProps) {
         <select
           value={day}
           onChange={(e) => handleDayChange(parseInt(e.target.value))}
+          aria-label={fieldName ? `${fieldName} day` : "Day"}
           className={`${selectClass} flex-[2]`}
         >
           <option value={-1}>Day</option>
@@ -152,6 +170,7 @@ export default function DateInput({ value, onChange, label }: DateInputProps) {
         <select
           value={year}
           onChange={(e) => handleYearChange(parseInt(e.target.value))}
+          aria-label={fieldName ? `${fieldName} year` : "Year"}
           className={`${selectClass} flex-[2]`}
         >
           <option value={-1}>Year</option>

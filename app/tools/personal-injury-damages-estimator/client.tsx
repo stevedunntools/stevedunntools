@@ -1,6 +1,6 @@
 "use client";
 
-import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
+import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,6 +18,7 @@ import MobileResultBar from "@/components/mobile-result-bar";
 const MULTIPLIER_STEPS = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
 
 export default function PersonalInjuryClient() {
+  const hydrated = useHydrated();
   const [medicalToDate, setMedicalToDate] = useSessionState("tool:pi-damages:medicalToDate", "");
   const [futureMedical, setFutureMedical] = useSessionState("tool:pi-damages:futureMedical", "");
   const [lostEarningsToDate, setLostEarningsToDate] = useSessionState("tool:pi-damages:lostEarningsToDate", "");
@@ -66,20 +67,28 @@ export default function PersonalInjuryClient() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-brand-primary mb-1.5">
+                <label
+                  htmlFor="pi-damages-medical-to-date"
+                  className="block text-sm font-medium text-brand-primary mb-1.5"
+                >
                   Medical expenses to date
                 </label>
                 <DollarInput
+                  id="pi-damages-medical-to-date"
                   value={medicalToDate}
                   onChange={setMedicalToDate}
                   placeholder="25,000"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-brand-primary mb-1.5">
+                <label
+                  htmlFor="pi-damages-future-medical"
+                  className="block text-sm font-medium text-brand-primary mb-1.5"
+                >
                   Future medical expenses
                 </label>
                 <DollarInput
+                  id="pi-damages-future-medical"
                   value={futureMedical}
                   onChange={setFutureMedical}
                   placeholder="10,000"
@@ -109,6 +118,7 @@ export default function PersonalInjuryClient() {
               step="0.5"
               value={multiplier}
               onChange={(e) => setMultiplier(parseFloat(e.target.value))}
+              aria-label="Non-economic damages multiple of medical expenses"
               className="w-full accent-brand-accent"
             />
             <div className="flex justify-between px-1">
@@ -139,20 +149,28 @@ export default function PersonalInjuryClient() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-brand-primary mb-1.5">
+                <label
+                  htmlFor="pi-damages-lost-earnings-to-date"
+                  className="block text-sm font-medium text-brand-primary mb-1.5"
+                >
                   Lost earnings to date
                 </label>
                 <DollarInput
+                  id="pi-damages-lost-earnings-to-date"
                   value={lostEarningsToDate}
                   onChange={setLostEarningsToDate}
                   placeholder="15,000"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-brand-primary mb-1.5">
+                <label
+                  htmlFor="pi-damages-future-lost-earnings"
+                  className="block text-sm font-medium text-brand-primary mb-1.5"
+                >
                   Future lost earnings
                 </label>
                 <DollarInput
+                  id="pi-damages-future-lost-earnings"
                   value={futureLostEarnings}
                   onChange={setFutureLostEarnings}
                   placeholder="20,000"
@@ -171,10 +189,14 @@ export default function PersonalInjuryClient() {
           </CardHeader>
           <CardContent>
             <div className="max-w-[calc(50%-0.5rem)]">
-              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+              <label
+                htmlFor="pi-damages-property-damage"
+                className="block text-sm font-medium text-brand-primary mb-1.5"
+              >
                 Property damage
               </label>
               <DollarInput
+                id="pi-damages-property-damage"
                 value={propertyDamage}
                 onChange={setPropertyDamage}
                 placeholder="5,000"
@@ -198,7 +220,7 @@ export default function PersonalInjuryClient() {
             <CardContent className="pt-6">
               <p className="text-sm text-brand-muted mb-1">Estimated Total Damages</p>
               <p className="text-3xl font-bold text-brand-accent">
-                {fmt(total)}
+                {hydrated ? fmt(total) : "—"}
               </p>
             </CardContent>
           </Card>
@@ -211,24 +233,24 @@ export default function PersonalInjuryClient() {
             <CardContent>
               <table className="w-full text-sm">
                 <tbody>
-                  <Row label="Medical expenses to date" value={medTo} />
-                  <Row label="Future medical expenses" value={medFuture} />
-                  <Row label="Total medical expenses" value={totalMedical} bold />
+                  <Row label="Medical expenses to date" value={hydrated ? medTo : "—"} />
+                  <Row label="Future medical expenses" value={hydrated ? medFuture : "—"} />
+                  <Row label="Total medical expenses" value={hydrated ? totalMedical : "—"} bold />
                   <Separator />
                   <Row
-                    label={`Non-economic damages (${multiplier}× medical)`}
-                    value={painAndSuffering}
+                    label={hydrated ? `Non-economic damages (${multiplier}× medical)` : "Non-economic damages"}
+                    value={hydrated ? painAndSuffering : "—"}
                     bold
                   />
                   <Separator />
-                  <Row label="Lost earnings to date" value={earnTo} />
-                  <Row label="Future lost earnings" value={earnFuture} />
-                  <Row label="Property damage" value={prop} />
+                  <Row label="Lost earnings to date" value={hydrated ? earnTo : "—"} />
+                  <Row label="Future lost earnings" value={hydrated ? earnFuture : "—"} />
+                  <Row label="Property damage" value={hydrated ? prop : "—"} />
                   <Separator />
                   <tr>
                     <td className="py-2 font-semibold text-brand-primary">Total</td>
                     <td className="py-2 text-right font-semibold text-brand-accent">
-                      {fmt(total)}
+                      {hydrated ? fmt(total) : "—"}
                     </td>
                   </tr>
                 </tbody>
@@ -242,7 +264,7 @@ export default function PersonalInjuryClient() {
           </div>
         </div>
       </div>
-      <MobileResultBar label="Total damages" value={fmt(total)} targetId="tool-headline-result" />
+      <MobileResultBar label="Total damages" value={hydrated ? fmt(total) : "—"} targetId="tool-headline-result" />
     </div>
   );
 }

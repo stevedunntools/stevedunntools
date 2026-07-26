@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, useLayoutEffect } from "react";
-import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
+import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -818,6 +818,7 @@ function NegotiationChart({
 // ---------------------------------------------------------------------------
 
 export default function NegotiationVisualizerClient() {
+  const hydrated = useHydrated();
   const [offers, setOffers] = useSessionState<Offer[]>("tool:neg-viz:offers", []);
 
   const [party, setParty] = useSessionState<Party>("tool:neg-viz:party", "plaintiff");
@@ -838,6 +839,11 @@ export default function NegotiationVisualizerClient() {
     const n = parseFloat(settlementInput.replace(/[$,\s]/g, ""));
     return Number.isFinite(n) ? n : null;
   }, [settlementInput]);
+
+  // Gate restored offers/settlement until mounted so a previous matter's
+  // data doesn't flash on first paint. The input form stays live.
+  const displayOffers = useMemo(() => (hydrated ? offers : []), [hydrated, offers]);
+  const displaySettlement = hydrated ? settlement : null;
 
   const [input, setInput] = useState("");
   const [inputError, setInputError] = useState<string | null>(null);
@@ -944,10 +950,10 @@ export default function NegotiationVisualizerClient() {
   }
 
   const overlapInfo = useMemo(() => {
-    const pBrackets = offers
+    const pBrackets = displayOffers
       .filter((m) => m.party === "plaintiff" && m.type === "bracket")
       .sort((a, b) => a.round - b.round);
-    const dBrackets = offers
+    const dBrackets = displayOffers
       .filter((m) => m.party === "defendant" && m.type === "bracket")
       .sort((a, b) => a.round - b.round);
     if (pBrackets.length === 0 || dBrackets.length === 0) return null;
@@ -959,9 +965,9 @@ export default function NegotiationVisualizerClient() {
 
     if (overlapLow >= overlapHigh) return null;
     return { low: overlapLow, high: overlapHigh };
-  }, [offers]);
+  }, [displayOffers]);
 
-  const convergence = useMemo(() => computeConvergence(offers), [offers]);
+  const convergence = useMemo(() => computeConvergence(displayOffers), [displayOffers]);
   const convergenceAvailable = convergence !== null;
 
   const activeProjections: ActiveProjection[] =
@@ -971,11 +977,11 @@ export default function NegotiationVisualizerClient() {
 
   return (
     <div className="space-y-6">
-      {settlement !== null && (
+      {displaySettlement !== null && (
         <div className="flex items-center gap-2.5 px-4 py-3 bg-green-50 border border-green-300 rounded-md">
           <CheckCircle2 className="h-5 w-5 text-green-700 shrink-0" />
           <span className="text-sm font-semibold text-green-900">
-            Case settled for {fmt(settlement)}
+            Case settled for {fmt(displaySettlement)}
           </span>
         </div>
       )}
@@ -1082,10 +1088,14 @@ export default function NegotiationVisualizerClient() {
 
             {/* Settlement */}
             <div className="pt-4 border-t border-brand-border">
-              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+              <label
+                htmlFor="neg-viz-settlement"
+                className="block text-sm font-medium text-brand-primary mb-1.5"
+              >
                 Settlement Amount
               </label>
               <DollarInput
+                id="neg-viz-settlement"
                 value={settlementInput}
                 onChange={setSettlementInput}
                 placeholder="450,000"
@@ -1104,7 +1114,7 @@ export default function NegotiationVisualizerClient() {
             <CardTitle className="text-brand-primary text-base">Offer History</CardTitle>
           </CardHeader>
           <CardContent>
-            {offers.length === 0 ? (
+            {displayOffers.length === 0 ? (
               <p className="text-sm text-brand-muted py-4 text-center">
                 No offers yet. Add your first offer to get started.
               </p>
@@ -1120,7 +1130,7 @@ export default function NegotiationVisualizerClient() {
                     </tr>
                   </thead>
                   <tbody>
-                    {offers.map((m) => (
+                    {displayOffers.map((m) => (
                       <tr key={m.id} className="border-b border-brand-border/50">
                         <td className="py-2 pr-3 text-brand-primary">{m.round}</td>
                         <td className="py-2 pr-3">
@@ -1191,10 +1201,10 @@ export default function NegotiationVisualizerClient() {
           </div>
 
           <NegotiationChart
-            offers={offers}
+            offers={displayOffers}
             showMidpoint={showMidpoint}
             projections={activeProjections}
-            settlement={settlement}
+            settlement={displaySettlement}
           />
 
           {/* Legend */}
@@ -1242,7 +1252,7 @@ export default function NegotiationVisualizerClient() {
                 {proj.label}
               </span>
             ))}
-            {settlement !== null && (
+            {displaySettlement !== null && (
               <span className="flex items-center gap-2">
                 <span
                   className="inline-block w-4 border-t-2 border-dashed"

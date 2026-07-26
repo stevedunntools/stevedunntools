@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useEffect } from "react";
-import { useSessionState, clearSessionKeys } from "@/lib/use-session-state";
+import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -48,6 +48,7 @@ function makeId() {
 // ---------------------------------------------------------------------------
 
 export default function PaymentOverTimeClient() {
+  const hydrated = useHydrated();
   const [totalSettlement, setTotalSettlement] = useSessionState("tool:payment-time:totalSettlement", "");
   const [upfronts, setUpfronts] = useSessionState<UpfrontPayment[]>("tool:payment-time:upfronts", [
     { id: makeId(), amount: "", timing: "At signing" },
@@ -154,10 +155,14 @@ export default function PaymentOverTimeClient() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <label className="block text-sm font-medium text-brand-primary mb-1.5">
+            <label
+              htmlFor="payment-time-total"
+              className="block text-sm font-medium text-brand-primary mb-1.5"
+            >
               Total settlement amount
             </label>
             <DollarInput
+              id="payment-time-total"
               value={totalSettlement}
               onChange={setTotalSettlement}
               placeholder="250,000"
@@ -194,6 +199,7 @@ export default function PaymentOverTimeClient() {
                   max={20}
                   allowOverflow
                   label="Annual interest rate"
+                  aria-label="Annual interest rate"
                 />
                 <div>
                   <label className="block text-sm font-medium text-brand-primary mb-1.5">
@@ -225,10 +231,14 @@ export default function PaymentOverTimeClient() {
           {upfronts.map((u, idx) => (
             <div key={u.id} className="grid grid-cols-[1fr_1fr_auto] gap-3">
               <div>
-                <label className="block text-xs font-medium text-brand-muted mb-1">
+                <label
+                  htmlFor={`payment-time-upfront-amount-${u.id}`}
+                  className="block text-xs font-medium text-brand-muted mb-1"
+                >
                   Amount
                 </label>
                 <DollarInput
+                  id={`payment-time-upfront-amount-${u.id}`}
                   value={u.amount}
                   onChange={(v) => updateUpfront(u.id, "amount", v)}
                   placeholder="25,000"
@@ -287,10 +297,14 @@ export default function PaymentOverTimeClient() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-brand-primary mb-1.5">
+              <label
+                htmlFor="payment-time-installment-amount"
+                className="block text-sm font-medium text-brand-primary mb-1.5"
+              >
                 Payment amount
               </label>
               <DollarInput
+                id="payment-time-installment-amount"
                 value={installmentMode === "count" && calculatedPayment > 0 ? commaFmtNum(calculatedPayment) : installmentAmount}
                 onChange={(v) => {
                   setInstallmentAmount(v);
@@ -355,7 +369,7 @@ export default function PaymentOverTimeClient() {
       )}
 
       {/* Schedule */}
-      {schedule.length > 0 && (
+      {hydrated && schedule.length > 0 && (
         <Card id="tool-headline-result" className="bg-white border-brand-border">
           <CardHeader>
             <CardTitle className="text-brand-primary text-base">
@@ -425,12 +439,12 @@ export default function PaymentOverTimeClient() {
         </Card>
       )}
 
-      {schedule.length > 0 && (
+      {hydrated && schedule.length > 0 && (
         <div className="print:hidden">
           <ExportPdfButton />
         </div>
       )}
-      {schedule.length > 0 && (
+      {hydrated && schedule.length > 0 && (
         <MobileResultBar label="Total paid" value={fmt(summary.totalPaid)} targetId="tool-headline-result" />
       )}
     </div>
