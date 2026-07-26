@@ -154,6 +154,32 @@ describe("buildSchedule — interest starting immediately", () => {
   });
 });
 
+describe("buildSchedule — installment cap", () => {
+  it("caps an absurd payment count and warns", () => {
+    const result = buildSchedule(
+      input({ totalSettlement: 120000, numPayments: 99999999 })
+    );
+    expect(result.schedule).toHaveLength(1200);
+    expect(result.warnings.some((w) => w.includes("capped"))).toBe(true);
+    // The capped schedule still amortizes fully
+    expect(result.schedule[1199].balance).toBeCloseTo(0, 5);
+  });
+
+  it("caps amount mode when a tiny payment would run long, and warns", () => {
+    // 120,000 at $1/payment would need 120,000 rows
+    const result = buildSchedule(
+      input({
+        totalSettlement: 120000,
+        installmentMode: "amount",
+        installmentAmount: 1,
+      })
+    );
+    expect(result.schedule).toHaveLength(1200);
+    expect(result.calculatedCount).toBe(1200);
+    expect(result.warnings.some((w) => w.includes("balance will remain"))).toBe(true);
+  });
+});
+
 describe("buildSchedule — quarterly and custom frequencies", () => {
   it("uses 4 periods per year for quarterly", () => {
     const result = buildSchedule(

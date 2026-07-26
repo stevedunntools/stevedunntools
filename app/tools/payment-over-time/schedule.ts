@@ -42,6 +42,12 @@ export interface ScheduleResult {
   warnings: string[];
 }
 
+/**
+ * Hard cap on generated installment rows. Larger requests would build
+ * hundreds of thousands of row objects and hang the page rendering them.
+ */
+export const MAX_INSTALLMENTS = 1200;
+
 export function buildSchedule(input: ScheduleInput): ScheduleResult {
   const {
     totalSettlement: total,
@@ -127,6 +133,12 @@ export function buildSchedule(input: ScheduleInput): ScheduleResult {
 
   if (balance > 0) {
     if (mode === "count" && n > 0) {
+      if (n > MAX_INSTALLMENTS) {
+        warnings.push(
+          `Number of payments is capped at ${MAX_INSTALLMENTS.toLocaleString()}. The payment below pays the balance off within that limit.`
+        );
+        n = MAX_INSTALLMENTS;
+      }
       if (installmentRate > 0) {
         fixedPayment = (balance * installmentRate) / (1 - Math.pow(1 + installmentRate, -n));
       } else {
@@ -150,6 +162,12 @@ export function buildSchedule(input: ScheduleInput): ScheduleResult {
         }
       } else {
         n = Math.ceil(balance / fixedPayment);
+      }
+      if (n > MAX_INSTALLMENTS) {
+        warnings.push(
+          `At ${fmt(fixedPayment)} per payment the schedule would run past ${MAX_INSTALLMENTS.toLocaleString()} payments — only the first ${MAX_INSTALLMENTS.toLocaleString()} are shown, and a balance will remain.`
+        );
+        n = MAX_INSTALLMENTS;
       }
       calcPayment = fixedPayment;
       calcCount = n;
