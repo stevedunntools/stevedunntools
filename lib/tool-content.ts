@@ -1,6 +1,10 @@
 // Long-form content for each tool page: How it works, a worked example,
 // when to use it, and an FAQ. Sourced from Steve Dunn's reviewed draft.
 // Rendered by components/tool-content.tsx below each tool.
+//
+// Inline links use a lightweight markdown convention: [anchor text](/href).
+// tool-content.tsx renders them as Next <Link>s and unwraps them to plain
+// anchor text for the FAQ JSON-LD.
 
 export interface ToolFaq {
   q: string;
@@ -103,7 +107,7 @@ export const toolContent: Record<string, ToolContent> = {
       },
       {
         q: `How is this different from the Negotiation Visualizer's projection?`,
-        a: `This tool is a quick two-offers-per-side calculator. The Negotiation Visualizer tracks a whole negotiation round by round and bases its projection on each side's three most recent moves. Use this one for a fast read; use the Visualizer to chart the full negotiation.`,
+        a: `This tool is a quick two-offers-per-side calculator. The [Negotiation Visualizer](/tools/negotiation-visualizer) tracks a whole negotiation round by round and bases its projection on each side's three most recent moves. Use this one for a fast read; use the Visualizer to chart the full negotiation.`,
       },
     ],
   },
@@ -135,7 +139,7 @@ export const toolContent: Record<string, ToolContent> = {
       },
       {
         q: `Is this the amount my case will settle for?`,
-        a: `No. It is an estimate of exposure, not a prediction of settlement. Cases settle at discounts to exposure for risk, cost, delay, and collectability. Pair this tool with the Plaintiff's Expected Value calculator to apply those discounts.`,
+        a: `No. It is an estimate of exposure, not a prediction of settlement. Cases settle at discounts to exposure for risk, cost, delay, and collectability. Pair this tool with the [Plaintiff's Expected Value calculator](/tools/plaintiffs-expected-value) to apply those discounts.`,
       },
     ],
   },
@@ -272,7 +276,7 @@ export const toolContent: Record<string, ToolContent> = {
       `Allocation must reflect the actual claims in the case — it is a characterization of what the settlement pays for, not a dial for minimizing taxes. But within the range the claims support, the split makes a real difference to what the client keeps, and it's better negotiated deliberately.`,
     ],
     example: [
-      `A $250,000 employment settlement with a 40% fee and $10,000 in costs nets the plaintiff $140,000. Allocated 50/50, that's $70,000 of wages (subject to withholding) and $70,000 of non-wage income. To see what the allocation means in after-tax dollars, carry both numbers into the Rough Guess After Taxes Estimator.`,
+      `A $250,000 employment settlement with a 40% fee and $10,000 in costs nets the plaintiff $140,000. Allocated 50/50, that's $70,000 of wages (subject to withholding) and $70,000 of non-wage income. To see what the allocation means in after-tax dollars, carry both numbers into the [Rough Guess After Taxes Estimator](/tools/take-home-after-taxes).`,
     ],
     whenToUse: [
       `Use it when drafting or negotiating the settlement agreement in an employment case — the allocation belongs in the written agreement, and this shows both sides what each split means before anyone signs.`,
@@ -310,7 +314,7 @@ export const toolContent: Record<string, ToolContent> = {
     faqs: [
       {
         q: `What is the difference between simple and compound interest?`,
-        a: `Simple interest is calculated only on the original principal, so it accrues in a straight line. Compound interest is calculated on principal plus previously accrued interest, so it accelerates. Statutory judgment interest is usually simple; if your deal compounds, use the Payment Over Time Calculator instead — its amortization math compounds each period.`,
+        a: `Simple interest is calculated only on the original principal, so it accrues in a straight line. Compound interest is calculated on principal plus previously accrued interest, so it accelerates. Statutory judgment interest is usually simple; if your deal compounds, use the [Payment Over Time Calculator](/tools/payment-over-time) instead — its amortization math compounds each period.`,
       },
       {
         q: `Does this use a 360-day or 365-day year?`,
@@ -363,7 +367,7 @@ export const toolContent: Record<string, ToolContent> = {
       `An employment settlement allocates $70,000 to wages and $70,000 to non-wage 1099 income for a single filer in North Carolina. The estimator shows the federal and state income tax on the full $140,000, FICA on the wage portion only — and what actually lands in the client's account. Move the same $140,000 to a 60/40 split and watch the take-home change; that's the comparison that matters at the table.`,
     ],
     whenToUse: [
-      `Use it during settlement negotiations to compare allocations — wages versus non-wages, taxable versus §104 personal-injury dollars — and to keep a client's expectations anchored to net, not gross. It pairs naturally with the W-2, 1099, and Attorney Fee Calculator.`,
+      `Use it during settlement negotiations to compare allocations — wages versus non-wages, taxable versus §104 personal-injury dollars — and to keep a client's expectations anchored to net, not gross. It pairs naturally with the [W-2, 1099, and Attorney Fee Calculator](/tools/employment-contingency-calculator).`,
     ],
     faqs: [
       {

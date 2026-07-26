@@ -4,7 +4,7 @@ import ToolPageHeader from "@/components/tool-page-header";
 
 export const metadata = toolMetadata({
   title: "Bracket Generator",
-  seoTitle: "Bracket Generator — Settlement Bracket Calculator",
+  seoTitle: "Settlement Bracket Calculator",
   description:
     "Generate a bracketed offer range by entering any two of our number, their number, and midpoint.",
   path: "/tools/bracket-generator",

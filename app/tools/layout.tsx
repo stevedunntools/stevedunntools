@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import BackToTools from "@/components/back-to-tools";
 import RelatedTools from "@/components/related-tools";
 import ToolContent from "@/components/tool-content";
 
@@ -30,13 +29,7 @@ export default function ToolLayout({ children }: { children: React.ReactNode }) 
           </span>
         </div>
 
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-sm text-brand-muted hover:text-brand-accent transition-colors mb-6 print:hidden"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to all tools
-        </Link>
+        <BackToTools />
         {children}
         <ToolContent />
         <RelatedTools />

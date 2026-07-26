@@ -4,6 +4,7 @@ import ToolPageHeader from "@/components/tool-page-header";
 
 export const metadata = toolMetadata({
   title: "Contingency Calculator",
+  seoTitle: "Contingency Fee Calculator",
   description:
     "Calculate attorney fees under a contingency arrangement and the net recovery to the plaintiff.",
   path: "/tools/contingency-calculator",

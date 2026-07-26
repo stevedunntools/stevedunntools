@@ -4,6 +4,7 @@ import ToolPageHeader from "@/components/tool-page-header";
 
 export const metadata = toolMetadata({
   title: "Personal Injury Damages Estimator",
+  seoTitle: "Personal Injury Settlement Calculator",
   description:
     "Estimate personal injury damages including medical expenses, lost earnings, property damage, and non-economic damages.",
   path: "/tools/personal-injury-damages-estimator",

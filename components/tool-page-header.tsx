@@ -37,7 +37,7 @@ export default function ToolPageHeader({
       {
         "@type": "BreadcrumbList",
         itemListElement: [
-          { "@type": "ListItem", position: 1, name: "All Tools", item: BASE_URL },
+          { "@type": "ListItem", position: 1, name: "All Tools", item: `${BASE_URL}/tools` },
           { "@type": "ListItem", position: 2, name: title },
         ],
       },

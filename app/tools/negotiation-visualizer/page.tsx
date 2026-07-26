@@ -4,7 +4,7 @@ import ToolPageHeader from "@/components/tool-page-header";
 
 export const metadata = toolMetadata({
   title: "Negotiation Visualizer",
-  seoTitle: "Negotiation Visualizer — Settlement Offer Chart",
+  seoTitle: "Settlement Negotiation Visualizer",
   description:
     "Visualize the negotiation process with an interactive chart of offers, counteroffers, and convergence patterns.",
   path: "/tools/negotiation-visualizer",

@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   description:
     "Legal disclaimer for Steve Dunn Tools mediation calculators and utilities.",
   alternates: { canonical: "/disclaimer" },
+  openGraph: { url: "/disclaimer" },
 };
 
 export default function DisclaimerPage() {

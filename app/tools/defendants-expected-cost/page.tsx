@@ -4,6 +4,7 @@ import ToolPageHeader from "@/components/tool-page-header";
 
 export const metadata = toolMetadata({
   title: "Defendant's Expected Cost",
+  seoTitle: "Defendant's Expected Cost Calculator",
   description:
     "Estimate the defendant's total expected cost including liability risk, damages exposure, and defense costs.",
   path: "/tools/defendants-expected-cost",

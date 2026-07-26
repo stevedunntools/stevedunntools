@@ -1,7 +1,41 @@
 "use client";
 
+import Link from "next/link";
+import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { toolContent } from "@/lib/tool-content";
+
+/**
+ * Inline links in content strings use a lightweight markdown convention:
+ * [anchor text](/href). Rendered as Next <Link>s in the prose and unwrapped
+ * to plain anchor text in the FAQ JSON-LD.
+ */
+const LINK_PATTERN = /\[([^\]]+)\]\(([^)\s]+)\)/g;
+
+function renderInline(text: string): ReactNode {
+  const nodes: ReactNode[] = [];
+  let lastIndex = 0;
+  for (const match of text.matchAll(LINK_PATTERN)) {
+    const [full, label, href] = match;
+    if (match.index > lastIndex) nodes.push(text.slice(lastIndex, match.index));
+    nodes.push(
+      <Link
+        key={match.index}
+        href={href}
+        className="text-brand-accent hover:text-brand-accent-hover underline"
+      >
+        {label}
+      </Link>
+    );
+    lastIndex = match.index + full.length;
+  }
+  if (lastIndex < text.length) nodes.push(text.slice(lastIndex));
+  return nodes;
+}
+
+function stripLinks(text: string): string {
+  return text.replace(LINK_PATTERN, "$1");
+}
 
 /**
  * Long-form content rendered below each tool: How it works, a worked example,
@@ -20,7 +54,7 @@ export default function ToolContent() {
     mainEntity: content.faqs.map((f) => ({
       "@type": "Question",
       name: f.q,
-      acceptedAnswer: { "@type": "Answer", text: f.a },
+      acceptedAnswer: { "@type": "Answer", text: stripLinks(f.a) },
     })),
   };
 
@@ -68,7 +102,9 @@ export default function ToolContent() {
                     </svg>
                   </span>
                 </summary>
-                <p className="mt-2 text-brand-muted leading-relaxed">{faq.a}</p>
+                <p className="mt-2 text-brand-muted leading-relaxed">
+                  {renderInline(faq.a)}
+                </p>
               </details>
             ))}
           </div>
@@ -86,7 +122,7 @@ function Prose({ heading, paragraphs }: { heading: string; paragraphs: string[] 
       <div className="space-y-3">
         {paragraphs.map((p, i) => (
           <p key={i} className="text-brand-primary leading-relaxed">
-            {p}
+            {renderInline(p)}
           </p>
         ))}
       </div>

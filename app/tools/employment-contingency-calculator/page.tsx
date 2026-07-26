@@ -4,7 +4,7 @@ import ToolPageHeader from "@/components/tool-page-header";
 
 export const metadata = toolMetadata({
   title: "W-2, 1099, and Attorney Fee Calculator",
-  seoTitle: "W-2, 1099, and Attorney Fee Calculator — Employment Settlement Allocation",
+  seoTitle: "Employment Settlement Fee Calculator",
   description:
     "Calculate attorney fees, net recovery, and wage vs. non-wage allocation for employment settlements.",
   path: "/tools/employment-contingency-calculator",

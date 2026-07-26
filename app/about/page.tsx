@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   description:
     "Learn about Steve Dunn, a full-time mediator and former litigator who built these settlement tools for lawyers, mediators, and parties in dispute resolution.",
   alternates: { canonical: "/about" },
+  openGraph: { url: "/about" },
 };
 
 const jsonLd = {
