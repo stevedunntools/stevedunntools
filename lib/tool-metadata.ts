@@ -14,6 +14,13 @@ interface ToolMetadataOpts {
  * Standard metadata for a tool page: title, description, canonical, and
  * per-tool Open Graph / Twitter tags so shared links name the tool instead
  * of the generic site card.
+ *
+ * og:image / twitter:image are intentionally NOT set here — each tool
+ * directory has an `opengraph-image.tsx` (file-based metadata), which the
+ * Next.js docs give higher priority than exported metadata. That file also
+ * supplies the per-tool `og:image:alt` via its `alt` export. Pages without
+ * an `opengraph-image` fall back to the site-wide /og-image.png set in the
+ * root layout, and X falls back to og:image when twitter:image is absent.
  */
 export function toolMetadata({ title, seoTitle, description, path }: ToolMetadataOpts): Metadata {
   const fullTitle = `${seoTitle ?? title} | Steve Dunn Tools`;
@@ -27,20 +34,11 @@ export function toolMetadata({ title, seoTitle, description, path }: ToolMetadat
       url: path,
       siteName: "Steve Dunn Tools",
       type: "website",
-      images: [
-        {
-          url: "/og-image.png",
-          width: 1200,
-          height: 630,
-          alt: "Steve Dunn Tools — Settlement tools built by a mediator",
-        },
-      ],
     },
     twitter: {
       card: "summary_large_image",
       title: fullTitle,
       description,
-      images: ["/og-image.png"],
     },
   };
 }
