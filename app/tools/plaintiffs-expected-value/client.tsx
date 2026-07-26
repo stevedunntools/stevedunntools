@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
@@ -96,7 +97,7 @@ export default function PlaintiffsExpectedValueClient() {
             <PercentSlider
               value={probability}
               onChange={setProbability}
-              min={1}
+              min={0}
               max={100}
               aria-label="Probability of success"
             />
@@ -128,7 +129,7 @@ export default function PlaintiffsExpectedValueClient() {
             <PercentSlider
               value={discountRate}
               onChange={setDiscountRate}
-              min={1}
+              min={0}
               max={10}
               allowOverflow
               label="Annual discount rate"
@@ -206,6 +207,16 @@ export default function PlaintiffsExpectedValueClient() {
               <p className="text-sm text-brand-muted mb-1">Plaintiff&apos;s Expected Value</p>
               <p className="text-3xl font-bold text-brand-accent">
                 {hydrated ? fmt(expectedValue) : "—"}
+              </p>
+              <p className="mt-2 text-xs text-brand-muted">
+                On contingency? Carry this number into the{" "}
+                <Link
+                  href="/tools/contingency-calculator"
+                  className="text-brand-accent hover:text-brand-accent-hover underline"
+                >
+                  Contingency Fee Calculator
+                </Link>{" "}
+                to see what the plaintiff nets after the fee.
               </p>
             </CardContent>
           </Card>

@@ -92,7 +92,7 @@ export default function SimpleInterestClient() {
             <PercentSlider
               value={rate}
               onChange={setRate}
-              min={1}
+              min={0}
               max={20}
               allowOverflow
               label="Annual interest rate (type a value for rates above 20%)"
