@@ -275,4 +275,24 @@ describe("nextRoundFor", () => {
       nextRoundFor([offer("plaintiff", 1, 500000), offer("defendant", 1, 50000)])
     ).toBe(2);
   });
+
+  it("re-opens an earlier round left one-sided by a deletion", () => {
+    // P1, D1, P2, D2 with P1 deleted → the next offer fills round 1
+    const offers = [
+      offer("defendant", 1, 50000),
+      offer("plaintiff", 2, 450000),
+      offer("defendant", 2, 75000),
+    ];
+    expect(nextRoundFor(offers)).toBe(1);
+  });
+
+  it("advances past a refilled hole", () => {
+    const offers = [
+      offer("defendant", 1, 50000),
+      offer("plaintiff", 1, 480000),
+      offer("plaintiff", 2, 450000),
+      offer("defendant", 2, 75000),
+    ];
+    expect(nextRoundFor(offers)).toBe(3);
+  });
 });

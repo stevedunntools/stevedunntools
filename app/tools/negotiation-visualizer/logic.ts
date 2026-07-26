@@ -173,13 +173,20 @@ export function buildExportData(
   };
 }
 
-/** The round the next offer belongs to: a round is open until both parties have offered. */
+/**
+ * The round the next offer belongs to: the earliest round not yet filled by
+ * both parties. (A round is open until both sides have offered, so deleting
+ * an earlier offer re-opens that round to be filled rather than leaving a
+ * permanent one-sided hole in the history.)
+ */
 export function nextRoundFor(offers: Offer[]): number {
   if (offers.length === 0) return 1;
   const lastRound = Math.max(...offers.map((m) => m.round));
-  const lastRoundOffers = offers.filter((m) => m.round === lastRound);
-  const hasPlaintiff = lastRoundOffers.some((m) => m.party === "plaintiff");
-  const hasDefendant = lastRoundOffers.some((m) => m.party === "defendant");
-  if (hasPlaintiff && hasDefendant) return lastRound + 1;
-  return lastRound;
+  for (let r = 1; r <= lastRound; r++) {
+    const roundOffers = offers.filter((m) => m.round === r);
+    const hasPlaintiff = roundOffers.some((m) => m.party === "plaintiff");
+    const hasDefendant = roundOffers.some((m) => m.party === "defendant");
+    if (!hasPlaintiff || !hasDefendant) return r;
+  }
+  return lastRound + 1;
 }
