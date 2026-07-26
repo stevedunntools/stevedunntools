@@ -8,7 +8,19 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { fmt, parseNumOrNull } from "@/lib/format";
-import { generateYTicks, formatTickLabel } from "@/lib/chart-utils";
+import {
+  CHART_W,
+  CHART_H,
+  PAD,
+  INNER_W,
+  INNER_H,
+  BLUE,
+  RED,
+  GREEN,
+  pointsToPath,
+  generateYTicks,
+  formatTickLabel,
+} from "@/lib/chart-utils";
 import DollarInput from "@/components/dollar-input";
 import { computeIntersection, desiredMoves } from "./logic";
 
@@ -16,15 +28,6 @@ import { computeIntersection, desiredMoves } from "./logic";
 // Chart constants
 // ---------------------------------------------------------------------------
 
-const CHART_W = 800;
-const CHART_H = 420;
-const PAD = { top: 20, right: 30, bottom: 50, left: 80 };
-const INNER_W = CHART_W - PAD.left - PAD.right;
-const INNER_H = CHART_H - PAD.top - PAD.bottom;
-
-const BLUE = "#4A90D9";
-const RED = "#DC2626";
-const GREEN = "#16A34A";
 const VIOLET = "#7C3AED";
 
 // Hard upper bound on rendered rounds — defense in depth behind the
@@ -140,10 +143,6 @@ function TrendChart({ data, desired }: { data: ChartData; desired?: DesiredPoint
     { x: intX, y: intY },
   ];
 
-  function pathD(pts: { x: number; y: number }[]) {
-    return pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-  }
-
   return (
     <svg
       viewBox={`0 0 ${CHART_W} ${CHART_H}`}
@@ -205,16 +204,16 @@ function TrendChart({ data, desired }: { data: ChartData; desired?: DesiredPoint
       <line x1={PAD.left} y1={PAD.top + INNER_H} x2={PAD.left + INNER_W} y2={PAD.top + INNER_H} stroke="#D1D5DB" strokeWidth="1" />
 
       {/* Plaintiff solid line (rounds 1-2) */}
-      <path d={pathD(pSolid)} fill="none" stroke={BLUE} strokeWidth="2" />
+      <path d={pointsToPath(pSolid)} fill="none" stroke={BLUE} strokeWidth="2" />
 
       {/* Defendant solid line (rounds 1-2) */}
-      <path d={pathD(dSolid)} fill="none" stroke={RED} strokeWidth="2" />
+      <path d={pointsToPath(dSolid)} fill="none" stroke={RED} strokeWidth="2" />
 
       {/* Plaintiff extrapolation (dotted) */}
-      <path d={pathD(pDotted)} fill="none" stroke={BLUE} strokeWidth="1.5" strokeDasharray="5 3" />
+      <path d={pointsToPath(pDotted)} fill="none" stroke={BLUE} strokeWidth="1.5" strokeDasharray="5 3" />
 
       {/* Defendant extrapolation (dotted) */}
-      <path d={pathD(dDotted)} fill="none" stroke={RED} strokeWidth="1.5" strokeDasharray="5 3" />
+      <path d={pointsToPath(dDotted)} fill="none" stroke={RED} strokeWidth="1.5" strokeDasharray="5 3" />
 
       {/* Plaintiff dots */}
       {pSolid.map((p, i) => (
@@ -230,7 +229,7 @@ function TrendChart({ data, desired }: { data: ChartData; desired?: DesiredPoint
       {desired && desiredX !== null && desiredY !== null && (
         <>
           <path
-            d={pathD([{ x: xScale(2), y: yScale(p2) }, { x: desiredX, y: desiredY }])}
+            d={pointsToPath([{ x: xScale(2), y: yScale(p2) }, { x: desiredX, y: desiredY }])}
             fill="none"
             stroke={VIOLET}
             strokeWidth="1.5"
@@ -238,7 +237,7 @@ function TrendChart({ data, desired }: { data: ChartData; desired?: DesiredPoint
             opacity="0.8"
           />
           <path
-            d={pathD([{ x: xScale(2), y: yScale(d2) }, { x: desiredX, y: desiredY }])}
+            d={pointsToPath([{ x: xScale(2), y: yScale(d2) }, { x: desiredX, y: desiredY }])}
             fill="none"
             stroke={VIOLET}
             strokeWidth="1.5"

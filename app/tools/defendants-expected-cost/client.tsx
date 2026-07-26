@@ -8,12 +8,11 @@ import {
   CardTitle,
   CardContent,
 } from "@/components/ui/card";
-import { fmt, parseNum } from "@/lib/format";
-import { Row, Separator } from "@/components/breakdown-table";
+import { fmt, parseNumNonNeg } from "@/lib/format";
+import { Row, Separator, TotalRow } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
 import PercentSlider from "@/components/percent-slider";
-import EstimateDisclaimer from "@/components/estimate-disclaimer";
-import ExportPdfButton from "@/components/export-pdf-button";
+import ResultsShell from "@/components/results-shell";
 import MobileResultBar from "@/components/mobile-result-bar";
 
 export default function DefendantsExpectedCostClient() {
@@ -37,11 +36,11 @@ export default function DefendantsExpectedCostClient() {
     clearSessionKeys("tool:defendant-ec:");
   }
 
-  const dmg = parseNum(damages);
-  const pFees = parseNum(plaintiffFees);
-  const dFees = parseNum(defendantFees);
-  const dCosts = parseNum(defendantCosts);
-  const intang = parseNum(intangibleCosts);
+  const dmg = parseNumNonNeg(damages);
+  const pFees = parseNumNonNeg(plaintiffFees);
+  const dFees = parseNumNonNeg(defendantFees);
+  const dCosts = parseNumNonNeg(defendantCosts);
+  const intang = parseNumNonNeg(intangibleCosts);
 
   const expectedDamages = dmg * (damagesProbability / 100);
   const expectedFeeExposure = pFees * (feeProbability / 100);
@@ -186,16 +185,10 @@ export default function DefendantsExpectedCostClient() {
 
       {/* Results */}
       <div className="lg:col-span-2">
-        <div className="sticky top-20 space-y-6">
-          <Card id="tool-headline-result" className="bg-white border-brand-accent">
-            <CardContent className="pt-6">
-              <p className="text-sm text-brand-muted mb-1">Defendant&apos;s Total Expected Cost</p>
-              <p className="text-3xl font-bold text-brand-accent">
-                {hydrated ? fmt(totalExpectedCost) : "—"}
-              </p>
-            </CardContent>
-          </Card>
-
+        <ResultsShell
+          label="Defendant&apos;s Total Expected Cost"
+          value={hydrated ? fmt(totalExpectedCost) : "—"}
+        >
           <Card className="bg-white border-brand-border">
             <CardHeader>
               <CardTitle className="text-brand-primary text-base">Breakdown</CardTitle>
@@ -215,22 +208,15 @@ export default function DefendantsExpectedCostClient() {
                   <Row label="Defendant's litigation costs" value={hydrated ? dCosts : "—"} />
                   <Row label="Intangible costs" value={hydrated ? intang : "—"} />
                   <Separator />
-                  <tr>
-                    <td className="py-2 font-semibold text-brand-primary">Total expected cost</td>
-                    <td className="py-2 text-right font-semibold text-brand-accent">
-                      {hydrated ? fmt(totalExpectedCost) : "—"}
-                    </td>
-                  </tr>
+                  <TotalRow
+                    label="Total expected cost"
+                    value={hydrated ? fmt(totalExpectedCost) : "—"}
+                  />
                 </tbody>
               </table>
             </CardContent>
           </Card>
-
-          <EstimateDisclaimer />
-          <div className="print:hidden">
-            <ExportPdfButton />
-          </div>
-        </div>
+        </ResultsShell>
       </div>
       <MobileResultBar label="Expected cost" value={hydrated ? fmt(totalExpectedCost) : "—"} targetId="tool-headline-result" />
     </div>

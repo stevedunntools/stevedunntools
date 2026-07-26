@@ -8,11 +8,10 @@ import {
   CardTitle,
   CardContent,
 } from "@/components/ui/card";
-import { fmt, parseNum } from "@/lib/format";
-import { Row, Separator } from "@/components/breakdown-table";
+import { fmt, parseNumNonNeg } from "@/lib/format";
+import { Row, Separator, TotalRow } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
-import EstimateDisclaimer from "@/components/estimate-disclaimer";
-import ExportPdfButton from "@/components/export-pdf-button";
+import ResultsShell from "@/components/results-shell";
 import MobileResultBar from "@/components/mobile-result-bar";
 
 const MULTIPLIER_STEPS = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
@@ -36,11 +35,11 @@ export default function PersonalInjuryClient() {
     clearSessionKeys("tool:pi-damages:");
   }
 
-  const medTo = parseNum(medicalToDate);
-  const medFuture = parseNum(futureMedical);
-  const earnTo = parseNum(lostEarningsToDate);
-  const earnFuture = parseNum(futureLostEarnings);
-  const prop = parseNum(propertyDamage);
+  const medTo = parseNumNonNeg(medicalToDate);
+  const medFuture = parseNumNonNeg(futureMedical);
+  const earnTo = parseNumNonNeg(lostEarningsToDate);
+  const earnFuture = parseNumNonNeg(futureLostEarnings);
+  const prop = parseNumNonNeg(propertyDamage);
 
   const totalMedical = medTo + medFuture;
   const painAndSuffering = totalMedical * multiplier;
@@ -214,17 +213,10 @@ export default function PersonalInjuryClient() {
 
       {/* Results */}
       <div className="lg:col-span-2">
-        <div className="sticky top-20 space-y-6">
-          {/* Total */}
-          <Card id="tool-headline-result" className="bg-white border-brand-accent">
-            <CardContent className="pt-6">
-              <p className="text-sm text-brand-muted mb-1">Estimated Total Damages</p>
-              <p className="text-3xl font-bold text-brand-accent">
-                {hydrated ? fmt(total) : "—"}
-              </p>
-            </CardContent>
-          </Card>
-
+        <ResultsShell
+          label="Estimated Total Damages"
+          value={hydrated ? fmt(total) : "—"}
+        >
           {/* Breakdown */}
           <Card className="bg-white border-brand-border">
             <CardHeader>
@@ -247,22 +239,12 @@ export default function PersonalInjuryClient() {
                   <Row label="Future lost earnings" value={hydrated ? earnFuture : "—"} />
                   <Row label="Property damage" value={hydrated ? prop : "—"} />
                   <Separator />
-                  <tr>
-                    <td className="py-2 font-semibold text-brand-primary">Total</td>
-                    <td className="py-2 text-right font-semibold text-brand-accent">
-                      {hydrated ? fmt(total) : "—"}
-                    </td>
-                  </tr>
+                  <TotalRow label="Total" value={hydrated ? fmt(total) : "—"} />
                 </tbody>
               </table>
             </CardContent>
           </Card>
-
-          <EstimateDisclaimer />
-          <div className="print:hidden">
-            <ExportPdfButton />
-          </div>
-        </div>
+        </ResultsShell>
       </div>
       <MobileResultBar label="Total damages" value={hydrated ? fmt(total) : "—"} targetId="tool-headline-result" />
     </div>

@@ -9,7 +9,7 @@ import {
   CardTitle,
   CardContent,
 } from "@/components/ui/card";
-import { fmt, parseNum } from "@/lib/format";
+import { fmt, parseNumNonNeg } from "@/lib/format";
 import { Row, Separator } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
 import ExportPdfButton from "@/components/export-pdf-button";
@@ -55,10 +55,10 @@ export default function TakeHomeAfterTaxesClient() {
     return calculate({
       filingStatus,
       stateCode,
-      w2Wages: parseNum(w2),
-      income1099: parseNum(income1099),
+      w2Wages: parseNumNonNeg(w2),
+      income1099: parseNumNonNeg(income1099),
       income1099Type,
-      piIncome: parseNum(pi),
+      piIncome: parseNumNonNeg(pi),
     });
   }, [filingStatus, stateCode, income1099Type, w2, income1099, pi]);
 

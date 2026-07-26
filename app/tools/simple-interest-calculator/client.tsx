@@ -8,12 +8,11 @@ import {
   CardTitle,
   CardContent,
 } from "@/components/ui/card";
-import { fmt, parseNum } from "@/lib/format";
-import { Row, Separator } from "@/components/breakdown-table";
+import { fmt, parseNumNonNeg } from "@/lib/format";
+import { Row, Separator, TotalRow } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
 import PercentSlider from "@/components/percent-slider";
-import EstimateDisclaimer from "@/components/estimate-disclaimer";
-import ExportPdfButton from "@/components/export-pdf-button";
+import ResultsShell from "@/components/results-shell";
 import { textFieldClass, selectFieldClass } from "@/lib/field-styles";
 import MobileResultBar from "@/components/mobile-result-bar";
 
@@ -40,8 +39,8 @@ export default function SimpleInterestClient() {
     clearSessionKeys("tool:simple-interest:");
   }
 
-  const p = parseNum(principal);
-  const t = parseNum(timePeriod);
+  const p = parseNumNonNeg(principal);
+  const t = parseNumNonNeg(timePeriod);
 
   let timeInYears = 0;
   if (timeUnit === "years") timeInYears = t;
@@ -152,16 +151,10 @@ export default function SimpleInterestClient() {
 
       {/* Results */}
       <div className="lg:col-span-2">
-        <div className="sticky top-20 space-y-6">
-          <Card id="tool-headline-result" className="bg-white border-brand-accent">
-            <CardContent className="pt-6">
-              <p className="text-sm text-brand-muted mb-1">Total (Principal + Interest)</p>
-              <p className="text-3xl font-bold text-brand-accent">
-                {hydrated ? fmt(total) : "—"}
-              </p>
-            </CardContent>
-          </Card>
-
+        <ResultsShell
+          label="Total (Principal + Interest)"
+          value={hydrated ? fmt(total) : "—"}
+        >
           <Card className="bg-white border-brand-border">
             <CardHeader>
               <CardTitle className="text-brand-primary text-base">Breakdown</CardTitle>
@@ -175,22 +168,12 @@ export default function SimpleInterestClient() {
                   <Separator />
                   <Row label="Interest earned" value={hydrated ? interest : "—"} />
                   <Separator />
-                  <tr>
-                    <td className="py-2 font-semibold text-brand-primary">Total</td>
-                    <td className="py-2 text-right font-semibold text-brand-accent">
-                      {hydrated ? fmt(total) : "—"}
-                    </td>
-                  </tr>
+                  <TotalRow label="Total" value={hydrated ? fmt(total) : "—"} />
                 </tbody>
               </table>
             </CardContent>
           </Card>
-
-          <EstimateDisclaimer />
-          <div className="print:hidden">
-            <ExportPdfButton />
-          </div>
-        </div>
+        </ResultsShell>
       </div>
       <MobileResultBar label="Total" value={hydrated ? fmt(total) : "—"} targetId="tool-headline-result" />
     </div>

@@ -9,11 +9,10 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Trash2 } from "lucide-react";
-import { fmt, parseNum } from "@/lib/format";
-import { Row, Separator } from "@/components/breakdown-table";
+import { fmt, parseNumNonNeg } from "@/lib/format";
+import { Row, Separator, TotalRow } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
-import EstimateDisclaimer from "@/components/estimate-disclaimer";
-import ExportPdfButton from "@/components/export-pdf-button";
+import ResultsShell from "@/components/results-shell";
 import { textFieldClass, selectFieldClass } from "@/lib/field-styles";
 import MobileResultBar from "@/components/mobile-result-bar";
 
@@ -84,13 +83,13 @@ export default function EmploymentDamagesClient() {
     clearSessionKeys("tool:emp-damages:");
   }
 
-  const comp = parseNum(monthlyComp);
-  const benefits = parseNum(monthlyBenefits);
-  const bpMonths = parseNum(monthsSinceTermination);
-  const fpMonths = parseNum(frontPayMonths);
-  const compDamages = parseNum(compensatory);
-  const pun = parseNum(punitive);
-  const other = parseNum(otherDamages);
+  const comp = parseNumNonNeg(monthlyComp);
+  const benefits = parseNumNonNeg(monthlyBenefits);
+  const bpMonths = parseNumNonNeg(monthsSinceTermination);
+  const fpMonths = parseNumNonNeg(frontPayMonths);
+  const compDamages = parseNumNonNeg(compensatory);
+  const pun = parseNumNonNeg(punitive);
+  const other = parseNumNonNeg(otherDamages);
 
   // Back pay = (compensation + benefits) × months since termination
   const backPayComp = comp * bpMonths;
@@ -99,7 +98,7 @@ export default function EmploymentDamagesClient() {
 
   // Mitigation = sum of all earnings from all jobs
   const totalMitigation = jobs.reduce(
-    (sum, j) => sum + parseNum(j.months) * parseNum(j.monthlyComp),
+    (sum, j) => sum + parseNumNonNeg(j.months) * parseNumNonNeg(j.monthlyComp),
     0
   );
 
@@ -108,7 +107,7 @@ export default function EmploymentDamagesClient() {
   // Front pay = months × (comp + benefits at termination - current job comp
   // if currently employed). Benefits are included, matching back pay.
   const currentJob = jobs.find((j) => j.current);
-  const currentJobComp = currentJob ? parseNum(currentJob.monthlyComp) : 0;
+  const currentJobComp = currentJob ? parseNumNonNeg(currentJob.monthlyComp) : 0;
   const frontPay = Math.max(0, comp + benefits - currentJobComp) * fpMonths;
 
   // Liquidated damages, computed on net (post-mitigation) back pay so the
@@ -370,17 +369,10 @@ export default function EmploymentDamagesClient() {
 
       {/* Results */}
       <div className="lg:col-span-2">
-        <div className="sticky top-20 space-y-6">
-          {/* Total */}
-          <Card id="tool-headline-result" className="bg-white border-brand-accent">
-            <CardContent className="pt-6">
-              <p className="text-sm text-brand-muted mb-1">Estimated Total Damages</p>
-              <p className="text-3xl font-bold text-brand-accent">
-                {hydrated ? fmt(grossTotal) : "—"}
-              </p>
-            </CardContent>
-          </Card>
-
+        <ResultsShell
+          label="Estimated Total Damages"
+          value={hydrated ? fmt(grossTotal) : "—"}
+        >
           {/* Breakdown */}
           <Card className="bg-white border-brand-border">
             <CardHeader>
@@ -402,22 +394,12 @@ export default function EmploymentDamagesClient() {
                   <Row label="Punitive damages" value={hydrated ? pun : "—"} />
                   <Row label="Other damages" value={hydrated ? other : "—"} />
                   <Separator />
-                  <tr>
-                    <td className="py-2 font-semibold text-brand-primary">Total</td>
-                    <td className="py-2 text-right font-semibold text-brand-accent">
-                      {hydrated ? fmt(grossTotal) : "—"}
-                    </td>
-                  </tr>
+                  <TotalRow label="Total" value={hydrated ? fmt(grossTotal) : "—"} />
                 </tbody>
               </table>
             </CardContent>
           </Card>
-
-          <EstimateDisclaimer />
-          <div className="print:hidden">
-            <ExportPdfButton />
-          </div>
-        </div>
+        </ResultsShell>
       </div>
       <MobileResultBar label="Total damages" value={hydrated ? fmt(grossTotal) : "—"} targetId="tool-headline-result" />
     </div>

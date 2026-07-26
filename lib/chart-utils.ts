@@ -4,6 +4,20 @@ export interface Pt {
   y: number;
 }
 
+// ---------------------------------------------------------------------------
+// Shared chart geometry + palette (negotiation visualizer, convergence calc)
+// ---------------------------------------------------------------------------
+
+export const CHART_W = 800;
+export const CHART_H = 420;
+export const PAD = { top: 20, right: 30, bottom: 50, left: 80 };
+export const INNER_W = CHART_W - PAD.left - PAD.right;
+export const INNER_H = CHART_H - PAD.top - PAD.bottom;
+
+export const BLUE = "#4A90D9";
+export const RED = "#DC2626";
+export const GREEN = "#16A34A";
+
 /** Convert an array of points to an SVG path string */
 export function pointsToPath(pts: Pt[], closed: boolean = false): string {
   if (pts.length === 0) return "";

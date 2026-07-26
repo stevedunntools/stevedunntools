@@ -9,12 +9,11 @@ import {
   CardTitle,
   CardContent,
 } from "@/components/ui/card";
-import { fmt, parseNum } from "@/lib/format";
-import { Row, Separator } from "@/components/breakdown-table";
+import { fmt, parseNumNonNeg } from "@/lib/format";
+import { Row, Separator, TotalRow } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
 import PercentSlider from "@/components/percent-slider";
-import EstimateDisclaimer from "@/components/estimate-disclaimer";
-import ExportPdfButton from "@/components/export-pdf-button";
+import ResultsShell from "@/components/results-shell";
 import { textFieldClass } from "@/lib/field-styles";
 import MobileResultBar from "@/components/mobile-result-bar";
 
@@ -39,11 +38,11 @@ export default function PlaintiffsExpectedValueClient() {
     clearSessionKeys("tool:plaintiff-ev:");
   }
 
-  const dmg = parseNum(damages);
-  const f = parseNum(fees);
-  const lit = parseNum(litigationCosts);
-  const intang = parseNum(intangibleCosts);
-  const years = parseNum(yearsToPayment);
+  const dmg = parseNumNonNeg(damages);
+  const f = parseNumNonNeg(fees);
+  const lit = parseNumNonNeg(litigationCosts);
+  const intang = parseNumNonNeg(intangibleCosts);
+  const years = parseNumNonNeg(yearsToPayment);
 
   const probabilityAdjusted = dmg * (probability / 100);
   const discountFactor = years > 0 ? 1 / Math.pow(1 + discountRate / 100, years) : 1;
@@ -200,27 +199,22 @@ export default function PlaintiffsExpectedValueClient() {
 
       {/* Results */}
       <div className="lg:col-span-2">
-        <div className="sticky top-20 space-y-6">
-          {/* Total */}
-          <Card id="tool-headline-result" className="bg-white border-brand-accent">
-            <CardContent className="pt-6">
-              <p className="text-sm text-brand-muted mb-1">Plaintiff&apos;s Expected Value</p>
-              <p className="text-3xl font-bold text-brand-accent">
-                {hydrated ? fmt(expectedValue) : "—"}
-              </p>
-              <p className="mt-2 text-xs text-brand-muted">
-                On contingency? Carry this number into the{" "}
-                <Link
-                  href="/tools/contingency-calculator"
-                  className="text-brand-accent hover:text-brand-accent-hover underline"
-                >
-                  Contingency Fee Calculator
-                </Link>{" "}
-                to see what the plaintiff nets after the fee.
-              </p>
-            </CardContent>
-          </Card>
-
+        <ResultsShell
+          label="Plaintiff&apos;s Expected Value"
+          value={hydrated ? fmt(expectedValue) : "—"}
+          headlineExtra={
+            <p className="mt-2 text-xs text-brand-muted">
+              On contingency? Carry this number into the{" "}
+              <Link
+                href="/tools/contingency-calculator"
+                className="text-brand-accent-text hover:text-brand-accent-hover underline"
+              >
+                Contingency Fee Calculator
+              </Link>{" "}
+              to see what the plaintiff nets after the fee.
+            </p>
+          }
+        >
           {/* Breakdown */}
           <Card className="bg-white border-brand-border">
             <CardHeader>
@@ -241,22 +235,15 @@ export default function PlaintiffsExpectedValueClient() {
                   <Row label="Litigation costs" value={hydrated ? lit : "—"} negative />
                   <Row label="Intangible costs" value={hydrated ? intang : "—"} negative />
                   <Separator />
-                  <tr>
-                    <td className="py-2 font-semibold text-brand-primary">Expected value</td>
-                    <td className="py-2 text-right font-semibold text-brand-accent">
-                      {hydrated ? fmt(expectedValue) : "—"}
-                    </td>
-                  </tr>
+                  <TotalRow
+                    label="Expected value"
+                    value={hydrated ? fmt(expectedValue) : "—"}
+                  />
                 </tbody>
               </table>
             </CardContent>
           </Card>
-
-          <EstimateDisclaimer />
-          <div className="print:hidden">
-            <ExportPdfButton />
-          </div>
-        </div>
+        </ResultsShell>
       </div>
       <MobileResultBar label="Expected value" value={hydrated ? fmt(expectedValue) : "—"} targetId="tool-headline-result" />
     </div>

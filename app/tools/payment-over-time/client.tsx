@@ -10,7 +10,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Trash2 } from "lucide-react";
-import { fmt, parseNum, commaFmtNum } from "@/lib/format";
+import { fmt, parseNumNonNeg, commaFmtNum } from "@/lib/format";
 import DollarInput from "@/components/dollar-input";
 import PercentSlider from "@/components/percent-slider";
 import ExportPdfButton from "@/components/export-pdf-button";
@@ -102,13 +102,13 @@ export default function PaymentOverTimeClient() {
   const { schedule, summary, calculatedPayment, calculatedCount, warnings } = useMemo(
     () =>
       buildSchedule({
-        totalSettlement: parseNum(totalSettlement),
-        upfronts: upfronts.map((u) => ({ amount: parseNum(u.amount), timing: u.timing })),
-        numPayments: parseNum(numPayments),
-        installmentAmount: parseNum(installmentAmount),
+        totalSettlement: parseNumNonNeg(totalSettlement),
+        upfronts: upfronts.map((u) => ({ amount: parseNumNonNeg(u.amount), timing: u.timing })),
+        numPayments: parseNumNonNeg(numPayments),
+        installmentAmount: parseNumNonNeg(installmentAmount),
         installmentMode,
         frequency,
-        customIntervalDays: parseNum(customIntervalDays),
+        customIntervalDays: parseNumNonNeg(customIntervalDays),
         interestScope,
         interestStart,
         annualRate,

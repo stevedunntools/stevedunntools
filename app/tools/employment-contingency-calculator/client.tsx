@@ -8,12 +8,11 @@ import {
   CardTitle,
   CardContent,
 } from "@/components/ui/card";
-import { fmt, parseNum } from "@/lib/format";
+import { fmt, parseNumNonNeg } from "@/lib/format";
 import { Row, Separator } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
 import PercentSlider from "@/components/percent-slider";
-import EstimateDisclaimer from "@/components/estimate-disclaimer";
-import ExportPdfButton from "@/components/export-pdf-button";
+import ResultsShell from "@/components/results-shell";
 import MobileResultBar from "@/components/mobile-result-bar";
 
 export default function EmploymentContingencyClient() {
@@ -35,9 +34,9 @@ export default function EmploymentContingencyClient() {
     clearSessionKeys("tool:emp-contingency:");
   }
 
-  const s = parseNum(settlement);
-  const c = parseNum(costs);
-  const nc = hasNotCovered ? parseNum(notCovered) : 0;
+  const s = parseNumNonNeg(settlement);
+  const c = parseNumNonNeg(costs);
+  const nc = hasNotCovered ? parseNumNonNeg(notCovered) : 0;
   const covered = Math.max(0, s - nc);
   const attorneyFee = covered * (contingencyPct / 100);
   const feeAndCosts = attorneyFee + c;
@@ -171,16 +170,10 @@ export default function EmploymentContingencyClient() {
 
       {/* Results */}
       <div className="lg:col-span-2">
-        <div className="sticky top-20 space-y-6">
-          <Card id="tool-headline-result" className="bg-white border-brand-accent">
-            <CardContent className="pt-6">
-              <p className="text-sm text-brand-muted mb-1">Net to Plaintiff</p>
-              <p className="text-3xl font-bold text-brand-accent">
-                {hydrated ? fmt(netToPlaintiff) : "—"}
-              </p>
-            </CardContent>
-          </Card>
-
+        <ResultsShell
+          label="Net to Plaintiff"
+          value={hydrated ? fmt(netToPlaintiff) : "—"}
+        >
           <Card className="bg-white border-brand-border">
             <CardHeader>
               <CardTitle className="text-brand-primary text-base">Breakdown</CardTitle>
@@ -219,12 +212,7 @@ export default function EmploymentContingencyClient() {
               </p>
             </CardContent>
           </Card>
-
-          <EstimateDisclaimer />
-          <div className="print:hidden">
-            <ExportPdfButton />
-          </div>
-        </div>
+        </ResultsShell>
       </div>
       <MobileResultBar label="Net to plaintiff" value={hydrated ? fmt(netToPlaintiff) : "—"} targetId="tool-headline-result" />
     </div>

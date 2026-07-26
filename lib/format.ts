@@ -82,6 +82,16 @@ export function parseNum(s: string): number {
 }
 
 /**
+ * Parse a dollar/number string, clamping the result to >= 0.
+ * Use for inputs where a negative value is meaningless (settlements, costs,
+ * damages, principal, income, etc.). Tools that legitimately allow negative
+ * values should use parseNum/parseNumOrNull instead.
+ */
+export function parseNumNonNeg(s: string): number {
+  return Math.max(0, parseNum(s));
+}
+
+/**
  * Parse a dollar/number string, returning null for empty or invalid input.
  * Use this when you need to distinguish "no input" from "zero".
  */
