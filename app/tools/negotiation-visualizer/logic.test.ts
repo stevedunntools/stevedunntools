@@ -155,7 +155,7 @@ describe("computeConvergence", () => {
     expect(result!.value).toBeCloseTo(300000, 0);
   });
 
-  it("anchors the drawn extrapolation at each side's last offer", () => {
+  it("anchors the drawn extrapolation on each side's fitted line, not its last offer", () => {
     const result = computeConvergence([
       offer("plaintiff", 1, 500000),
       offer("defendant", 1, 100000),
@@ -164,8 +164,12 @@ describe("computeConvergence", () => {
       offer("plaintiff", 3, 350000),
       offer("defendant", 3, 250000),
     ])!;
-    expect(result.pStart).toEqual({ round: 3, value: 350000 });
-    expect(result.dStart).toEqual({ round: 3, value: 250000 });
+    // P fit: slope −75k, intercept 566.67k → fitted value at round 3 = 341.67k
+    // D fit: slope +75k, intercept 33.33k → fitted value at round 3 = 258.33k
+    expect(result.pStart.round).toBe(3);
+    expect(result.pStart.value).toBeCloseTo(341666.67, 0);
+    expect(result.dStart.round).toBe(3);
+    expect(result.dStart.value).toBeCloseTo(258333.33, 0);
   });
 
   it("returns null for diverging trends", () => {

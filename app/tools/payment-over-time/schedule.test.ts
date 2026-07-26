@@ -169,8 +169,23 @@ describe("buildSchedule — interest starting immediately", () => {
   });
 });
 
-describe("buildSchedule — installment cap", () => {
-  it("caps an absurd payment count and warns", () => {
+describe("buildSchedule — custom frequency without an interval", () => {
+  it("warns and returns no schedule instead of silently using monthly math", () => {
+    const result = buildSchedule(
+      input({
+        totalSettlement: 100000,
+        numPayments: 6,
+        frequency: "custom",
+        customIntervalDays: 0,
+        interestScope: "installments",
+      })
+    );
+    expect(result.schedule).toHaveLength(0);
+    expect(result.warnings.some((w) => w.includes("interval"))).toBe(true);
+  });
+});
+
+describe("buildSchedule — installment cap", () => {  it("caps an absurd payment count and warns", () => {
     const result = buildSchedule(
       input({ totalSettlement: 120000, numPayments: 99999999 })
     );

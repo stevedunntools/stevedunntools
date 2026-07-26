@@ -49,4 +49,10 @@ describe("formatTickLabel", () => {
   it("formats negative values", () => {
     expect(formatTickLabel(-500000)).toBe("-$500k");
   });
+
+  it("never produces $1000k near the million boundary", () => {
+    expect(formatTickLabel(999600)).toBe("$1.0M");
+    expect(formatTickLabel(999400)).toBe("$999k");
+    expect(formatTickLabel(1000000)).toBe("$1M");
+  });
 });

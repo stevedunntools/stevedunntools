@@ -118,8 +118,11 @@ export function computeConvergence(offers: Offer[]): Convergence | null {
   return {
     round: x,
     value: pFit.slope * x + pFit.intercept,
-    pStart: { round: pLast.round, value: pLast.value },
-    dStart: { round: dLast.round, value: dLast.value },
+    // Anchor the drawn extrapolation ON each side's fitted line at its last
+    // round — the intersection lies on the fit, which does not in general
+    // pass through the last actual offer.
+    pStart: { round: pLast.round, value: pFit.slope * pLast.round + pFit.intercept },
+    dStart: { round: dLast.round, value: dFit.slope * dLast.round + dFit.intercept },
   };
 }
 
@@ -150,7 +153,9 @@ export function buildExportData(
   exportedAt: string,
 ): ExportData {
   const sorted = [...offers].sort(
-    (a, b) => a.round - b.round || (a.party === "plaintiff" ? -1 : 1),
+    (a, b) =>
+      a.round - b.round ||
+      (a.party === b.party ? 0 : a.party === "plaintiff" ? -1 : 1),
   );
   return {
     tool: "Negotiation Visualizer",

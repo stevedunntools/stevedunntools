@@ -5,6 +5,7 @@ import {
   commaFmtNum,
   commaFmtWithCursor,
   parseNum,
+  parseNumNonNeg,
   parseNumOrNull,
 } from "./format";
 
@@ -146,5 +147,17 @@ describe("parseNumOrNull", () => {
 
   it("returns null for invalid input", () => {
     expect(parseNumOrNull("abc")).toBeNull();
+  });
+});
+
+describe("parseNumNonNeg", () => {
+  it("clamps negative input to zero", () => {
+    expect(parseNumNonNeg("-100,000")).toBe(0);
+    expect(parseNumNonNeg("-5")).toBe(0);
+  });
+
+  it("parses positive input like parseNum", () => {
+    expect(parseNumNonNeg("$1,234.56")).toBe(1234.56);
+    expect(parseNumNonNeg("")).toBe(0);
   });
 });

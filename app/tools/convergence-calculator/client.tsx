@@ -87,7 +87,9 @@ function TrendChart({ data, desired }: { data: ChartData; desired?: DesiredPoint
   const rawMax = Math.max(...allVals);
   const range = rawMax - rawMin;
   const padding = Math.max(range * 0.15, rawMax * 0.1, 1);
-  const yMin = Math.max(0, rawMin - padding);
+  // Clamp the axis at zero only when everything is non-negative — negative
+  // offers are allowed and must stay on the chart.
+  const yMin = rawMin >= 0 ? Math.max(0, rawMin - padding) : rawMin - padding;
   const yMax = rawMax + padding;
 
   function xScale(r: number) {

@@ -64,11 +64,11 @@ export default function OfferForm({
       .map((p) => commaFmt(p.trim()) || p.trim())
       .join(parts.length > 1 ? "-" : "");
 
-    const significantBefore = raw.slice(0, cursor).replace(/[^0-9\-]/g, "").length;
+    const significantBefore = raw.slice(0, cursor).replace(/[^0-9.\-]/g, "").length;
     let newCursor = 0;
     let significant = 0;
     for (let i = 0; i < formatted.length; i++) {
-      if (/[0-9\-]/.test(formatted[i])) significant++;
+      if (/[0-9.\-]/.test(formatted[i])) significant++;
       if (significant === significantBefore) {
         newCursor = i + 1;
         break;

@@ -52,11 +52,13 @@ export function generateYTicks(yMin: number, yMax: number, targetCount: number =
 export function formatTickLabel(v: number): string {
   const sign = v < 0 ? "-" : "";
   const abs = Math.abs(v);
-  if (abs >= 1000000) {
+  // Round to the nearest thousand first so values like $999,600 become
+  // "$1.0M" instead of "$1000k".
+  if (Math.round(abs / 1000) >= 1000) {
     return `${sign}$${(abs / 1000000).toFixed(abs % 1000000 === 0 ? 0 : 1)}M`;
   }
   if (abs >= 1000) {
-    return `${sign}$${(abs / 1000).toFixed(0)}k`;
+    return `${sign}$${Math.round(abs / 1000)}k`;
   }
   return `${sign}$${abs}`;
 }

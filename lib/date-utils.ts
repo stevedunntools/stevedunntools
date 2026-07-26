@@ -72,20 +72,32 @@ function lastWeekday(year: number, month: number, weekday: number): Date {
   return new Date(year, month, last.getDate() - diff);
 }
 
+/**
+ * Per-year cache of normalized holiday timestamps, so counting business days
+ * across a multi-year span doesn't re-derive the holiday list for every day.
+ */
+const holidayCache = new Map<number, Set<number>>();
+
+function holidayTimestamps(year: number): Set<number> {
+  let set = holidayCache.get(year);
+  if (!set) {
+    const holidays = getFederalHolidays(year);
+    // When next year's New Year's Day falls on a Saturday, it is observed on
+    // December 31 of *this* year — include it so late-December checks are right.
+    const nextNewYear = observedDate(new Date(year + 1, 0, 1));
+    if (nextNewYear.getFullYear() === year) holidays.push(nextNewYear);
+    set = new Set(
+      holidays.map((h) => new Date(h.getFullYear(), h.getMonth(), h.getDate()).getTime()),
+    );
+    holidayCache.set(year, set);
+  }
+  return set;
+}
+
 /** Check if a date is a federal holiday */
 export function isFederalHoliday(date: Date): boolean {
-  const year = date.getFullYear();
-  const holidays = getFederalHolidays(year);
-  // When next year's New Year's Day falls on a Saturday, it is observed on
-  // December 31 of *this* year — include it so late-December checks are right.
-  const nextNewYear = observedDate(new Date(year + 1, 0, 1));
-  if (nextNewYear.getFullYear() === year) holidays.push(nextNewYear);
-
-  const dNorm = new Date(year, date.getMonth(), date.getDate()).getTime();
-  return holidays.some((h) => {
-    const hNorm = new Date(h.getFullYear(), h.getMonth(), h.getDate()).getTime();
-    return hNorm === dNorm;
-  });
+  const dNorm = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  return holidayTimestamps(date.getFullYear()).has(dNorm);
 }
 
 /** Check if a date is a weekend */

@@ -78,6 +78,19 @@ export function buildSchedule(input: ScheduleInput): ScheduleResult {
   let totalPaid = 0;
   const warnings: string[] = [];
 
+  // Custom frequency with no interval entered would silently fall back to
+  // monthly math — warn instead of producing a misleading schedule.
+  if (freq === "custom" && customIntervalDays <= 0) {
+    warnings.push("Enter an interval in days for the custom frequency.");
+    return {
+      schedule: [],
+      summary: { totalSettlement: total, totalPaid: 0, totalInterest: 0 },
+      calculatedPayment: 0,
+      calculatedCount: 0,
+      warnings,
+    };
+  }
+
   // Flag (but still process) upfronts whose total exceeds the settlement
   const upfrontTotal = upfronts.reduce((sum, u) => sum + Math.max(0, u.amount), 0);
   if (total > 0 && upfrontTotal > total + 0.005) {
