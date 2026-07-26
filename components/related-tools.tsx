@@ -32,7 +32,7 @@ export default function RelatedTools() {
           <Link
             key={tool.href}
             href={tool.href}
-            className="group rounded-lg focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:outline-none"
+            className="group rounded-xl focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:outline-none"
           >
             <Card className="h-full bg-white border-brand-border hover:border-brand-accent hover:shadow-md transition-all duration-200">
               <CardHeader>

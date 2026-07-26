@@ -11,7 +11,7 @@ export default function ExportPdfButton() {
       className="print:hidden"
     >
       <Download className="h-4 w-4 mr-1.5" data-icon="inline-start" />
-      Export as PDF
+      Print / Save as PDF
     </Button>
   );
 }

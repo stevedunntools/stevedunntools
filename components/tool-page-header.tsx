@@ -1,3 +1,4 @@
+import Link from "next/link";
 import SteveNote from "@/components/steve-note";
 import { toolCategory } from "@/lib/navigation";
 
@@ -17,6 +18,7 @@ export default function ToolPageHeader({
   description,
   note,
 }: ToolPageHeaderProps) {
+  const category = toolCategory(href);
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -51,8 +53,31 @@ export default function ToolPageHeader({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <div>
+        <nav aria-label="Breadcrumb" className="mb-2">
+          <ol className="flex flex-wrap items-center gap-1.5 text-xs text-brand-muted">
+            <li>
+              <Link
+                href="/"
+                className="text-brand-accent-text hover:underline"
+              >
+                Home
+              </Link>
+            </li>
+            <li aria-hidden="true">&rsaquo;</li>
+            <li>
+              <Link
+                href="/tools"
+                className="text-brand-accent-text hover:underline"
+              >
+                {category}
+              </Link>
+            </li>
+            <li aria-hidden="true">&rsaquo;</li>
+            <li aria-current="page">{title}</li>
+          </ol>
+        </nav>
         <p className="text-sm font-medium text-brand-accent-text mb-1">
-          {toolCategory(href)}
+          {category}
         </p>
         <h1 className="text-3xl font-bold text-brand-primary">{title}</h1>
         <p className="mt-2 text-brand-muted max-w-2xl">{description}</p>

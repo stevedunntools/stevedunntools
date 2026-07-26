@@ -2,8 +2,6 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -26,6 +24,31 @@
   --color-brand-success: #16A34A;
   --color-brand-error: #DC2626;
   --color-brand-caution: #F59E0B;
+
+  /* Category accents for the homepage /tools card grids.
+     Hues match the Tailwind palette tints previously hard-coded in
+     components/tool-card-grid.tsx. The damages category was shifted from
+     red to orange so it can't be mistaken for negative-money styling. */
+  --color-category-negotiation-50: #eff6ff; /* blue-50 */
+  --color-category-negotiation-100: #dbeafe; /* blue-100 */
+  --color-category-negotiation-200: #bfdbfe; /* blue-200 */
+  --color-category-negotiation-400: #60a5fa; /* blue-400 */
+  --color-category-negotiation-700: #1d4ed8; /* blue-700 */
+  --color-category-damages-50: #fff7ed; /* orange-50 */
+  --color-category-damages-100: #ffedd5; /* orange-100 */
+  --color-category-damages-200: #fed7aa; /* orange-200 */
+  --color-category-damages-400: #fb923c; /* orange-400 */
+  --color-category-damages-700: #c2410c; /* orange-700 */
+  --color-category-money-50: #ecfdf5; /* emerald-50 */
+  --color-category-money-100: #d1fae5; /* emerald-100 */
+  --color-category-money-200: #a7f3d0; /* emerald-200 */
+  --color-category-money-500: #10b981; /* emerald-500 */
+  --color-category-money-700: #047857; /* emerald-700 */
+  --color-category-dates-50: #f5f3ff; /* violet-50 */
+  --color-category-dates-100: #ede9fe; /* violet-100 */
+  --color-category-dates-200: #ddd6fe; /* violet-200 */
+  --color-category-dates-400: #a78bfa; /* violet-400 */
+  --color-category-dates-700: #6d28d9; /* violet-700 */
 
   /* shadcn theme mappings */
   --color-sidebar-ring: var(--sidebar-ring);
@@ -111,7 +134,8 @@
   }
   html {
     @apply font-sans;
-    overflow-x: hidden;
+    /* No overflow-x: hidden here — it breaks position: sticky descendants
+       (the results columns use sticky top-20). body keeps the clip. */
   }
 }
 

@@ -49,7 +49,7 @@ export default function AboutPage() {
         <div className="flex flex-col sm:flex-row items-start gap-6">
           <Image
             src="/steve-dunn-headshot.png"
-            alt="Steve Dunn"
+            alt="Steve Dunn, mediator and arbitrator"
             width={300}
             height={300}
             className="rounded-lg shrink-0 max-w-[200px] sm:max-w-[300px]"

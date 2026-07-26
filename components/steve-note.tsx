@@ -20,7 +20,7 @@ export default function SteveNote({ note }: { note: string }) {
         <div className="flex items-center gap-3">
           <Image
             src="/steve-dunn-headshot.png"
-            alt="Steve Dunn"
+            alt="Steve Dunn, mediator and arbitrator"
             width={40}
             height={40}
             className="rounded-full shrink-0"

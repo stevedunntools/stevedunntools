@@ -47,7 +47,7 @@ export const toolContent: Record<string, ToolContent> = {
       },
       {
         q: `Is my negotiation data saved anywhere?`,
-        a: `No. Offers exist only in your browser for the current session and are never sent to a server. Closing the tab clears them. Use Export as PDF if you want a record.`,
+        a: `No. Offers exist only in your browser for the current session and are never sent to a server. Closing the tab clears them. Use Print / Save as PDF if you want a record.`,
       },
     ],
   },

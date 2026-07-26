@@ -64,32 +64,33 @@ interface CategoryStyle {
 
 const categoryStyles: Record<string, CategoryStyle> = {
   "Negotiation Tools": {
-    card: "bg-blue-50/50 border-blue-200/70",
-    hover: "hover:border-blue-400",
-    iconBg: "bg-blue-100 group-hover:bg-blue-200",
-    iconColor: "text-blue-700",
-    titleHover: "group-hover:text-blue-700",
+    card: "bg-category-negotiation-50/50 border-category-negotiation-200/70",
+    hover: "hover:border-category-negotiation-400",
+    iconBg:
+      "bg-category-negotiation-100 group-hover:bg-category-negotiation-200",
+    iconColor: "text-category-negotiation-700",
+    titleHover: "group-hover:text-category-negotiation-700",
   },
   "Damages & Case Value": {
-    card: "bg-red-50/50 border-red-200/70",
-    hover: "hover:border-red-400",
-    iconBg: "bg-red-100 group-hover:bg-red-200",
-    iconColor: "text-red-700",
-    titleHover: "group-hover:text-red-700",
+    card: "bg-category-damages-50/50 border-category-damages-200/70",
+    hover: "hover:border-category-damages-400",
+    iconBg: "bg-category-damages-100 group-hover:bg-category-damages-200",
+    iconColor: "text-category-damages-700",
+    titleHover: "group-hover:text-category-damages-700",
   },
   "Money Math": {
-    card: "bg-emerald-50/50 border-emerald-200/70",
-    hover: "hover:border-emerald-500",
-    iconBg: "bg-emerald-100 group-hover:bg-emerald-200",
-    iconColor: "text-emerald-700",
-    titleHover: "group-hover:text-emerald-700",
+    card: "bg-category-money-50/50 border-category-money-200/70",
+    hover: "hover:border-category-money-500",
+    iconBg: "bg-category-money-100 group-hover:bg-category-money-200",
+    iconColor: "text-category-money-700",
+    titleHover: "group-hover:text-category-money-700",
   },
   "Date Tools": {
-    card: "bg-violet-50/50 border-violet-200/70",
-    hover: "hover:border-violet-400",
-    iconBg: "bg-violet-100 group-hover:bg-violet-200",
-    iconColor: "text-violet-700",
-    titleHover: "group-hover:text-violet-700",
+    card: "bg-category-dates-50/50 border-category-dates-200/70",
+    hover: "hover:border-category-dates-400",
+    iconBg: "bg-category-dates-100 group-hover:bg-category-dates-200",
+    iconColor: "text-category-dates-700",
+    titleHover: "group-hover:text-category-dates-700",
   },
 };
 
@@ -107,7 +108,7 @@ export default function ToolCardGrid() {
         return (
           <div key={group.label} className="mb-12 last:mb-0">
             <div className="mb-5">
-              <h2 className="text-base font-semibold text-brand-primary">
+              <h2 className="text-lg font-semibold tracking-tight text-brand-primary">
                 {group.label}
               </h2>
               {categoryDescriptions[group.label] && (
@@ -123,7 +124,7 @@ export default function ToolCardGrid() {
                   <Link
                     key={tool.href}
                     href={tool.href}
-                    className="group rounded-lg focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:outline-none"
+                    className="group rounded-xl focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:outline-none"
                   >
                     <Card
                       className={`h-full ${styles?.card ?? "bg-brand-card border-brand-border"} ${styles?.hover ?? "hover:border-brand-accent"} hover:shadow-md transition-all duration-200`}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import ToolCardGrid from "@/components/tool-card-grid";
+import { allToolLinks } from "@/lib/navigation";
 
 export const metadata: Metadata = {
   description:
@@ -24,12 +25,28 @@ const jsonLd = {
   },
 };
 
+const itemListJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  name: "Settlement Tools",
+  itemListElement: allToolLinks.map((tool, i) => ({
+    "@type": "ListItem",
+    position: i + 1,
+    name: tool.label,
+    url: `https://stevedunntools.com${tool.href}`,
+  })),
+};
+
 export default function Home() {
   return (
     <div className="bg-brand-bg">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
       />
       {/* Hero */}
       <section className="py-12 sm:py-20 lg:py-28">

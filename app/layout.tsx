@@ -27,6 +27,9 @@ export const metadata: Metadata = {
   },
   description:
     "Practical settlement tools built by a mediator. Calculators and utilities for lawyers, mediators, and parties in dispute resolution.",
+  authors: [{ name: "Steve Dunn", url: "https://stevedunntools.com/about" }],
+  creator: "Steve Dunn",
+  publisher: "Steve Dunn",
   openGraph: {
     title: "Steve Dunn Tools",
     description: "Settlement tools built by a mediator.",
