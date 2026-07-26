@@ -51,7 +51,7 @@ export default function ToolPageHeader({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <div>
-        <p className="text-sm font-medium text-brand-accent mb-1">
+        <p className="text-sm font-medium text-brand-accent-text mb-1">
           {toolCategory(href)}
         </p>
         <h1 className="text-3xl font-bold text-brand-primary">{title}</h1>

@@ -16,6 +16,9 @@
   --color-brand-secondary: #4A5068;
   --color-brand-accent: #4A90D9;
   --color-brand-accent-hover: #3A7BC2;
+  /* Darker accent for body-size text — #4A90D9 is only 3.3:1 on white,
+     which fails WCAG AA below large-text sizes */
+  --color-brand-accent-text: #2F6DB3;
   --color-brand-bg: #F7F8FA;
   --color-brand-card: #EDF1F7;
   --color-brand-muted: #6B7280;
@@ -100,7 +103,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring;
   }
   body {
     @apply bg-background text-foreground;

@@ -13,7 +13,7 @@ export default function NotFound() {
   return (
     <div className="bg-brand-bg min-h-full">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
-        <p className="text-sm font-medium text-brand-accent mb-2">404</p>
+        <p className="text-sm font-medium text-brand-accent-text mb-2">404</p>
         <h1 className="text-3xl sm:text-4xl font-bold text-brand-primary">
           Page not found
         </h1>
@@ -23,7 +23,7 @@ export default function NotFound() {
 
         <Link
           href="/"
-          className="mt-8 inline-flex items-center gap-1.5 text-sm font-medium text-brand-accent hover:text-brand-accent-hover transition-colors"
+          className="mt-8 inline-flex items-center gap-1.5 text-sm font-medium text-brand-accent-text hover:text-brand-accent-hover transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to all tools

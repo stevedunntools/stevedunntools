@@ -22,7 +22,7 @@ function renderInline(text: string): ReactNode {
       <Link
         key={match.index}
         href={href}
-        className="text-brand-accent hover:text-brand-accent-hover underline"
+        className="text-brand-accent-text hover:text-brand-accent-hover underline"
       >
         {label}
       </Link>

@@ -78,9 +78,9 @@ export default function PercentSlider({
             onBlur={handleTextCommit}
             onKeyDown={(e) => e.key === "Enter" && handleTextCommit()}
             aria-label={ariaLabel}
-            className="w-16 text-center text-lg font-semibold text-brand-accent bg-transparent border-b border-brand-border focus:border-brand-accent focus:outline-none"
+            className="w-16 text-center text-lg font-semibold text-brand-accent-text bg-transparent border-b border-brand-border focus:border-brand-accent focus:outline-none"
           />
-          <span className="text-lg font-semibold text-brand-accent">%</span>
+          <span className="text-lg font-semibold text-brand-accent-text">%</span>
         </div>
         <span className="text-sm text-brand-muted">{max}%</span>
       </div>
