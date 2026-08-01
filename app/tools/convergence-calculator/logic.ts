@@ -110,7 +110,11 @@ export function desiredMoves(inputs: TrendInputs, target: number): DesiredMovesR
   const high = Math.max(inputs.p2, inputs.d2);
   if (target <= low || target >= high) return { kind: "outside", low, high };
 
-  if (Math.abs(target - res.intersectValue) < 0.5) return { kind: "already-there" };
+  // "Effectively already there" tolerance: $0.50 at settlement magnitudes,
+  // proportional at small magnitudes so toy inputs (e.g. target 5.9 vs a
+  // projected 6) aren't falsely reported as already matching.
+  const alreadyTol = Math.min(0.5, Math.max(0.005, Math.abs(res.intersectValue) * 1e-4));
+  if (Math.abs(target - res.intersectValue) < alreadyTol) return { kind: "already-there" };
 
   const pNeeded = Math.abs(inputs.p2 - target) / movesRemaining;
   const dNeeded = Math.abs(target - inputs.d2) / movesRemaining;
@@ -130,6 +134,9 @@ export function desiredMoves(inputs: TrendInputs, target: number): DesiredMovesR
     if (Math.abs(heldSlope) < 1e-9) return null;
     const moves = (target - heldLast) / heldSlope;
     if (moves <= 1e-9) return null;
+    // Cap like the main projection: a meeting hundreds of rounds out is not
+    // meaningful, and drawing it would push the chart scale far off-canvas.
+    if (2 + moves > MAX_PROJECTED_ROUND) return null;
     return {
       heldParty,
       heldIncrement: Math.abs(heldSlope),

@@ -19,6 +19,11 @@ import {
 
 export type Income1099Type = "se" | "other";
 
+/** Round to cents — displayed components are rounded once, at the source. */
+function roundCents(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
 export interface CalcInput {
   filingStatus: FilingStatus;
   stateCode: string;
@@ -171,6 +176,7 @@ export function calculate(input: CalcInput): CalcResult {
       const base = program.wageBase == null ? w2Wages : Math.min(w2Wages, program.wageBase);
       let amount = base * program.rate;
       if (program.annualCap != null) amount = Math.min(amount, program.annualCap);
+      amount = roundCents(amount);
       statePayrollBreakdown.push({ name: program.name, amount });
       statePayrollTotal += amount;
     }
@@ -183,20 +189,25 @@ export function calculate(input: CalcInput): CalcResult {
   const w2Share = grossOrdinaryIncome > 0 ? w2Wages / grossOrdinaryIncome : 0;
   const inc1099Share = grossOrdinaryIncome > 0 ? income1099 / grossOrdinaryIncome : 0;
 
-  const w2FedTax = federalIncomeTax * w2Share;
-  const inc1099FedTax = federalIncomeTax * inc1099Share;
-  const w2StateTax = stateIncomeTax * w2Share;
-  const inc1099StateTax = stateIncomeTax * inc1099Share;
+  // Round every displayed tax component to cents HERE, then derive the
+  // totals and nets from the rounded values — so each breakdown table sums
+  // exactly (rows → total tax → net → gross) with no penny drift between
+  // independently rounded figures.
+  const w2FedTax = roundCents(federalIncomeTax * w2Share);
+  const inc1099FedTax = roundCents(federalIncomeTax * inc1099Share);
+  const w2StateTax = roundCents(stateIncomeTax * w2Share);
+  const inc1099StateTax = roundCents(stateIncomeTax * inc1099Share);
+  const ficaRounded = roundCents(ficaOnWages);
 
   const categories: CategoryResult[] = [];
 
   if (w2Wages > 0) {
-    const totalTax = w2FedTax + ficaOnWages + w2StateTax + statePayrollTotal;
+    const totalTax = w2FedTax + ficaRounded + w2StateTax + statePayrollTotal;
     categories.push({
       label: "W-2 wages",
       gross: w2Wages,
       federalIncomeTax: w2FedTax,
-      fica: ficaOnWages,
+      fica: ficaRounded,
       seTax: 0,
       stateIncomeTax: w2StateTax,
       statePayrollTax: statePayrollTotal,
@@ -206,7 +217,7 @@ export function calculate(input: CalcInput): CalcResult {
   }
 
   if (income1099 > 0) {
-    const seTaxForCategory = income1099Type === "se" ? seTaxTotal : 0;
+    const seTaxForCategory = income1099Type === "se" ? roundCents(seTaxTotal) : 0;
     const totalTax = inc1099FedTax + seTaxForCategory + inc1099StateTax;
     categories.push({
       label: income1099Type === "se" ? "1099 income (self-employment)" : "1099 income (non-SE)",

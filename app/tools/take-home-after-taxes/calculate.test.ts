@@ -94,8 +94,9 @@ describe("calculate — self-employment income", () => {
 
   it("computes SE tax on 92.35% of net earnings", () => {
     const netEarnings = 50000 * 0.9235;
-    const seTax = netEarnings * 0.124 + netEarnings * 0.029;
-    expect(result.totals.seTax).toBeCloseTo(seTax, 2);
+    // Displayed components are rounded to cents at the source
+    const seTax = Math.round((netEarnings * 0.124 + netEarnings * 0.029) * 100) / 100;
+    expect(result.totals.seTax).toBeCloseTo(seTax, 5);
   });
 
   it("deducts half of SE tax above the line", () => {

@@ -11,7 +11,6 @@ function input(overrides: Partial<ScheduleInput>): ScheduleInput {
     frequency: "monthly",
     customIntervalDays: 0,
     interestScope: "none",
-    interestStart: "first-installment",
     annualRate: 5,
     ...overrides,
   };
@@ -136,39 +135,6 @@ describe("buildSchedule — amortization with interest", () => {
   });
 });
 
-describe("buildSchedule — interest starting immediately", () => {
-  it("accrues one period of interest on the post-upfront balance", () => {
-    const result = buildSchedule(
-      input({
-        totalSettlement: 100000,
-        upfronts: [{ amount: 40000, timing: "At signing" }],
-        numPayments: 6,
-        interestScope: "installments",
-        interestStart: "immediately",
-        annualRate: 12,
-      })
-    );
-    const accrued = result.schedule.find((r) => r.label === "Accrued interest");
-    expect(accrued).toBeDefined();
-    expect(accrued!.interest).toBeCloseTo(60000 * 0.01, 5);
-  });
-
-  it("accrues one period on the full balance when there are no up-front payments", () => {
-    const result = buildSchedule(
-      input({
-        totalSettlement: 100000,
-        numPayments: 6,
-        interestScope: "installments",
-        interestStart: "immediately",
-        annualRate: 12,
-      })
-    );
-    const accrued = result.schedule.find((r) => r.label === "Accrued interest");
-    expect(accrued).toBeDefined();
-    expect(accrued!.interest).toBeCloseTo(100000 * 0.01, 5);
-  });
-});
-
 describe("buildSchedule — custom frequency without an interval", () => {
   it("warns and returns no schedule instead of silently using monthly math", () => {
     const result = buildSchedule(
@@ -207,6 +173,36 @@ describe("buildSchedule — installment cap", () => {  it("caps an absurd paymen
     expect(result.schedule).toHaveLength(1200);
     expect(result.calculatedCount).toBe(1200);
     expect(result.warnings.some((w) => w.includes("balance will remain"))).toBe(true);
+  });
+
+  it("does not balloon the final row of a capped amount-mode schedule", () => {
+    // The warning says "a balance will remain" — so row 1,200 must be a
+    // normal payment with a balance actually remaining, not a balloon payoff.
+    const result = buildSchedule(
+      input({
+        totalSettlement: 120000,
+        installmentMode: "amount",
+        installmentAmount: 1,
+      })
+    );
+    const last = result.schedule[result.schedule.length - 1];
+    expect(last.payment).toBe(1);
+    expect(last.balance).toBeGreaterThan(0);
+    expect(result.summary.totalPaid).toBeCloseTo(1200, 5);
+
+    // Same with interest in play
+    const withInterest = buildSchedule(
+      input({
+        totalSettlement: 100000,
+        installmentMode: "amount",
+        installmentAmount: 500.01,
+        interestScope: "installments",
+        annualRate: 6,
+      })
+    );
+    const lastWI = withInterest.schedule[withInterest.schedule.length - 1];
+    expect(lastWI.payment).toBeCloseTo(500.01, 5);
+    expect(lastWI.balance).toBeGreaterThan(0);
   });
 });
 

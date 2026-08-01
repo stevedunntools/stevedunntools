@@ -20,7 +20,6 @@ import {
   buildSchedule,
   Frequency,
   InterestScope,
-  InterestStart,
   InstallmentMode,
 } from "./schedule";
 
@@ -58,7 +57,6 @@ export default function PaymentOverTimeClient() {
   const [frequency, setFrequency] = useSessionState<Frequency>("tool:payment-time:frequency", "monthly");
   const [customIntervalDays, setCustomIntervalDays] = useSessionState("tool:payment-time:customIntervalDays", "");
   const [interestScope, setInterestScope] = useSessionState<InterestScope>("tool:payment-time:interestScope", "none");
-  const [interestStart, setInterestStart] = useSessionState<InterestStart>("tool:payment-time:interestStart", "first-installment");
   const [annualRate, setAnnualRate] = useSessionState("tool:payment-time:annualRate", 5);
 
   // Track which field the user last edited to determine calculation direction
@@ -90,7 +88,6 @@ export default function PaymentOverTimeClient() {
     setFrequency("monthly");
     setCustomIntervalDays("");
     setInterestScope("none");
-    setInterestStart("first-installment");
     setAnnualRate(5);
     clearSessionKeys("tool:payment-time:");
   }
@@ -110,7 +107,6 @@ export default function PaymentOverTimeClient() {
         frequency,
         customIntervalDays: parseNumNonNeg(customIntervalDays),
         interestScope,
-        interestStart,
         annualRate,
       }),
     [
@@ -122,7 +118,6 @@ export default function PaymentOverTimeClient() {
       frequency,
       customIntervalDays,
       interestScope,
-      interestStart,
       annualRate,
     ]
   );
@@ -140,7 +135,6 @@ export default function PaymentOverTimeClient() {
     installmentMode !== "count" ||
     frequency !== "monthly" ||
     interestScope !== "none" ||
-    interestStart !== "first-installment" ||
     annualRate !== 5 ||
     !upfrontsAreDefault;
 
@@ -201,19 +195,6 @@ export default function PaymentOverTimeClient() {
                   label="Annual interest rate"
                   aria-label="Annual interest rate"
                 />
-                <div>
-                  <label className="block text-sm font-medium text-brand-primary mb-1.5">
-                    Interest starts
-                  </label>
-                  <select
-                    value={interestStart}
-                    onChange={(e) => setInterestStart(e.target.value as InterestStart)}
-                    className={selectClass}
-                  >
-                    <option value="first-installment">With first installment</option>
-                    <option value="immediately">Immediately</option>
-                  </select>
-                </div>
               </>
             )}
           </CardContent>

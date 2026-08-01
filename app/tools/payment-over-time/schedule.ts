@@ -5,7 +5,6 @@ import { fmt } from "@/lib/format";
 
 export type Frequency = "monthly" | "quarterly" | "custom";
 export type InterestScope = "installments" | "none";
-export type InterestStart = "immediately" | "first-installment";
 export type InstallmentMode = "count" | "amount";
 
 export interface ScheduleRow {
@@ -25,7 +24,6 @@ export interface ScheduleInput {
   frequency: Frequency;
   customIntervalDays: number;
   interestScope: InterestScope;
-  interestStart: InterestStart;
   /** Annual interest rate as a percentage, e.g. 5 for 5%. */
   annualRate: number;
 }
@@ -56,7 +54,6 @@ export function buildSchedule(input: ScheduleInput): ScheduleResult {
     frequency: freq,
     customIntervalDays,
     interestScope: scope,
-    interestStart: startTiming,
   } = input;
   const rate = input.annualRate / 100;
 
@@ -119,22 +116,10 @@ export function buildSchedule(input: ScheduleInput): ScheduleResult {
     });
   }
 
-  // If interest starts immediately, accrue one period of interest on the
-  // post-upfront balance before installments begin — whether or not there
-  // were any up-front payments.
-  if (scope === "installments" && startTiming === "immediately" && periodRate > 0 && balance > 0) {
-    const accruedInterest = balance * periodRate;
-    balance += accruedInterest;
-    totalInterest += accruedInterest;
-
-    rows.push({
-      label: "Accrued interest",
-      payment: 0,
-      principal: 0,
-      interest: accruedInterest,
-      balance,
-    });
-  }
+  // Standard amortization: interest accrues from T=0 and each installment,
+  // due at the end of its period, pays that period's interest plus principal.
+  // (There is deliberately no extra-accrual variant — knowledgeable
+  // professionals expect textbook amortization here.)
 
   // Determine installment count and payment amount
   let n = Math.round(input.numPayments);
@@ -143,6 +128,9 @@ export function buildSchedule(input: ScheduleInput): ScheduleResult {
 
   let calcPayment = 0;
   let calcCount = 0;
+  // In amount mode a capped schedule is deliberately incomplete ("a balance
+  // will remain") — the final row must not balloon-pay the whole balance.
+  let truncated = false;
 
   if (balance > 0) {
     if (mode === "count" && n > 0) {
@@ -181,6 +169,7 @@ export function buildSchedule(input: ScheduleInput): ScheduleResult {
           `At ${fmt(fixedPayment)} per payment the schedule would run past ${MAX_INSTALLMENTS.toLocaleString()} payments — only the first ${MAX_INSTALLMENTS.toLocaleString()} are shown, and a balance will remain.`
         );
         n = MAX_INSTALLMENTS;
+        truncated = true;
       }
       calcPayment = fixedPayment;
       calcCount = n;
@@ -193,7 +182,7 @@ export function buildSchedule(input: ScheduleInput): ScheduleResult {
       let principal: number;
       let payment: number;
 
-      if (i === n) {
+      if (i === n && !truncated) {
         principal = balance;
         payment = principal + interest;
       } else {

@@ -56,7 +56,10 @@ export default function OfferForm({
   });
 
   function handleOfferInput(e: React.ChangeEvent<HTMLInputElement>) {
-    const raw = e.target.value;
+    // Normalize en/em dashes to hyphens BEFORE splitting — otherwise a pasted
+    // "200000–400000" passes through commaFmt whole, which truncates at the
+    // dash and silently rewrites the bracket to a firm "200,000".
+    const raw = e.target.value.replace(/[–—]/g, "-");
     const cursor = e.target.selectionStart ?? 0;
 
     const parts = raw.split("-");

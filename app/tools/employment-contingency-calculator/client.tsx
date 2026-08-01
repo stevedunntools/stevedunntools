@@ -38,10 +38,13 @@ export default function EmploymentContingencyClient() {
   const c = parseNumNonNeg(costs);
   const nc = hasNotCovered ? parseNumNonNeg(notCovered) : 0;
   const covered = Math.max(0, s - nc);
-  const attorneyFee = covered * (contingencyPct / 100);
+  // Round the fee and the wage split to cents at each step so every breakdown
+  // row sums exactly to the row above it (independent rounding of each row
+  // could otherwise drift by a penny).
+  const attorneyFee = Math.round(covered * contingencyPct) / 100;
   const feeAndCosts = attorneyFee + c;
   const netToPlaintiff = s - feeAndCosts;
-  const wages = netToPlaintiff * (wagesPct / 100);
+  const wages = Math.round(netToPlaintiff * wagesPct) / 100;
   const nonWage = netToPlaintiff - wages;
 
   const hasAny = settlement !== "" || costs !== "" || notCovered !== "" || hasNotCovered;

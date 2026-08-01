@@ -36,37 +36,27 @@ export default function DaysBetweenDatesClient() {
     );
     if (includeEndDay) totalDays += 1;
 
-    // Years + months + days
-    let yrs = later.getFullYear() - earlier.getFullYear();
-    let mos = later.getMonth() - earlier.getMonth();
-    let dys = later.getDate() - earlier.getDate();
+    // Years + months + days. Counting the end day inclusively is the same as
+    // measuring the exclusive span to the day after the end date — computing
+    // it that way keeps month-length borrowing consistent instead of bolting
+    // +1 day onto an exclusive breakdown after the fact.
+    const breakdownEnd = includeEndDay
+      ? new Date(later.getFullYear(), later.getMonth(), later.getDate() + 1)
+      : later;
+
+    let yrs = breakdownEnd.getFullYear() - earlier.getFullYear();
+    let mos = breakdownEnd.getMonth() - earlier.getMonth();
+    let dys = breakdownEnd.getDate() - earlier.getDate();
 
     if (dys < 0) {
       mos -= 1;
-      // Days in the previous month of the later date
-      const prevMonth = new Date(later.getFullYear(), later.getMonth(), 0);
+      // Days in the previous month of the (possibly shifted) end date
+      const prevMonth = new Date(breakdownEnd.getFullYear(), breakdownEnd.getMonth(), 0);
       dys += prevMonth.getDate();
     }
     if (mos < 0) {
       yrs -= 1;
       mos += 12;
-    }
-    if (includeEndDay) {
-      dys += 1;
-      // Overflow days into months
-      const maxDays = new Date(
-        later.getFullYear(),
-        later.getMonth() + 1,
-        0
-      ).getDate();
-      if (dys >= maxDays) {
-        dys -= maxDays;
-        mos += 1;
-      }
-      if (mos >= 12) {
-        mos -= 12;
-        yrs += 1;
-      }
     }
 
     // Total months + remaining days

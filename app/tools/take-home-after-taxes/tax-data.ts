@@ -129,7 +129,7 @@ export const QBI_RATE = 0.20;
 export const QBI_THRESHOLD: Record<FilingStatus, number> = {
   single: 201750,
   mfj: 403500,
-  mfs: 201775,
+  mfs: 201750, // half the MFJ threshold, same as single
   hoh: 201750,
 };
 

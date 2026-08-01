@@ -36,29 +36,38 @@ export function generateYTicks(yMin: number, yMax: number, targetCount: number =
   const mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
   if (mag <= 0) return [yMin];
 
-  const step = Math.ceil(rawStep / mag) * mag;
+  // The 1e-9 epsilon guards against float noise like 0.2/0.1 = 2.0000000000000004
+  // rounding up to a 3× step.
+  const step = Math.ceil(rawStep / mag - 1e-9) * mag;
   if (step <= 0) return [yMin];
 
+  // Build ticks as integer multiples of the step (rather than accumulating
+  // v += step) and snap away binary float garbage so sub-dollar scales don't
+  // produce labels like "$0.6000000000000001".
   const ticks: number[] = [];
-  let v = Math.ceil(yMin / step) * step;
-  while (v <= yMax && ticks.length < 20) {
-    ticks.push(v);
-    v += step;
+  let i = Math.ceil(yMin / step - 1e-9);
+  while (i * step <= yMax + step * 1e-9 && ticks.length < 20) {
+    ticks.push(parseFloat((i * step).toPrecision(12)));
+    i += 1;
   }
   return ticks.length > 0 ? ticks : [yMin];
 }
 
-/** Format a dollar value for Y-axis labels (e.g. "$500k", "$1.5M", "-$500k") */
+/** Format a dollar value for Y-axis labels (e.g. "$500k", "$1.5M", "$2B", "-$500k") */
 export function formatTickLabel(v: number): string {
   const sign = v < 0 ? "-" : "";
   const abs = Math.abs(v);
-  // Round to the nearest thousand first so values like $999,600 become
-  // "$1.0M" instead of "$1000k".
+  // Round to the nearest million first so values like $999,600,000 become
+  // "$1.0B" instead of "$1000M"; likewise thousands → "$1.0M".
+  if (Math.round(abs / 1000000) >= 1000) {
+    return `${sign}$${(abs / 1000000000).toFixed(abs % 1000000000 === 0 ? 0 : 1)}B`;
+  }
   if (Math.round(abs / 1000) >= 1000) {
     return `${sign}$${(abs / 1000000).toFixed(abs % 1000000 === 0 ? 0 : 1)}M`;
   }
   if (abs >= 1000) {
     return `${sign}$${Math.round(abs / 1000)}k`;
   }
-  return `${sign}$${abs}`;
+  // Snap float noise and cap at cents so sub-$1000 scales stay readable.
+  return `${sign}$${parseFloat(abs.toPrecision(10)).toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
 }

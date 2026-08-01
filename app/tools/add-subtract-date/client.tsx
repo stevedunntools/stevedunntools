@@ -31,12 +31,19 @@ export default function AddSubtractDateClient() {
   const result = useMemo(() => {
     if (!startDate) return null;
 
-    const yrs = parseInt(years) || 0;
-    const mos = parseInt(months) || 0;
-    const wks = parseInt(weeks) || 0;
-    const dys = parseInt(days) || 0;
+    // Durations are magnitudes — the Add/Subtract toggle supplies the sign.
+    // A typed "-5" would otherwise double-negate under Subtract.
+    const yrs = Math.max(0, parseInt(years) || 0);
+    const mos = Math.max(0, parseInt(months) || 0);
+    const wks = Math.max(0, parseInt(weeks) || 0);
+    const dys = Math.max(0, parseInt(days) || 0);
 
     if (yrs === 0 && mos === 0 && wks === 0 && dys === 0) return null;
+
+    // The business-day walk and summary count iterate day by day; an absurd
+    // span (millions of days) would hang the page mid-render.
+    const approxDays = yrs * 366 + mos * 31 + wks * 7 + dys;
+    if (approxDays > 36600) return { tooLarge: true as const };
 
     const sign = direction === "add" ? 1 : -1;
 
@@ -74,6 +81,7 @@ export default function AddSubtractDateClient() {
     );
 
     return {
+      tooLarge: false as const,
       date: resultDate,
       totalCalendarDays,
       totalBusinessDays: totalBizDays,
@@ -266,21 +274,28 @@ export default function AddSubtractDateClient() {
             <CardContent className="pt-6">
               <p className="text-sm text-brand-muted mb-1">Resulting Date</p>
               {displayResult ? (
-                <>
-                  <p className="text-2xl font-bold text-brand-accent">
-                    {formatDate(displayResult.date)}
+                displayResult.tooLarge ? (
+                  <p className="text-sm text-brand-muted">
+                    That span is too large to calculate — this tool supports
+                    spans up to about 100 years.
                   </p>
-                  <p className="text-sm text-brand-muted mt-1">
-                    {dayOfWeek(displayResult.date)}
-                  </p>
-                </>
+                ) : (
+                  <>
+                    <p className="text-2xl font-bold text-brand-accent">
+                      {formatDate(displayResult.date)}
+                    </p>
+                    <p className="text-sm text-brand-muted mt-1">
+                      {dayOfWeek(displayResult.date)}
+                    </p>
+                  </>
+                )
               ) : (
                 <p className="text-2xl font-bold text-brand-muted">—</p>
               )}
             </CardContent>
           </Card>
 
-          {displayResult && (
+          {displayResult && !displayResult.tooLarge && (
             <Card className="bg-white border-brand-border">
               <CardHeader>
                 <CardTitle className="text-brand-primary text-base">
@@ -309,7 +324,7 @@ export default function AddSubtractDateClient() {
           )}
         </div>
       </div>
-      <MobileResultBar label="Result" value={displayResult ? formatDate(displayResult.date) : "\u2014"} targetId="tool-headline-result" />
+      <MobileResultBar label="Result" value={displayResult && !displayResult.tooLarge ? formatDate(displayResult.date) : "\u2014"} targetId="tool-headline-result" />
     </div>
   );
 }

@@ -54,8 +54,10 @@ export default function PercentSlider({
   }
 
   function handleTextCommit() {
-    const parsed = parseFloat(textValue);
-    if (isNaN(parsed) || parsed < min || (!allowOverflow && parsed > max)) {
+    // Round to the 3 decimals the box displays so the value used in the math
+    // is exactly the value shown ("Infinity" also fails the finite check).
+    const parsed = Math.round(parseFloat(textValue) * 1000) / 1000;
+    if (!Number.isFinite(parsed) || parsed < min || (!allowOverflow && parsed > max)) {
       setError(
         allowOverflow
           ? `Enter a number ${min} or greater`

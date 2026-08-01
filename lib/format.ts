@@ -5,7 +5,10 @@
  */
 export function fmt(n: number) {
   if (!isFinite(n)) return "$0";
-  const abs = Math.round(Math.abs(n) * 100) / 100;
+  // Above ~1e15 the ×100 cent-rounding trick loses float precision and
+  // invents wrong cents — round to whole dollars instead.
+  const absRaw = Math.abs(n);
+  const abs = absRaw >= 1e15 ? Math.round(absRaw) : Math.round(absRaw * 100) / 100;
   const formatted =
     "$" +
     abs.toLocaleString("en-US", {
@@ -78,7 +81,9 @@ export function parseNum(s: string): number {
   const cleaned = s.replace(/[$,\s]/g, "");
   if (cleaned === "") return 0;
   const n = parseFloat(cleaned);
-  return isNaN(n) ? 0 : n;
+  // Number.isFinite also rejects the literal strings "Infinity"/"-Infinity",
+  // which parseFloat happily accepts.
+  return Number.isFinite(n) ? n : 0;
 }
 
 /**
@@ -99,5 +104,5 @@ export function parseNumOrNull(s: string): number | null {
   const cleaned = s.replace(/[$,\s]/g, "");
   if (cleaned === "") return null;
   const n = parseFloat(cleaned);
-  return isNaN(n) ? null : n;
+  return Number.isFinite(n) ? n : null;
 }

@@ -32,12 +32,13 @@ function parseTextDate(s: string): Date | null {
   const match = trimmed.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{2,4})$/);
   if (match) {
     const m = parseInt(match[1]) - 1;
-    let d = parseInt(match[2]);
+    const d = parseInt(match[2]);
     let y = parseInt(match[3]);
     if (y < 100) y += 2000;
-    if (m >= 0 && m <= 11 && d >= 1 && d <= 31 && y >= 1900) {
-      const maxDay = daysInMonth(y, m);
-      d = Math.min(d, maxDay);
+    // Reject days the month doesn't have (2/30, 4/31, 2/29 in a non-leap
+    // year) instead of silently clamping — a deadline computed from a date
+    // the user never entered is worse than an error message.
+    if (m >= 0 && m <= 11 && d >= 1 && y >= 1900 && d <= daysInMonth(y, m)) {
       return new Date(y, m, d);
     }
   }

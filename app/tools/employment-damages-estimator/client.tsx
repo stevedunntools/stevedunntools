@@ -63,6 +63,12 @@ export default function EmploymentDamagesClient() {
   }
 
   function updateJob(id: string, field: "months" | "monthlyComp" | "current", value: string | boolean) {
+    // Only one job can be the current one — the front-pay offset uses a single
+    // current job, so checking a second box silently doing nothing would mislead.
+    if (field === "current" && value === true) {
+      setJobs(jobs.map((j) => ({ ...j, current: j.id === id })));
+      return;
+    }
     setJobs(jobs.map((j) => (j.id === id ? { ...j, [field]: value } : j)));
   }
 
@@ -386,6 +392,15 @@ export default function EmploymentDamagesClient() {
                   <Row label="Gross back pay" value={hydrated ? backPay : "—"} bold />
                   <Row label="Less: mitigation" value={hydrated ? totalMitigation : "—"} negative />
                   <Row label="Net back pay" value={hydrated ? netBackPay : "—"} bold />
+                  {hydrated && totalMitigation > backPay && backPay > 0 && (
+                    <tr>
+                      <td colSpan={2} className="pb-2 text-xs text-brand-muted">
+                        Mitigation exceeds gross back pay; net back pay is
+                        floored at $0 and the excess does not offset other
+                        damages.
+                      </td>
+                    </tr>
+                  )}
                   <Separator />
                   <Row label="Front pay" value={hydrated ? frontPay : "—"} />
                   <Separator />

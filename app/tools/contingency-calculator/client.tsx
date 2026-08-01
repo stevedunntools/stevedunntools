@@ -36,7 +36,10 @@ export default function ContingencyCalculatorClient() {
   const c = parseNumNonNeg(costs);
   const nc = hasNotCovered ? parseNumNonNeg(notCovered) : 0;
   const covered = Math.max(0, s - nc);
-  const attorneyFee = covered * (contingencyPct / 100);
+  // Round the fee to cents before deriving the net so the breakdown rows
+  // always sum exactly to the settlement (a half-cent fee would otherwise
+  // round up in both the fee row and the net row).
+  const attorneyFee = Math.round(covered * contingencyPct) / 100;
   const netToPlaintiff = s - attorneyFee - c;
 
   const hasAny = settlement !== "" || costs !== "" || notCovered !== "" || hasNotCovered;
