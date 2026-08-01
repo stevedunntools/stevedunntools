@@ -23,11 +23,10 @@ export const toolContent: Record<string, ToolContent> = {
     howItWorks: [
       `Most negotiations are easier to understand as a picture than as a list of numbers. The Negotiation Visualizer charts a settlement negotiation round by round: enter each offer as it happens, and the chart plots the plaintiff's demands and the defendant's offers as two converging lines.`,
       `The tool accepts two kinds of moves. A firm offer is a single number, like 500,000. A bracket is a range, entered like 200,000-400,000, which appears on the chart as a shaded band with a dotted line through its midpoint. When both sides have brackets on the table and the brackets overlap, the overlapping zone is highlighted in green — often the first visible sign of where a deal might land.`,
-      `Once both sides have made at least three moves, you can turn on a projected convergence point. It fits a straight line through each side's three most recent moves and extends both lines to where they would intersect — the round and the dollar figure where the parties meet if the current pattern simply continues. Negotiations rarely move in straight lines, but the projection is a useful reality check on pace.`,
       `Everything runs in your browser. No offer you enter is stored on a server or transmitted anywhere, and you can print or save the chart and offer history as a PDF for your file.`,
     ],
     example: [
-      `Suppose the plaintiff opens at $500,000 and the defendant responds at $100,000. The plaintiff comes down to $400,000; the defendant comes up to $200,000. The plaintiff then offers a bracket of $300,000–$450,000 and the defendant counters with a bracket of $225,000–$325,000. The chart shows the two paths closing, the two brackets overlapping between $300,000 and $325,000 in green, and — with three moves on each side — a projected convergence in the low $300,000s a round or two ahead.`,
+      `Suppose the plaintiff opens at $500,000 and the defendant responds at $100,000. The plaintiff comes down to $400,000; the defendant comes up to $200,000. The plaintiff then offers a bracket of $300,000–$450,000 and the defendant counters with a bracket of $225,000–$325,000. The chart shows the two paths closing and the two brackets overlapping between $300,000 and $325,000 in green — often the first visible sign of where the deal might land.`,
     ],
     whenToUse: [
       `Use it live during a mediation to keep a clean record of the bidding, to show a client how far the other side has actually moved, or after a session to study the pattern before the next round. The exported chart also makes a clear exhibit for a client update letter.`,
@@ -40,10 +39,6 @@ export const toolContent: Record<string, ToolContent> = {
       {
         q: `What does the green area on the chart mean?`,
         a: `Green marks where the two sides' brackets overlap. An overlap doesn't guarantee a deal, but it usually means the parties' signaled ranges already contain a common number.`,
-      },
-      {
-        q: `How is the projected convergence calculated?`,
-        a: `It is a straight-line projection based on each side's three most recent moves. The tool fits a line through each side's last three offers and extends both lines to their intersection. It appears only after both sides have made at least three offers, and it is a projection of the current pattern — not a prediction.`,
       },
       {
         q: `Is my negotiation data saved anywhere?`,
@@ -106,8 +101,8 @@ export const toolContent: Record<string, ToolContent> = {
         a: `Enter the number you would like the case to land on, and the tool works backward from it. It shows what each side's moves would have to become to meet at your number in the same number of moves as the current pattern — and two alternative scenarios where one side's moves stay exactly as they are and only the other side adjusts, which changes how many moves the meeting takes. Whichever scenario you select is drawn on the chart next to the current projection.`,
       },
       {
-        q: `How is this different from the Negotiation Visualizer's projection?`,
-        a: `This tool is a quick two-offers-per-side calculator. The [Negotiation Visualizer](/tools/negotiation-visualizer) tracks a whole negotiation round by round and bases its projection on each side's three most recent moves. Use this one for a fast read; use the Visualizer to chart the full negotiation.`,
+        q: `How is this different from the Negotiation Visualizer?`,
+        a: `This tool is a quick two-offers-per-side calculator for projecting where the current pattern lands. The [Negotiation Visualizer](/tools/negotiation-visualizer) tracks a whole negotiation round by round — offers, brackets, overlap, and settlement. Use this one for a fast read on pace; use the Visualizer to chart the full negotiation.`,
       },
     ],
   },

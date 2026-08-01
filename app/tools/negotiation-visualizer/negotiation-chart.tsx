@@ -19,7 +19,6 @@ import {
   Party,
   OfferType,
   Offer,
-  Convergence,
   offerValues,
 } from "./logic";
 import {
@@ -45,23 +44,7 @@ export type HoverInfo =
       x: number;
       y: number;
     }
-  | { kind: "midpoint"; round: number; value: number; x: number; y: number }
-  | {
-      kind: "convergence";
-      label: string;
-      color: string;
-      round: number;
-      value: number;
-      x: number;
-      y: number;
-    };
-
-/** A projection the user has toggled on, with its computed result. */
-export interface ActiveProjection {
-  label: string;
-  color: string;
-  data: Convergence;
-}
+  | { kind: "midpoint"; round: number; value: number; x: number; y: number };
 
 // ---------------------------------------------------------------------------
 // Chart colors (fills/strokes derived from the shared palette)
@@ -81,14 +64,12 @@ export const AMBER = "#B45309";
 interface NegotiationChartProps {
   offers: Offer[];
   showMidpoint: boolean;
-  projections: ActiveProjection[];
   settlement: number | null;
 }
 
 export function NegotiationChart({
   offers,
   showMidpoint,
-  projections,
   settlement,
 }: NegotiationChartProps) {
   const [hover, setHover] = useState<HoverInfo | null>(null);
@@ -138,12 +119,7 @@ export function NegotiationChart({
       allVals.push(e.low, e.high);
     }
 
-    // Extend axis bounds when projection/midpoint visuals are shown
-    let projRounds = actualRounds;
-    for (const proj of projections) {
-      projRounds = Math.max(projRounds, Math.ceil(proj.data.round));
-      allVals.push(proj.data.value);
-    }
+    // Extend axis bounds when midpoint/settlement visuals are shown
     if (showMidpoint) {
       for (const m of roundMidpoints) allVals.push(m.value);
     }
@@ -159,16 +135,16 @@ export function NegotiationChart({
     const mx = rawMax + padding;
 
     return {
-      rounds: projRounds,
+      rounds: actualRounds,
       yMin: mn,
       yMax: mx,
       xScale: (r: number) => {
-        if (projRounds <= 1) return PAD.left + INNER_W / 2;
-        return PAD.left + ((r - 1) / (projRounds - 1)) * INNER_W;
+        if (actualRounds <= 1) return PAD.left + INNER_W / 2;
+        return PAD.left + ((r - 1) / (actualRounds - 1)) * INNER_W;
       },
       yScale: (v: number) => PAD.top + INNER_H - ((v - mn) / (mx - mn)) * INNER_H,
     };
-  }, [offers, projections, showMidpoint, roundMidpoints, settlement]);
+  }, [offers, showMidpoint, roundMidpoints, settlement]);
 
   const pBand = useMemo(() => buildBand(pOffers, xScale, yScale), [pOffers, xScale, yScale]);
   const dBand = useMemo(() => buildBand(dOffers, xScale, yScale), [dOffers, xScale, yScale]);
@@ -418,40 +394,6 @@ export function NegotiationChart({
         </>
       )}
 
-      {/* Projected convergence — one dashed pair + dot per active model */}
-      {projections.map((proj) => (
-        <g key={`proj-${proj.label}`}>
-          <line
-            x1={xScale(proj.data.pStart.round)}
-            y1={yScale(proj.data.pStart.value)}
-            x2={xScale(proj.data.round)}
-            y2={yScale(proj.data.value)}
-            stroke={proj.color}
-            strokeWidth="1.5"
-            strokeDasharray="3 4"
-            opacity="0.7"
-          />
-          <line
-            x1={xScale(proj.data.dStart.round)}
-            y1={yScale(proj.data.dStart.value)}
-            x2={xScale(proj.data.round)}
-            y2={yScale(proj.data.value)}
-            stroke={proj.color}
-            strokeWidth="1.5"
-            strokeDasharray="3 4"
-            opacity="0.7"
-          />
-          <circle
-            cx={xScale(proj.data.round)}
-            cy={yScale(proj.data.value)}
-            r="4"
-            fill={proj.color}
-            stroke="white"
-            strokeWidth="1.5"
-          />
-        </g>
-      ))}
-
       {/* Settlement line */}
       {settlement !== null && offers.length > 0 && (
         <g>
@@ -563,29 +505,6 @@ export function NegotiationChart({
           />
         ))}
 
-      {/* Convergence point hit areas */}
-      {projections.map((proj) => (
-        <circle
-          key={`proj-hit-${proj.label}`}
-          cx={xScale(proj.data.round)}
-          cy={yScale(proj.data.value)}
-          r="20"
-          fill="transparent"
-          {...hitAreaProps(
-            {
-              kind: "convergence",
-              label: proj.label,
-              color: proj.color,
-              round: proj.data.round,
-              value: proj.data.value,
-              x: xScale(proj.data.round),
-              y: yScale(proj.data.value),
-            },
-            `${proj.label}: ${fmt(proj.data.value)} at round ${proj.data.round.toFixed(1)}`,
-          )}
-        />
-      ))}
-
       {/* Empty state */}
       {offers.length === 0 && (
         <text
@@ -653,15 +572,6 @@ export function NegotiationChart({
                     <div style={{ fontWeight: 600, color: GREEN }}>
                       Midpoint · Round {hover.round}
                     </div>
-                    <div>{fmt(hover.value)}</div>
-                  </>
-                )}
-                {hover.kind === "convergence" && (
-                  <>
-                    <div style={{ fontWeight: 600, color: hover.color }}>
-                      {hover.label}
-                    </div>
-                    <div>Round {hover.round.toFixed(1)}</div>
                     <div>{fmt(hover.value)}</div>
                   </>
                 )}

@@ -15,13 +15,11 @@ import {
   Party,
   Offer,
   parseInput,
-  computeConvergence,
   nextRoundFor,
   buildExportData,
 } from "./logic";
 import {
   NegotiationChart,
-  ActiveProjection,
   GREEN_FILL,
   AMBER,
 } from "./negotiation-chart";
@@ -43,10 +41,6 @@ export default function NegotiationVisualizerClient() {
   const [party, setParty] = useSessionState<Party>("tool:neg-viz:party", "plaintiff");
   const [showMidpoint, setShowMidpoint] = useSessionState<boolean>(
     "tool:neg-viz:showMidpoint",
-    false
-  );
-  const [showConvergence, setShowConvergence] = useSessionState<boolean>(
-    "tool:neg-viz:showConvergence",
     false
   );
   const [settlementInput, setSettlementInput] = useSessionState<string>(
@@ -121,7 +115,6 @@ export default function NegotiationVisualizerClient() {
   function clearAll() {
     setOffers([]);
     setParty("plaintiff");
-    setShowConvergence(false);
     setSettlementInput("");
     clearSessionKeys("tool:neg-viz:");
   }
@@ -143,14 +136,6 @@ export default function NegotiationVisualizerClient() {
     if (overlapLow >= overlapHigh) return null;
     return { low: overlapLow, high: overlapHigh };
   }, [displayOffers]);
-
-  const convergence = useMemo(() => computeConvergence(displayOffers), [displayOffers]);
-  const convergenceAvailable = convergence !== null;
-
-  const activeProjections: ActiveProjection[] =
-    showConvergence && convergence
-      ? [{ label: "Projected convergence", color: GREEN, data: convergence }]
-      : [];
 
   return (
     <div className="space-y-6">
@@ -194,30 +179,11 @@ export default function NegotiationVisualizerClient() {
               />
               <span className="text-brand-primary">Show midpoint between offers</span>
             </label>
-
-            {convergenceAvailable && (
-              <label className="flex items-start gap-2 select-none text-sm cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={showConvergence}
-                  onChange={(e) => setShowConvergence(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded border-brand-border text-brand-accent focus:ring-brand-accent"
-                />
-                <span>
-                  <span className="text-brand-primary">Show projected convergence</span>
-                  <span className="block text-xs text-brand-muted">
-                    A straight-line projection based on each side&apos;s three most
-                    recent moves, extended to where the trends meet.
-                  </span>
-                </span>
-              </label>
-            )}
           </div>
 
           <NegotiationChart
             offers={displayOffers}
             showMidpoint={showMidpoint}
-            projections={activeProjections}
             settlement={displaySettlement}
           />
 
@@ -257,15 +223,6 @@ export default function NegotiationVisualizerClient() {
                 Midpoint between offers
               </span>
             )}
-            {activeProjections.map((proj) => (
-              <span key={proj.label} className="flex items-center gap-2">
-                <span
-                  className="inline-block w-3 h-3 rounded-full"
-                  style={{ backgroundColor: proj.color }}
-                />
-                {proj.label}
-              </span>
-            ))}
             {displaySettlement !== null && (
               <span className="flex items-center gap-2">
                 <span

@@ -1,5 +1,5 @@
 // Pure data types and math for the negotiation visualizer. Kept free of React
-// so the parsing and projection logic can be unit-tested directly.
+// so the parsing and export logic can be unit-tested directly.
 
 export type Party = "plaintiff" | "defendant";
 export type OfferType = "number" | "bracket";
@@ -12,13 +12,6 @@ export interface Offer {
   value: number;
   low: number;
   high: number;
-}
-
-export interface Convergence {
-  round: number;
-  value: number;
-  pStart: { round: number; value: number };
-  dStart: { round: number; value: number };
 }
 
 export function offerValues(m: Offer): { low: number; high: number; mid: number } {
@@ -62,68 +55,6 @@ export function parseInput(
   const num = parseFloat(trimmed.replace(/[$,]/g, ""));
   if (isNaN(num)) return null;
   return { type: "number", value: num, low: 0, high: 0 };
-}
-
-/** Each party's offers as (round, midpoint-value) points, sorted by round. */
-function partySeries(offers: Offer[], party: Party): { round: number; value: number }[] {
-  return offers
-    .filter((m) => m.party === party)
-    .sort((a, b) => a.round - b.round)
-    .map((m) => ({ round: m.round, value: offerValues(m).mid }));
-}
-
-/** Ordinary least-squares fit of value vs. round. Null if degenerate. */
-function fitLine(
-  pts: { round: number; value: number }[],
-): { slope: number; intercept: number } | null {
-  if (pts.length < 2) return null;
-  const n = pts.length;
-  const meanX = pts.reduce((s, p) => s + p.round, 0) / n;
-  const meanY = pts.reduce((s, p) => s + p.value, 0) / n;
-  let cov = 0;
-  let varX = 0;
-  for (const p of pts) {
-    cov += (p.round - meanX) * (p.value - meanY);
-    varX += (p.round - meanX) ** 2;
-  }
-  if (varX === 0) return null;
-  const slope = cov / varX;
-  return { slope, intercept: meanY - slope * meanX };
-}
-
-/**
- * Projected convergence: a least-squares straight line through each party's
- * THREE most recent offers (bracket midpoints), extended forward to where the
- * two lines intersect. Returns null when either side has fewer than three
- * offers, the lines are parallel, or the intersection is not in the future.
- */
-export function computeConvergence(offers: Offer[]): Convergence | null {
-  const p = partySeries(offers, "plaintiff").slice(-3);
-  const d = partySeries(offers, "defendant").slice(-3);
-  if (p.length < 3 || d.length < 3) return null;
-
-  const pFit = fitLine(p);
-  const dFit = fitLine(d);
-  if (!pFit || !dFit) return null;
-
-  const slopeDiff = pFit.slope - dFit.slope;
-  if (Math.abs(slopeDiff) < 1e-9) return null;
-
-  const x = (dFit.intercept - pFit.intercept) / slopeDiff;
-  const pLast = p[p.length - 1];
-  const dLast = d[d.length - 1];
-  const lastRound = Math.max(pLast.round, dLast.round);
-  if (x <= lastRound) return null;
-
-  return {
-    round: x,
-    value: pFit.slope * x + pFit.intercept,
-    // Anchor the drawn extrapolation ON each side's fitted line at its last
-    // round — the intersection lies on the fit, which does not in general
-    // pass through the last actual offer.
-    pStart: { round: pLast.round, value: pFit.slope * pLast.round + pFit.intercept },
-    dStart: { round: dLast.round, value: dFit.slope * dLast.round + dFit.intercept },
-  };
 }
 
 /** Offer as it appears in a JSON export: no internal ids, bracket midpoint included. */

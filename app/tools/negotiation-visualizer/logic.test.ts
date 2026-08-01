@@ -3,7 +3,6 @@ import {
   Offer,
   Party,
   parseInput,
-  computeConvergence,
   offerValues,
   nextRoundFor,
   buildExportData,
@@ -96,120 +95,6 @@ describe("offerValues", () => {
     expect(offerValues(offer("plaintiff", 1, [200000, 400000]))).toEqual({
       low: 200000, high: 400000, mid: 300000,
     });
-  });
-});
-
-describe("computeConvergence", () => {
-  it("returns null until both sides have made three offers", () => {
-    expect(computeConvergence([])).toBeNull();
-    expect(
-      computeConvergence([
-        offer("plaintiff", 1, 500000),
-        offer("defendant", 1, 100000),
-        offer("plaintiff", 2, 400000),
-        offer("defendant", 2, 200000),
-      ])
-    ).toBeNull();
-    expect(
-      computeConvergence([
-        offer("plaintiff", 1, 500000),
-        offer("defendant", 1, 100000),
-        offer("plaintiff", 2, 400000),
-        offer("defendant", 2, 200000),
-        offer("plaintiff", 3, 350000),
-      ])
-    ).toBeNull();
-  });
-
-  it("fits a line through each side's three most recent offers", () => {
-    const result = computeConvergence([
-      offer("plaintiff", 1, 500000),
-      offer("defendant", 1, 100000),
-      offer("plaintiff", 2, 400000),
-      offer("defendant", 2, 200000),
-      offer("plaintiff", 3, 350000),
-      offer("defendant", 3, 250000),
-    ]);
-    // Least-squares through P (1,500k)(2,400k)(3,350k): slope −75k, intercept 566.7k
-    // and D (1,100k)(2,200k)(3,250k): slope +75k, intercept 33.3k
-    // → intersect at round 3.556, $300,000
-    expect(result).not.toBeNull();
-    expect(result!.round).toBeCloseTo(3.5556, 3);
-    expect(result!.value).toBeCloseTo(300000, 0);
-  });
-
-  it("ignores offers older than each side's last three", () => {
-    const result = computeConvergence([
-      offer("plaintiff", 1, 900000), // outlier opener — must not affect the fit
-      offer("defendant", 1, 0),
-      offer("plaintiff", 2, 500000),
-      offer("defendant", 2, 100000),
-      offer("plaintiff", 3, 400000),
-      offer("defendant", 3, 200000),
-      offer("plaintiff", 4, 350000),
-      offer("defendant", 4, 250000),
-    ]);
-    // Same pattern as above shifted one round later → round 4.556, $300,000
-    expect(result).not.toBeNull();
-    expect(result!.round).toBeCloseTo(4.5556, 3);
-    expect(result!.value).toBeCloseTo(300000, 0);
-  });
-
-  it("anchors the drawn extrapolation on each side's fitted line, not its last offer", () => {
-    const result = computeConvergence([
-      offer("plaintiff", 1, 500000),
-      offer("defendant", 1, 100000),
-      offer("plaintiff", 2, 400000),
-      offer("defendant", 2, 200000),
-      offer("plaintiff", 3, 350000),
-      offer("defendant", 3, 250000),
-    ])!;
-    // P fit: slope −75k, intercept 566.67k → fitted value at round 3 = 341.67k
-    // D fit: slope +75k, intercept 33.33k → fitted value at round 3 = 258.33k
-    expect(result.pStart.round).toBe(3);
-    expect(result.pStart.value).toBeCloseTo(341666.67, 0);
-    expect(result.dStart.round).toBe(3);
-    expect(result.dStart.value).toBeCloseTo(258333.33, 0);
-  });
-
-  it("returns null for diverging trends", () => {
-    expect(
-      computeConvergence([
-        offer("plaintiff", 1, 350000),
-        offer("defendant", 1, 250000),
-        offer("plaintiff", 2, 400000),
-        offer("defendant", 2, 200000),
-        offer("plaintiff", 3, 500000),
-        offer("defendant", 3, 100000),
-      ])
-    ).toBeNull();
-  });
-
-  it("returns null for parallel trends", () => {
-    expect(
-      computeConvergence([
-        offer("plaintiff", 1, 500000),
-        offer("defendant", 1, 200000),
-        offer("plaintiff", 2, 400000),
-        offer("defendant", 2, 100000),
-        offer("plaintiff", 3, 300000),
-        offer("defendant", 3, 0),
-      ])
-    ).toBeNull();
-  });
-
-  it("uses bracket midpoints in the fit", () => {
-    const result = computeConvergence([
-      offer("plaintiff", 1, [400000, 600000]), // mid 500k
-      offer("defendant", 1, 100000),
-      offer("plaintiff", 2, [300000, 500000]), // mid 400k
-      offer("defendant", 2, 200000),
-      offer("plaintiff", 3, [250000, 450000]), // mid 350k
-      offer("defendant", 3, 250000),
-    ]);
-    expect(result).not.toBeNull();
-    expect(result!.round).toBeCloseTo(3.5556, 3);
-    expect(result!.value).toBeCloseTo(300000, 0);
   });
 });
 
