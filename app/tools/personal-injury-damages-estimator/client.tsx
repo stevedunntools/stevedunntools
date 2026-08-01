@@ -11,10 +11,21 @@ import {
 import { fmt, parseNumNonNeg } from "@/lib/format";
 import { Row, Separator, TotalRow } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
+import PercentSlider from "@/components/percent-slider";
 import ResultsShell from "@/components/results-shell";
 import MobileResultBar from "@/components/mobile-result-bar";
 
 const MULTIPLIER_STEPS = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
+
+/** Plain-English severity anchor for a multiplier value — the classic
+ *  adjuster bands: severity, permanence, and objective documentation are
+ *  what justify moving up the range. */
+function severityAnchor(m: number): string {
+  if (m <= 1.5) return "minor soft-tissue injuries with full recovery";
+  if (m <= 3) return "moderate injuries — fractures, injuries requiring surgery";
+  if (m <= 4) return "severe injuries with lasting or partially permanent effects";
+  return "permanent or catastrophic injuries";
+}
 
 export default function PersonalInjuryClient() {
   const hydrated = useHydrated();
@@ -24,6 +35,8 @@ export default function PersonalInjuryClient() {
   const [futureLostEarnings, setFutureLostEarnings] = useSessionState("tool:pi-damages:futureLostEarnings", "");
   const [propertyDamage, setPropertyDamage] = useSessionState("tool:pi-damages:propertyDamage", "");
   const [multiplier, setMultiplier] = useSessionState("tool:pi-damages:multiplier", 3);
+  const [pastOnlyBase, setPastOnlyBase] = useSessionState("tool:pi-damages:pastOnlyBase", false);
+  const [faultPct, setFaultPct] = useSessionState("tool:pi-damages:faultPct", 0);
 
   function clearAll() {
     setMedicalToDate("");
@@ -32,6 +45,8 @@ export default function PersonalInjuryClient() {
     setFutureLostEarnings("");
     setPropertyDamage("");
     setMultiplier(3);
+    setPastOnlyBase(false);
+    setFaultPct(0);
     clearSessionKeys("tool:pi-damages:");
   }
 
@@ -42,15 +57,32 @@ export default function PersonalInjuryClient() {
   const prop = parseNumNonNeg(propertyDamage);
 
   const totalMedical = medTo + medFuture;
-  const painAndSuffering = totalMedical * multiplier;
-  const total = totalMedical + painAndSuffering + earnTo + earnFuture + prop;
+  const multiplierBase = pastOnlyBase ? medTo : totalMedical;
+
+  // Total at a given multiplier, after the comparative-fault reduction —
+  // used for the headline and for the ±1× range around the chosen value.
+  function totalAt(m: number) {
+    const gross = totalMedical + multiplierBase * m + earnTo + earnFuture + prop;
+    return gross - Math.round(gross * faultPct) / 100;
+  }
+
+  const painAndSuffering = multiplierBase * multiplier;
+  const grossTotal = totalMedical + painAndSuffering + earnTo + earnFuture + prop;
+  const faultReduction = Math.round(grossTotal * faultPct) / 100;
+  const total = grossTotal - faultReduction;
+
+  const rangeLowMult = Math.max(1, multiplier - 1);
+  const rangeHighMult = Math.min(5, multiplier + 1);
+  const showRange = multiplierBase > 0;
 
   const hasAny =
     medicalToDate !== "" ||
     futureMedical !== "" ||
     lostEarningsToDate !== "" ||
     futureLostEarnings !== "" ||
-    propertyDamage !== "";
+    propertyDamage !== "" ||
+    pastOnlyBase ||
+    faultPct !== 0;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -132,9 +164,34 @@ export default function PersonalInjuryClient() {
                 </span>
               ))}
             </div>
-            <p className="text-xs text-brand-muted">
-              Applied to total medical expenses (to date + future)
+            <p className="text-sm text-brand-primary">
+              {multiplier}&times; is typical of{" "}
+              <span className="font-medium">{severityAnchor(multiplier)}</span>.
             </p>
+            <p className="text-xs text-brand-muted">
+              Clear liability, objectively documented injuries (imaging,
+              surgery), physician-directed treatment, recovery over six
+              months, and documented permanency justify the upper end of the
+              range.
+            </p>
+            <label className="flex items-start gap-2 cursor-pointer select-none text-sm pt-1">
+              <input
+                type="checkbox"
+                checked={pastOnlyBase}
+                onChange={(e) => setPastOnlyBase(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-brand-border text-brand-accent focus:ring-brand-accent"
+              />
+              <span>
+                <span className="text-brand-primary">
+                  Apply multiplier to past medical expenses only
+                </span>
+                <span className="block text-xs text-brand-muted">
+                  Large future medical costs (life-care plans) are often
+                  treated as economic damages rather than multiplied. Future
+                  medicals still count toward the total either way.
+                </span>
+              </span>
+            </label>
           </CardContent>
         </Card>
 
@@ -204,6 +261,31 @@ export default function PersonalInjuryClient() {
           </CardContent>
         </Card>
 
+        {/* Comparative Fault */}
+        <Card className="bg-white border-brand-border">
+          <CardHeader>
+            <CardTitle className="text-brand-primary text-base">
+              Plaintiff&apos;s Share of Fault
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <PercentSlider
+              value={faultPct}
+              onChange={setFaultPct}
+              min={0}
+              max={100}
+              label="The estimate is reduced by this percentage. State rules differ: pure comparative states reduce recovery at any fault level, most states bar recovery entirely at 50% or 51%, and a few contributory-negligence states bar it at any fault."
+              aria-label="Plaintiff's share of fault percentage"
+            />
+            {faultPct >= 50 && (
+              <p className="text-xs text-brand-error">
+                At {faultPct}% fault, most states would bar recovery entirely
+                — this estimate applies a proportional reduction only.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
         {hasAny && (
           <Button variant="outline" onClick={clearAll}>
             Clear All
@@ -216,6 +298,15 @@ export default function PersonalInjuryClient() {
         <ResultsShell
           label="Estimated Total Damages"
           value={hydrated ? fmt(total) : "—"}
+          headlineExtra={
+            hydrated && showRange ? (
+              <p className="mt-2 text-sm text-brand-muted">
+                Range at &plusmn;1&times;: {fmt(totalAt(rangeLowMult))} (
+                {rangeLowMult}&times;) &ndash; {fmt(totalAt(rangeHighMult))} (
+                {rangeHighMult}&times;)
+              </p>
+            ) : undefined
+          }
         >
           {/* Breakdown */}
           <Card className="bg-white border-brand-border">
@@ -230,7 +321,11 @@ export default function PersonalInjuryClient() {
                   <Row label="Total medical expenses" value={hydrated ? totalMedical : "—"} bold />
                   <Separator />
                   <Row
-                    label={hydrated ? `Non-economic damages (${multiplier}× medical)` : "Non-economic damages"}
+                    label={
+                      hydrated
+                        ? `Non-economic damages (${multiplier}× ${pastOnlyBase ? "past medical" : "medical"})`
+                        : "Non-economic damages"
+                    }
                     value={hydrated ? painAndSuffering : "—"}
                     bold
                   />
@@ -238,6 +333,17 @@ export default function PersonalInjuryClient() {
                   <Row label="Lost earnings to date" value={hydrated ? earnTo : "—"} />
                   <Row label="Future lost earnings" value={hydrated ? earnFuture : "—"} />
                   <Row label="Property damage" value={hydrated ? prop : "—"} />
+                  {hydrated && faultPct > 0 && (
+                    <>
+                      <Separator />
+                      <Row label="Gross damages" value={grossTotal} bold />
+                      <Row
+                        label={`Less: plaintiff's fault (${faultPct}%)`}
+                        value={faultReduction}
+                        negative
+                      />
+                    </>
+                  )}
                   <Separator />
                   <TotalRow label="Total" value={hydrated ? fmt(total) : "—"} />
                 </tbody>

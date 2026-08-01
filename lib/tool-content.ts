@@ -141,8 +141,9 @@ export const toolContent: Record<string, ToolContent> = {
   "/tools/personal-injury-damages-estimator": {
     howItWorks: [
       `This tool estimates personal injury damages using the multiplier method — the longest-standing shorthand in injury valuation. Economic damages are added up directly: medical expenses to date, future medical expenses, lost earnings to date, future lost earnings, and property damage.`,
-      `Non-economic damages — pain and suffering, loss of enjoyment — are estimated by multiplying total medical expenses (past and future combined) by a factor between 1× and 5×. Minor, fully-resolved injuries sit near the bottom of that range; severe, permanent, well-documented injuries sit near the top.`,
-      `The output is an itemized breakdown, so you can see exactly how much of the total is hard economic loss and how much rides on the multiplier — which is usually where the negotiation actually happens.`,
+      `Non-economic damages — pain and suffering, loss of enjoyment — are estimated by multiplying medical expenses by a factor between 1× and 5×. The slider shows what each level typically corresponds to: minor soft-tissue injuries with full recovery near 1×, fractures and surgical cases in the middle, permanent or catastrophic injuries at the top. Clear liability, objectively documented injuries, physician-directed treatment, and documented permanency are what justify the upper end. By default the multiplier applies to past and future medicals combined; a checkbox limits it to past medicals only — the professional convention when large future costs (a life-care plan) are better treated as economic damages than multiplied.`,
+      `If the plaintiff shares fault, enter their percentage and the estimate is reduced proportionally. State rules differ — pure comparative states reduce recovery at any fault level, most states bar recovery entirely at 50% or 51%, and a few contributory-negligence states bar it at any fault — so treat the reduction as the pure-comparative case.`,
+      `The output is an itemized breakdown plus an automatic range showing the estimate one multiplier step below and above your selection — because the spread, not the point estimate, is the honest answer. The breakdown shows exactly how much of the total is hard economic loss and how much rides on the multiplier, which is usually where the negotiation actually happens.`,
     ],
     example: [
       `Medicals of $25,000 to date plus $10,000 expected — $35,000 total — at a 3× multiplier produces $105,000 of non-economic damages. Add $15,000 in lost earnings to date, $20,000 future, and $5,000 in property damage, and the estimate is $180,000. At 2× the same case is $145,000; at 4× it is $215,000. That range is the real output.`,
@@ -164,8 +165,16 @@ export const toolContent: Record<string, ToolContent> = {
         a: `Jurisdictions differ on whether the jury sees billed charges, amounts actually paid, or both. Enter the figure your jurisdiction uses — the multiplier compounds whatever base you give it, so this choice matters.`,
       },
       {
-        q: `Does the calculation include punitive damages or comparative fault?`,
-        a: `No. Punitive damages, comparative-fault reductions, liens, and subrogation all sit outside this estimate. Treat the output as a gross full-liability number and adjust from there.`,
+        q: `Why would I apply the multiplier to past medicals only?`,
+        a: `When future medical costs are large — a life-care plan for a catastrophic injury — multiplying them produces numbers no adjuster will credit. The professional convention is to treat future medicals as a separately proven economic item and reserve the multiplier for past treatment. The checkbox models it either way; future medicals count toward the total in both cases.`,
+      },
+      {
+        q: `How does the comparative fault reduction work?`,
+        a: `The estimate is reduced by the plaintiff's percentage of fault — the pure-comparative-negligence approach. Be aware that most states bar recovery entirely once the plaintiff's share reaches 50% or 51%, and a handful of contributory-negligence jurisdictions bar recovery at any fault, so check your state's rule before relying on a reduced number.`,
+      },
+      {
+        q: `Does the calculation include punitive damages, caps, or liens?`,
+        a: `No. Punitive damages, state caps on non-economic damages, policy limits, liens, and subrogation all sit outside this estimate. Treat the output as a gross damages number and adjust from there — the Contingency Fee Calculator can carry the figure through to the plaintiff's net.`,
       },
     ],
   },
