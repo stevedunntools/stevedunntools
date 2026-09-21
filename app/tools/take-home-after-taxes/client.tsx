@@ -1,5 +1,6 @@
 "use client";
 
+import PrintInputs from "@/components/print-inputs";
 import { useMemo } from "react";
 import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
@@ -78,10 +79,11 @@ export default function TakeHomeAfterTaxesClient() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-brand-primary mb-1.5">
+                <label htmlFor="take-home-after-taxes-filing-status" className="block text-sm font-medium text-brand-primary mb-1.5">
                   Filing status
                 </label>
                 <select
+                  id="take-home-after-taxes-filing-status"
                   value={filingStatus}
                   onChange={(e) => setFilingStatus(e.target.value as FilingStatus)}
                   className={selectClass}
@@ -92,10 +94,11 @@ export default function TakeHomeAfterTaxesClient() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-brand-primary mb-1.5">
+                <label htmlFor="take-home-after-taxes-state" className="block text-sm font-medium text-brand-primary mb-1.5">
                   State
                 </label>
                 <select
+                  id="take-home-after-taxes-state"
                   value={stateCode}
                   onChange={(e) => setStateCode(e.target.value)}
                   className={selectClass}
@@ -123,7 +126,7 @@ export default function TakeHomeAfterTaxesClient() {
               >
                 W-2 wages
               </label>
-              <DollarInput id="take-home-w2" value={w2} onChange={setW2} placeholder="0" />
+              <DollarInput id="take-home-w2" value={w2} onChange={setW2} placeholder="e.g. 0" />
               <p className="mt-1 text-xs text-brand-muted">
                 Employee compensation subject to FICA and federal/state income tax.
               </p>
@@ -140,9 +143,10 @@ export default function TakeHomeAfterTaxesClient() {
                 id="take-home-1099"
                 value={income1099}
                 onChange={setIncome1099}
-                placeholder="0"
+                placeholder="e.g. 0"
               />
-              <div className="mt-2 flex flex-col sm:flex-row gap-2 sm:gap-4">
+              <fieldset className="mt-2 flex flex-col sm:flex-row gap-2 sm:gap-4">
+                <legend className="sr-only">Type of 1099 income</legend>
                 <label className="flex items-center gap-2 text-sm text-brand-primary cursor-pointer">
                   <input
                     type="radio"
@@ -163,7 +167,7 @@ export default function TakeHomeAfterTaxesClient() {
                   />
                   Self-employment (subject to SE tax)
                 </label>
-              </div>
+              </fieldset>
             </div>
 
             <div>
@@ -173,7 +177,7 @@ export default function TakeHomeAfterTaxesClient() {
               >
                 Tax-free personal injury settlement
               </label>
-              <DollarInput id="take-home-pi" value={pi} onChange={setPi} placeholder="0" />
+              <DollarInput id="take-home-pi" value={pi} onChange={setPi} placeholder="e.g. 0" />
               <p className="mt-1 text-xs text-brand-muted">
                 Damages on account of physical injury, excluded under IRC §104(a)(2).
                 Punitive damages and pre-judgment interest are <em>not</em>{" "}
@@ -190,14 +194,21 @@ export default function TakeHomeAfterTaxesClient() {
         )}
       </div>
 
+      <PrintInputs items={[
+        { label: "Filing status", value: filingStatusOptions.find((o) => o.value === filingStatus)?.label },
+        { label: "State", value: STATES.find((s) => s.code === stateCode)?.name },
+        { label: "W-2 wages", value: w2 ? "$" + w2 : "" },
+        { label: "1099 income", value: income1099 ? `$${income1099} (${income1099Type === "se" ? "self-employment" : "other"})` : "" },
+        { label: "Physical injury (non-taxable)", value: pi ? "$" + pi : "" },
+      ]} />
       {/* Results */}
       <div className="lg:col-span-2">
         <div className="sticky top-20 space-y-6">
           <Card id="tool-headline-result" className="bg-white border-brand-accent">
             <CardContent className="pt-6">
               <p className="text-sm text-brand-muted mb-1">Estimated Take-Home</p>
-              <p className="text-3xl font-bold text-brand-accent">
-                {hydrated ? fmt(result.totals.net) : "—"}
+              <p className="text-3xl font-bold text-brand-accent" aria-live="polite" aria-atomic="true">
+                {hydrated && hasAny ? fmt(result.totals.net) : "—"}
               </p>
               {hasResults && (
                 <p className="text-xs text-brand-muted mt-2">
@@ -223,7 +234,7 @@ export default function TakeHomeAfterTaxesClient() {
                       ))}
                       <tr>
                         <td className="py-2 font-semibold text-brand-primary">Total take-home</td>
-                        <td className="py-2 text-right font-semibold text-brand-accent tabular-nums">
+                        <td className="py-2 text-right font-semibold text-brand-accent-text tabular-nums">
                           {fmt(result.totals.net)}
                         </td>
                       </tr>
@@ -312,7 +323,7 @@ export default function TakeHomeAfterTaxesClient() {
                   href="https://www.irs.gov/newsroom/irs-releases-tax-inflation-adjustments-for-tax-year-2026-including-amendments-from-the-one-big-beautiful-bill"
                   target="_blank"
                   rel="noopener"
-                  className="text-brand-accent hover:underline"
+                  className="text-brand-accent-text hover:underline"
                 >
                   IRS Rev. Proc. 2025-32 (2026 inflation adjustments)
                 </a>
@@ -324,7 +335,7 @@ export default function TakeHomeAfterTaxesClient() {
                   href="https://www.ssa.gov/news/en/cola/factsheets/2026.html"
                   target="_blank"
                   rel="noopener"
-                  className="text-brand-accent hover:underline"
+                  className="text-brand-accent-text hover:underline"
                 >
                   SSA 2026 Fact Sheet
                 </a>
@@ -337,7 +348,7 @@ export default function TakeHomeAfterTaxesClient() {
                   href="https://taxfoundation.org/data/all/state/state-income-tax-rates-2026/"
                   target="_blank"
                   rel="noopener"
-                  className="text-brand-accent hover:underline"
+                  className="text-brand-accent-text hover:underline"
                 >
                   Tax Foundation, 2026 State Individual Income Tax Rates and Brackets
                 </a>
@@ -346,16 +357,16 @@ export default function TakeHomeAfterTaxesClient() {
               <p>
                 State payroll programs (SDI / PFL / PFML / FAMLI / TDI): individual
                 state agency sources, including{" "}
-                <a href="https://edd.ca.gov/" target="_blank" rel="noopener" className="text-brand-accent hover:underline">CA EDD</a>,{" "}
-                <a href="https://famli.colorado.gov/" target="_blank" rel="noopener" className="text-brand-accent hover:underline">CO FAMLI</a>,{" "}
-                <a href="https://ctpaidleave.org/" target="_blank" rel="noopener" className="text-brand-accent hover:underline">CT Paid Leave</a>,{" "}
-                <a href="https://www.mass.gov/info-details/paid-family-and-medical-leave-employer-contribution-rates-and-calculator" target="_blank" rel="noopener" className="text-brand-accent hover:underline">MA PFML</a>,{" "}
-                <a href="https://paidleave.mn.gov/" target="_blank" rel="noopener" className="text-brand-accent hover:underline">MN Paid Leave</a>,{" "}
-                <a href="https://www.nj.gov/labor/myleavebenefits/" target="_blank" rel="noopener" className="text-brand-accent hover:underline">NJ TDI/FLI</a>,{" "}
-                <a href="https://paidfamilyleave.ny.gov/2026" target="_blank" rel="noopener" className="text-brand-accent hover:underline">NY PFL</a>,{" "}
-                <a href="https://paidleave.oregon.gov/" target="_blank" rel="noopener" className="text-brand-accent hover:underline">OR Paid Leave</a>,{" "}
-                <a href="https://dlt.ri.gov/individuals/temporary-disability-caregiver-insurance" target="_blank" rel="noopener" className="text-brand-accent hover:underline">RI TDI</a>,{" "}
-                <a href="https://paidleave.wa.gov/" target="_blank" rel="noopener" className="text-brand-accent hover:underline">WA PFML</a>.
+                <a href="https://edd.ca.gov/" target="_blank" rel="noopener" className="text-brand-accent-text hover:underline">CA EDD</a>,{" "}
+                <a href="https://famli.colorado.gov/" target="_blank" rel="noopener" className="text-brand-accent-text hover:underline">CO FAMLI</a>,{" "}
+                <a href="https://ctpaidleave.org/" target="_blank" rel="noopener" className="text-brand-accent-text hover:underline">CT Paid Leave</a>,{" "}
+                <a href="https://www.mass.gov/info-details/paid-family-and-medical-leave-employer-contribution-rates-and-calculator" target="_blank" rel="noopener" className="text-brand-accent-text hover:underline">MA PFML</a>,{" "}
+                <a href="https://paidleave.mn.gov/" target="_blank" rel="noopener" className="text-brand-accent-text hover:underline">MN Paid Leave</a>,{" "}
+                <a href="https://www.nj.gov/labor/myleavebenefits/" target="_blank" rel="noopener" className="text-brand-accent-text hover:underline">NJ TDI/FLI</a>,{" "}
+                <a href="https://paidfamilyleave.ny.gov/2026" target="_blank" rel="noopener" className="text-brand-accent-text hover:underline">NY PFL</a>,{" "}
+                <a href="https://paidleave.oregon.gov/" target="_blank" rel="noopener" className="text-brand-accent-text hover:underline">OR Paid Leave</a>,{" "}
+                <a href="https://dlt.ri.gov/individuals/temporary-disability-caregiver-insurance" target="_blank" rel="noopener" className="text-brand-accent-text hover:underline">RI TDI</a>,{" "}
+                <a href="https://paidleave.wa.gov/" target="_blank" rel="noopener" className="text-brand-accent-text hover:underline">WA PFML</a>.
               </p>
             </CardContent>
           </Card>
@@ -364,7 +375,7 @@ export default function TakeHomeAfterTaxesClient() {
           </div>
         </div>
       </div>
-      <MobileResultBar label="Take-home" value={hydrated ? fmt(result.totals.net) : "—"} targetId="tool-headline-result" />
+      <MobileResultBar label="Take-home" value={hydrated && hasAny ? fmt(result.totals.net) : "—"} />
     </div>
   );
 }

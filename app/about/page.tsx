@@ -6,7 +6,20 @@ export const metadata: Metadata = {
   description:
     "Learn about Steve Dunn, a full-time mediator and former litigator who built these settlement tools for lawyers, mediators, and parties in dispute resolution.",
   alternates: { canonical: "/about" },
-  openGraph: { url: "/about" },
+  openGraph: {
+    title: "About Steve Dunn | Steve Dunn Tools",
+    description:
+      "Full-time mediator and former litigator. Steve Dunn mediates disputes nationwide, in person or by video, through Miles Mediation & Arbitration.",
+    url: "/about",
+    siteName: "Steve Dunn Tools",
+    type: "profile",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "About Steve Dunn | Steve Dunn Tools",
+    description:
+      "Full-time mediator and former litigator. Steve Dunn mediates disputes nationwide, in person or by video, through Miles Mediation & Arbitration.",
+  },
 };
 
 const jsonLd = {
@@ -18,7 +31,7 @@ const jsonLd = {
   description:
     "Senior Neutral at Miles Mediation & Arbitration. Full-time mediator since 2019 after more than 20 years of litigation practice in business and employment disputes.",
   url: "https://stevedunntools.com/about",
-  image: "https://stevedunntools.com/steve-dunn-headshot.png",
+  image: "https://stevedunntools.com/steve-dunn-headshot.jpg",
   worksFor: {
     "@type": "Organization",
     name: "Miles Mediation & Arbitration",
@@ -48,7 +61,7 @@ export default function AboutPage() {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="flex flex-col sm:flex-row items-start gap-6">
           <Image
-            src="/steve-dunn-headshot.png"
+            src="/steve-dunn-headshot.jpg"
             alt="Steve Dunn, mediator and arbitrator"
             width={300}
             height={300}
@@ -70,7 +83,7 @@ export default function AboutPage() {
             Steve Dunn is a Senior Neutral at{" "}
             <a
               href="https://milesmediation.com/neutrals/stephen-j-dunn/"
-              className="text-brand-accent hover:text-brand-accent-hover underline"
+              className="text-brand-accent-text hover:text-brand-accent-hover underline"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -143,10 +156,10 @@ export default function AboutPage() {
               </a>
             </li>
             <li className="text-brand-muted">
-              Email: sdunn@milesadr.com
+              Email: <a href="mailto:sdunn@milesadr.com" className="text-brand-accent-text hover:text-brand-accent-hover underline">sdunn@milesadr.com</a>
             </li>
             <li className="text-brand-muted">
-              Call or text: (704) 608-6063
+              Call or text: <a href="tel:+17046086063" className="text-brand-accent-text hover:text-brand-accent-hover underline">(704) 608-6063</a>
             </li>
           </ul>
         </div>

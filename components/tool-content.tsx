@@ -60,7 +60,7 @@ export default function ToolContent() {
 
   return (
     <section
-      className="mt-12 max-w-3xl print:hidden"
+      className="mt-10 max-w-3xl print:hidden"
       aria-label="About this tool"
     >
       {content.faqs.length > 0 && (
@@ -70,6 +70,14 @@ export default function ToolContent() {
         />
       )}
 
+      <details className="group rounded-xl border border-brand-border bg-white">
+        <summary className="flex cursor-pointer items-center justify-between gap-3 px-5 py-4 text-brand-primary font-semibold marker:content-none [&::-webkit-details-marker]:hidden">
+          <span>How this tool works, with a worked example and FAQ</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0 text-brand-muted transition-transform group-open:rotate-180">
+            <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </summary>
+        <div className="px-5 pb-6 border-t border-brand-border pt-5">
       <Prose heading="How it works" paragraphs={content.howItWorks} />
       <Prose heading="Worked example" paragraphs={content.example} />
       <Prose heading="When to use it" paragraphs={content.whenToUse} />
@@ -83,7 +91,7 @@ export default function ToolContent() {
             {content.faqs.map((faq) => (
               <details key={faq.q} className="group py-3">
                 <summary className="flex cursor-pointer items-center justify-between gap-3 text-brand-primary font-medium marker:content-none [&::-webkit-details-marker]:hidden">
-                  <h3 className="text-base font-medium">{faq.q}</h3>
+                  <span className="text-base font-medium">{faq.q}</span>
                   <span className="text-brand-muted transition-transform group-open:rotate-180">
                     <svg
                       width="16"
@@ -110,6 +118,8 @@ export default function ToolContent() {
           </div>
         </div>
       )}
+        </div>
+      </details>
     </section>
   );
 }

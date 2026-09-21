@@ -1,5 +1,6 @@
 "use client";
 
+import PrintInputs from "@/components/print-inputs";
 import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
@@ -66,7 +67,7 @@ export default function ContingencyCalculatorClient() {
                 id="contingency-settlement"
                 value={settlement}
                 onChange={setSettlement}
-                placeholder="250,000"
+                placeholder="e.g. 250,000"
               />
             </div>
             <label className="flex items-center gap-2 cursor-pointer select-none text-sm">
@@ -92,7 +93,7 @@ export default function ContingencyCalculatorClient() {
                   id="contingency-not-covered"
                   value={notCovered}
                   onChange={setNotCovered}
-                  placeholder="100,000"
+                  placeholder="e.g. 100,000"
                 />
               </div>
             )}
@@ -135,7 +136,7 @@ export default function ContingencyCalculatorClient() {
                 id="contingency-costs"
                 value={costs}
                 onChange={setCosts}
-                placeholder="10,000"
+                placeholder="e.g. 10,000"
               />
             </div>
           </CardContent>
@@ -148,11 +149,17 @@ export default function ContingencyCalculatorClient() {
         )}
       </div>
 
+      <PrintInputs items={[
+        { label: "Settlement amount", value: settlement ? "$" + settlement : "" },
+        { label: "Not covered by contingency", value: hasNotCovered && notCovered ? "$" + notCovered : "" },
+        { label: "Contingency fee", value: `${contingencyPct}%` },
+        { label: "Litigation costs", value: costs ? "$" + costs : "" },
+      ]} />
       {/* Results */}
       <div className="lg:col-span-2">
         <ResultsShell
           label="Net to Plaintiff"
-          value={hydrated ? fmt(netToPlaintiff) : "—"}
+          value={hydrated && hasAny ? fmt(netToPlaintiff) : "—"}
         >
           <Card className="bg-white border-brand-border">
             <CardHeader>
@@ -161,7 +168,7 @@ export default function ContingencyCalculatorClient() {
             <CardContent>
               <table className="w-full text-sm">
                 <tbody>
-                  <Row label="Settlement amount" value={hydrated ? s : "—"} />
+                  <Row label="Settlement amount" value={hydrated && hasAny ? s : "—"} />
                   <Row
                     label={
                       !hydrated
@@ -170,14 +177,14 @@ export default function ContingencyCalculatorClient() {
                           ? `Attorney fee (${contingencyPct}% of ${fmt(covered)})`
                           : `Attorney fee (${contingencyPct}%)`
                     }
-                    value={hydrated ? attorneyFee : "—"}
+                    value={hydrated && hasAny ? attorneyFee : "—"}
                     negative
                   />
-                  <Row label="Costs" value={hydrated ? c : "—"} negative />
+                  <Row label="Costs" value={hydrated && hasAny ? c : "—"} negative />
                   <Separator />
                   <TotalRow
                     label="Net to plaintiff"
-                    value={hydrated ? fmt(netToPlaintiff) : "—"}
+                    value={hydrated && hasAny ? fmt(netToPlaintiff) : "—"}
                   />
                 </tbody>
               </table>
@@ -185,7 +192,7 @@ export default function ContingencyCalculatorClient() {
           </Card>
         </ResultsShell>
       </div>
-      <MobileResultBar label="Net to plaintiff" value={hydrated ? fmt(netToPlaintiff) : "—"} targetId="tool-headline-result" />
+      <MobileResultBar label="Net to plaintiff" value={hydrated && hasAny ? fmt(netToPlaintiff) : "—"} />
     </div>
   );
 }

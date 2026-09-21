@@ -1,5 +1,6 @@
 "use client";
 
+import PrintInputs from "@/components/print-inputs";
 import { useMemo, useEffect } from "react";
 import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
@@ -103,7 +104,7 @@ export default function PaymentOverTimeClient() {
         upfronts: upfronts.map((u) => ({ amount: parseNumNonNeg(u.amount), timing: u.timing })),
         numPayments: parseNumNonNeg(numPayments),
         installmentAmount: parseNumNonNeg(installmentAmount),
-        installmentMode,
+        installmentMode: installmentMode === "amount" && parseNumNonNeg(installmentAmount) <= 0 ? "count" : installmentMode,
         frequency,
         customIntervalDays: parseNumNonNeg(customIntervalDays),
         interestScope,
@@ -159,7 +160,7 @@ export default function PaymentOverTimeClient() {
               id="payment-time-total"
               value={totalSettlement}
               onChange={setTotalSettlement}
-              placeholder="250,000"
+              placeholder="e.g. 250,000"
             />
           </CardContent>
         </Card>
@@ -172,10 +173,11 @@ export default function PaymentOverTimeClient() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-brand-primary mb-1.5">
-                Interest applies to
-              </label>
+              <label htmlFor="payment-over-time-interest-applies-to" className="block text-sm font-medium text-brand-primary mb-1.5">
+                  Interest applies to
+                </label>
               <select
+                id="payment-over-time-interest-applies-to"
                 value={interestScope}
                 onChange={(e) => setInterestScope(e.target.value as InterestScope)}
                 className={selectClass}
@@ -222,14 +224,15 @@ export default function PaymentOverTimeClient() {
                   id={`payment-time-upfront-amount-${u.id}`}
                   value={u.amount}
                   onChange={(v) => updateUpfront(u.id, "amount", v)}
-                  placeholder="25,000"
+                  placeholder="e.g. 25,000"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-brand-muted mb-1">
+                <label htmlFor="payment-over-time-timing" className="block text-xs font-medium text-brand-muted mb-1">
                   Timing
                 </label>
                 <input
+                  id="payment-over-time-timing"
                   type="text"
                   value={u.timing}
                   onChange={(e) => updateUpfront(u.id, "timing", e.target.value)}
@@ -262,10 +265,11 @@ export default function PaymentOverTimeClient() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-brand-primary mb-1.5">
-                Number of payments
-              </label>
+              <label htmlFor="payment-over-time-number-of-payments" className="block text-sm font-medium text-brand-primary mb-1.5">
+                  Number of payments
+                </label>
               <input
+                id="payment-over-time-number-of-payments"
                 type="text"
                 inputMode="numeric"
                 value={installmentMode === "amount" && calculatedCount > 0 ? calculatedCount.toString() : numPayments}
@@ -273,7 +277,7 @@ export default function PaymentOverTimeClient() {
                   setNumPayments(e.target.value.replace(/[^0-9]/g, ""));
                   setInstallmentMode("count");
                 }}
-                placeholder="12"
+                placeholder="e.g. 12"
                 className={`${inputClass} ${installmentMode === "amount" && calculatedCount > 0 ? "bg-brand-bg border-brand-accent/40" : ""}`}
               />
             </div>
@@ -291,15 +295,16 @@ export default function PaymentOverTimeClient() {
                   setInstallmentAmount(v);
                   setInstallmentMode("amount");
                 }}
-                placeholder="10,000"
+                placeholder="e.g. 10,000"
                 className={`w-full pl-7 pr-3 py-2 text-base sm:text-sm border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent ${installmentMode === "count" && calculatedPayment > 0 ? "bg-brand-bg border-brand-accent/40" : "border-brand-border"}`}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-brand-primary mb-1.5">
-                Frequency
-              </label>
+              <label htmlFor="payment-over-time-frequency" className="block text-sm font-medium text-brand-primary mb-1.5">
+                  Frequency
+                </label>
               <select
+                id="payment-over-time-frequency"
                 value={frequency}
                 onChange={(e) => setFrequency(e.target.value as Frequency)}
                 className={selectClass}
@@ -311,16 +316,17 @@ export default function PaymentOverTimeClient() {
             </div>
           </div>
           {frequency === "custom" && (
-            <div className="max-w-[calc(33.333%-0.67rem)]">
-              <label className="block text-sm font-medium text-brand-primary mb-1.5">
-                Interval (days)
-              </label>
+            <div className="sm:max-w-[calc(33.333%-0.67rem)]">
+              <label htmlFor="payment-over-time-interval-days" className="block text-sm font-medium text-brand-primary mb-1.5">
+                  Interval (days)
+                </label>
               <input
+                id="payment-over-time-interval-days"
                 type="text"
                 inputMode="numeric"
                 value={customIntervalDays}
                 onChange={(e) => setCustomIntervalDays(e.target.value.replace(/[^0-9]/g, ""))}
-                placeholder="60"
+                placeholder="e.g. 60"
                 className={inputClass}
               />
             </div>
@@ -331,7 +337,7 @@ export default function PaymentOverTimeClient() {
       {hasAny && (
         <div className="print:hidden">
           <Button variant="outline" onClick={clearAll}>
-            Clear data
+            Clear All
           </Button>
         </div>
       )}
@@ -347,6 +353,24 @@ export default function PaymentOverTimeClient() {
             </div>
           ))}
         </div>
+      )}
+
+      <PrintInputs items={[
+        { label: "Settlement amount", value: totalSettlement ? "$" + totalSettlement : "" },
+        { label: "Up-front payments", value: upfronts.filter((u) => u.amount).map((u) => `$${u.amount}${u.timing ? ` (${u.timing})` : ""}`).join("; ") },
+        { label: "Number of payments", value: numPayments },
+        { label: "Payment amount", value: installmentAmount ? "$" + installmentAmount : "" },
+        { label: "Frequency", value: frequency === "custom" ? `every ${customIntervalDays} days` : frequency },
+        { label: "Interest", value: interestScope === "none" ? "none" : `${annualRate}% (${interestScope})` },
+      ]} />
+      {hydrated && schedule.length === 0 && (
+        <Card id="tool-headline-result" className="bg-white border-brand-accent print:hidden">
+          <CardContent className="pt-6">
+            <p className="text-sm text-brand-muted mb-1">Total paid</p>
+            <p className="text-3xl font-bold text-brand-accent">—</p>
+            <p className="text-xs text-brand-muted mt-2">Enter a settlement amount and either a number of payments or a payment amount.</p>
+          </CardContent>
+        </Card>
       )}
 
       {/* Schedule */}
@@ -426,7 +450,7 @@ export default function PaymentOverTimeClient() {
         </div>
       )}
       {hydrated && schedule.length > 0 && (
-        <MobileResultBar label="Total paid" value={fmt(summary.totalPaid)} targetId="tool-headline-result" />
+        <MobileResultBar label="Total paid" value={fmt(summary.totalPaid)} />
       )}
     </div>
   );

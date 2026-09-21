@@ -6,7 +6,7 @@ interface MobileResultBarProps {
   label: string;
   value: string;
   /** id of the full results card; the bar hides when it scrolls into view. */
-  targetId: string;
+  targetId?: string;
 }
 
 /**
@@ -15,7 +15,7 @@ interface MobileResultBarProps {
  * headline result live; tapping it scrolls to the full results card, and it
  * slides away once that card is visible.
  */
-export default function MobileResultBar({ label, value, targetId }: MobileResultBarProps) {
+export default function MobileResultBar({ label, value, targetId = "tool-headline-result" }: MobileResultBarProps) {
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => {

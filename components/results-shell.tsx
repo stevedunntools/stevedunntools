@@ -30,7 +30,7 @@ export default function ResultsShell({
       <Card id="tool-headline-result" className="bg-white border-brand-accent">
         <CardContent className="pt-6">
           <p className="text-sm text-brand-muted mb-1">{label}</p>
-          <p className="text-3xl font-bold text-brand-accent">{value}</p>
+          <p className="text-3xl font-bold text-brand-accent" aria-live="polite" aria-atomic="true">{value}</p>
           {headlineExtra}
         </CardContent>
       </Card>

@@ -16,6 +16,7 @@ export default function ToolPageHeader({
   description,
 }: ToolPageHeaderProps) {
   const category = toolCategory(href);
+  const categorySlug = category.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -36,21 +37,22 @@ export default function ToolPageHeader({
       {
         "@type": "BreadcrumbList",
         itemListElement: [
-          { "@type": "ListItem", position: 1, name: "All Tools", item: `${BASE_URL}/tools` },
-          { "@type": "ListItem", position: 2, name: title },
+          { "@type": "ListItem", position: 1, name: "Home", item: BASE_URL },
+          { "@type": "ListItem", position: 2, name: category, item: `${BASE_URL}/tools#${categorySlug}` },
+          { "@type": "ListItem", position: 3, name: title, item: `${BASE_URL}${href}` },
         ],
       },
     ],
   };
 
   return (
-    <div className="mb-8 print:hidden">
+    <div className="mb-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <div>
-        <nav aria-label="Breadcrumb" className="mb-2">
+        <nav aria-label="Breadcrumb" className="mb-2 print:hidden">
           <ol className="flex flex-wrap items-center gap-1.5 text-xs text-brand-muted">
             <li>
               <Link
@@ -63,7 +65,7 @@ export default function ToolPageHeader({
             <li aria-hidden="true">&rsaquo;</li>
             <li>
               <Link
-                href="/tools"
+                href={`/tools#${categorySlug}`}
                 className="text-brand-accent-text hover:underline"
               >
                 {category}
@@ -73,9 +75,6 @@ export default function ToolPageHeader({
             <li aria-current="page">{title}</li>
           </ol>
         </nav>
-        <p className="text-sm font-medium text-brand-accent-text mb-1">
-          {category}
-        </p>
         <h1 className="text-3xl font-bold text-brand-primary">{title}</h1>
         <p className="mt-2 text-brand-muted max-w-2xl">{description}</p>
       </div>

@@ -22,7 +22,7 @@ export default function NotFound() {
         </p>
 
         <Link
-          href="/"
+          href="/tools"
           className="mt-8 inline-flex items-center gap-1.5 text-sm font-medium text-brand-accent-text hover:text-brand-accent-hover transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />

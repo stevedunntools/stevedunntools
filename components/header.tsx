@@ -73,6 +73,17 @@ function DesktopNav() {
     <nav className="hidden lg:flex items-center gap-1">
       {navGroups.map((group) => {
         const isOpen = openMenu === group.label;
+        if (group.links.length === 1) {
+          return (
+            <Link
+              key={group.label}
+              href={group.links[0].href}
+              className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white rounded-md transition-colors"
+            >
+              {group.label}
+            </Link>
+          );
+        }
         return (
           <div
             key={group.label}
@@ -155,7 +166,7 @@ function DesktopNav() {
       })}
       <BookingLink
         placement="header"
-        className="ml-3 inline-flex items-center rounded-md bg-brand-accent px-3.5 py-2 text-sm font-semibold text-white hover:bg-brand-accent-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+        className="ml-3 inline-flex items-center rounded-md bg-brand-accent-hover px-3.5 py-2 text-sm font-semibold text-white hover:bg-brand-accent-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
       >
         Book a mediation
       </BookingLink>
@@ -194,11 +205,20 @@ function MobileNav() {
           <BookingLink
             placement="menu"
             onClick={() => setOpen(false)}
-            className="flex items-center justify-center rounded-md bg-brand-accent px-3 py-2.5 mb-3 text-sm font-semibold text-white hover:bg-brand-accent-hover transition-colors"
+            className="flex items-center justify-center rounded-md bg-brand-accent-hover px-3 py-2.5 mb-3 text-sm font-semibold text-white hover:bg-brand-accent-text transition-colors"
           >
             Book a mediation
           </BookingLink>
-          {navGroups.map((group) => (
+          {navGroups.map((group) => group.links.length === 1 ? (
+            <Link
+              key={group.label}
+              href={group.links[0].href}
+              onClick={() => setOpen(false)}
+              className="block px-3 py-2.5 text-sm font-medium text-gray-300 hover:text-white rounded-md transition-colors"
+            >
+              {group.label}
+            </Link>
+          ) : (
             <div key={group.label}>
               <button
                 onClick={() =>

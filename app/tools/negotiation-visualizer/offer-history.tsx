@@ -56,7 +56,7 @@ export default function OfferHistory({ offers, onRemove }: OfferHistoryProps) {
                     <td className="py-2 print:hidden">
                       <button
                         onClick={() => onRemove(m.id)}
-                        className="p-1 text-brand-muted hover:text-brand-error transition-colors"
+                        className="p-3 sm:p-1.5 -m-1 text-brand-muted hover:text-brand-error transition-colors print:hidden"
                         aria-label={`Remove round ${m.round} ${m.party} offer`}
                       >
                         <Trash2 className="h-3.5 w-3.5" />

@@ -1,4 +1,3 @@
-import BackToTools from "@/components/back-to-tools";
 import BookingPanel from "@/components/booking-panel";
 import RelatedTools from "@/components/related-tools";
 import ToolContent from "@/components/tool-content";
@@ -30,10 +29,9 @@ export default function ToolLayout({ children }: { children: React.ReactNode }) 
           </span>
         </div>
 
-        <BackToTools />
         {children}
-        <ToolContent />
         <BookingPanel />
+        <ToolContent />
         <RelatedTools />
       </div>
     </div>

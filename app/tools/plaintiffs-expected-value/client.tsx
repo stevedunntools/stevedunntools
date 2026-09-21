@@ -1,5 +1,6 @@
 "use client";
 
+import PrintInputs from "@/components/print-inputs";
 import Link from "next/link";
 import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
@@ -79,7 +80,7 @@ export default function PlaintiffsExpectedValueClient() {
                 id="plaintiff-ev-damages"
                 value={damages}
                 onChange={setDamages}
-                placeholder="250,000"
+                placeholder="e.g. 250,000"
               />
             </div>
           </CardContent>
@@ -112,15 +113,16 @@ export default function PlaintiffsExpectedValueClient() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="max-w-[calc(50%-0.5rem)]">
-              <label className="block text-sm font-medium text-brand-primary mb-1.5">
-                Years to payment
-              </label>
+              <label htmlFor="plaintiffs-expected-value-years-to-payment" className="block text-sm font-medium text-brand-primary mb-1.5">
+                  Years to payment
+                </label>
               <input
+                id="plaintiffs-expected-value-years-to-payment"
                 type="text"
                 inputMode="numeric"
                 value={yearsToPayment}
                 onChange={(e) => setYearsToPayment(e.target.value)}
-                placeholder="2"
+                placeholder="e.g. 2"
                 className={textFieldClass}
               />
             </div>
@@ -156,7 +158,7 @@ export default function PlaintiffsExpectedValueClient() {
                 id="plaintiff-ev-fees"
                 value={fees}
                 onChange={setFees}
-                placeholder="25,000"
+                placeholder="e.g. 25,000"
               />
             </div>
             <div>
@@ -170,7 +172,7 @@ export default function PlaintiffsExpectedValueClient() {
                 id="plaintiff-ev-litigation-costs"
                 value={litigationCosts}
                 onChange={setLitigationCosts}
-                placeholder="10,000"
+                placeholder="e.g. 10,000"
               />
             </div>
             <div>
@@ -184,7 +186,7 @@ export default function PlaintiffsExpectedValueClient() {
                 id="plaintiff-ev-intangible-costs"
                 value={intangibleCosts}
                 onChange={setIntangibleCosts}
-                placeholder="5,000"
+                placeholder="e.g. 5,000"
               />
             </div>
           </CardContent>
@@ -197,11 +199,20 @@ export default function PlaintiffsExpectedValueClient() {
         )}
       </div>
 
+      <PrintInputs items={[
+        { label: "Potential damages", value: damages ? "$" + damages : "" },
+        { label: "Attorney fees", value: fees ? "$" + fees : "" },
+        { label: "Litigation costs", value: litigationCosts ? "$" + litigationCosts : "" },
+        { label: "Intangible costs", value: intangibleCosts ? "$" + intangibleCosts : "" },
+        { label: "Probability of success", value: `${probability}%` },
+        { label: "Years to payment", value: yearsToPayment },
+        { label: "Discount rate", value: `${discountRate}%` },
+      ]} />
       {/* Results */}
       <div className="lg:col-span-2">
         <ResultsShell
           label="Plaintiff&apos;s Expected Value"
-          value={hydrated ? fmt(expectedValue) : "—"}
+          value={hydrated && hasAny ? fmt(expectedValue) : "—"}
           headlineExtra={
             <p className="mt-2 text-xs text-brand-muted">
               On contingency? Carry this number into the{" "}
@@ -223,21 +234,21 @@ export default function PlaintiffsExpectedValueClient() {
             <CardContent>
               <table className="w-full text-sm">
                 <tbody>
-                  <Row label="Total damages" value={hydrated ? dmg : "—"} />
-                  <Row label="Probability of success" value={hydrated ? `${probability}%` : "—"} />
-                  <Row label="Probability-adjusted value" value={hydrated ? probabilityAdjusted : "—"} bold />
+                  <Row label="Total damages" value={hydrated && hasAny ? dmg : "—"} />
+                  <Row label="Probability of success" value={hydrated && hasAny ? `${probability}%` : "—"} />
+                  <Row label="Probability-adjusted value" value={hydrated && hasAny ? probabilityAdjusted : "—"} bold />
                   <Separator />
                   <Row label="Years to payment" value={hydrated && years > 0 ? `${years}` : "—"} />
-                  <Row label="Annual discount rate" value={hydrated ? `${discountRate}%` : "—"} />
-                  <Row label="Discounted value" value={hydrated ? discountedValue : "—"} bold />
+                  <Row label="Annual discount rate" value={hydrated && hasAny ? `${discountRate}%` : "—"} />
+                  <Row label="Discounted value" value={hydrated && hasAny ? discountedValue : "—"} bold />
                   <Separator />
-                  <Row label="Attorneys fees" value={hydrated ? f : "—"} negative />
-                  <Row label="Litigation costs" value={hydrated ? lit : "—"} negative />
-                  <Row label="Intangible costs" value={hydrated ? intang : "—"} negative />
+                  <Row label="Attorneys fees" value={hydrated && hasAny ? f : "—"} negative />
+                  <Row label="Litigation costs" value={hydrated && hasAny ? lit : "—"} negative />
+                  <Row label="Intangible costs" value={hydrated && hasAny ? intang : "—"} negative />
                   <Separator />
                   <TotalRow
                     label="Expected value"
-                    value={hydrated ? fmt(expectedValue) : "—"}
+                    value={hydrated && hasAny ? fmt(expectedValue) : "—"}
                   />
                 </tbody>
               </table>
@@ -245,7 +256,7 @@ export default function PlaintiffsExpectedValueClient() {
           </Card>
         </ResultsShell>
       </div>
-      <MobileResultBar label="Expected value" value={hydrated ? fmt(expectedValue) : "—"} targetId="tool-headline-result" />
+      <MobileResultBar label="Expected value" value={hydrated && hasAny ? fmt(expectedValue) : "—"} />
     </div>
   );
 }

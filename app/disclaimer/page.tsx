@@ -5,7 +5,14 @@ export const metadata: Metadata = {
   description:
     "Legal disclaimer for Steve Dunn Tools mediation calculators and utilities.",
   alternates: { canonical: "/disclaimer" },
-  openGraph: { url: "/disclaimer" },
+  openGraph: {
+    title: "Disclaimer | Steve Dunn Tools",
+    description: "Legal disclaimer for Steve Dunn Tools mediation calculators and utilities.",
+    url: "/disclaimer",
+    siteName: "Steve Dunn Tools",
+    type: "website",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Steve Dunn Tools — Settlement tools built by a mediator" }],
+  },
 };
 
 export default function DisclaimerPage() {

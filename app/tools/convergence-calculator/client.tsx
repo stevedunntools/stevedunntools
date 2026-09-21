@@ -148,7 +148,7 @@ function TrendChart({ data, desired }: { data: ChartData; desired?: DesiredPoint
   return (
     <svg
       viewBox={`0 0 ${CHART_W} ${CHART_H}`}
-      className="w-full h-auto"
+      className="w-full h-auto min-w-[640px] sm:min-w-0"
       role="img"
       aria-label="Trend analysis chart showing projected intersection of offers"
     >
@@ -401,7 +401,7 @@ export default function ConvergenceCalculatorClient() {
                 id="convergence-p1"
                 value={p1Str}
                 onChange={setP1Str}
-                placeholder="500,000"
+                placeholder="e.g. 500,000"
               />
             </div>
             <div>
@@ -415,7 +415,7 @@ export default function ConvergenceCalculatorClient() {
                 id="convergence-p2"
                 value={p2Str}
                 onChange={setP2Str}
-                placeholder="400,000"
+                placeholder="e.g. 400,000"
               />
             </div>
           </CardContent>
@@ -439,7 +439,7 @@ export default function ConvergenceCalculatorClient() {
                 id="convergence-d1"
                 value={d1Str}
                 onChange={setD1Str}
-                placeholder="50,000"
+                placeholder="e.g. 50,000"
               />
             </div>
             <div>
@@ -453,7 +453,7 @@ export default function ConvergenceCalculatorClient() {
                 id="convergence-d2"
                 value={d2Str}
                 onChange={setD2Str}
-                placeholder="150,000"
+                placeholder="e.g. 150,000"
               />
             </div>
           </CardContent>
@@ -481,7 +481,7 @@ export default function ConvergenceCalculatorClient() {
                 id="convergence-desired"
                 value={desiredStr}
                 onChange={setDesiredStr}
-                placeholder="250,000"
+                placeholder="e.g. 250,000"
               />
               <p className="mt-1.5 text-xs text-brand-muted">
                 See what the moves would have to look like to land somewhere

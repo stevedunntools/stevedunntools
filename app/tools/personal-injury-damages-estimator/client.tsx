@@ -1,5 +1,6 @@
 "use client";
 
+import PrintInputs from "@/components/print-inputs";
 import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
@@ -108,7 +109,7 @@ export default function PersonalInjuryClient() {
                   id="pi-damages-medical-to-date"
                   value={medicalToDate}
                   onChange={setMedicalToDate}
-                  placeholder="25,000"
+                  placeholder="e.g. 25,000"
                 />
               </div>
               <div>
@@ -122,7 +123,7 @@ export default function PersonalInjuryClient() {
                   id="pi-damages-future-medical"
                   value={futureMedical}
                   onChange={setFutureMedical}
-                  placeholder="10,000"
+                  placeholder="e.g. 10,000"
                 />
               </div>
             </div>
@@ -139,7 +140,7 @@ export default function PersonalInjuryClient() {
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-brand-muted">1×</span>
-              <span className="text-lg font-semibold text-brand-accent">{multiplier}×</span>
+              <span className="text-lg font-semibold text-brand-accent-text">{multiplier}×</span>
               <span className="text-sm text-brand-muted">5×</span>
             </div>
             <input
@@ -157,7 +158,7 @@ export default function PersonalInjuryClient() {
                 <span
                   key={v}
                   className={`text-xs ${
-                    v === multiplier ? "text-brand-accent font-medium" : "text-brand-muted/50"
+                    v === multiplier ? "text-brand-accent-text font-medium" : "text-brand-muted/50"
                   }`}
                 >
                   {v}
@@ -215,7 +216,7 @@ export default function PersonalInjuryClient() {
                   id="pi-damages-lost-earnings-to-date"
                   value={lostEarningsToDate}
                   onChange={setLostEarningsToDate}
-                  placeholder="15,000"
+                  placeholder="e.g. 15,000"
                 />
               </div>
               <div>
@@ -229,7 +230,7 @@ export default function PersonalInjuryClient() {
                   id="pi-damages-future-lost-earnings"
                   value={futureLostEarnings}
                   onChange={setFutureLostEarnings}
-                  placeholder="20,000"
+                  placeholder="e.g. 20,000"
                 />
               </div>
             </div>
@@ -255,7 +256,7 @@ export default function PersonalInjuryClient() {
                 id="pi-damages-property-damage"
                 value={propertyDamage}
                 onChange={setPropertyDamage}
-                placeholder="5,000"
+                placeholder="e.g. 5,000"
               />
             </div>
           </CardContent>
@@ -293,11 +294,21 @@ export default function PersonalInjuryClient() {
         )}
       </div>
 
+      <PrintInputs items={[
+        { label: "Medical expenses to date", value: medicalToDate ? "$" + medicalToDate : "" },
+        { label: "Future medical", value: futureMedical ? "$" + futureMedical : "" },
+        { label: "Lost earnings to date", value: lostEarningsToDate ? "$" + lostEarningsToDate : "" },
+        { label: "Future lost earnings", value: futureLostEarnings ? "$" + futureLostEarnings : "" },
+        { label: "Property damage", value: propertyDamage ? "$" + propertyDamage : "" },
+        { label: "Non-economic multiple", value: `${multiplier}×` },
+        { label: "Multiple applied to", value: pastOnlyBase ? "past medical only" : "all medical" },
+        { label: "Plaintiff's share of fault", value: `${faultPct}%` },
+      ]} />
       {/* Results */}
       <div className="lg:col-span-2">
         <ResultsShell
           label="Estimated Total Damages"
-          value={hydrated ? fmt(total) : "—"}
+          value={hydrated && hasAny ? fmt(total) : "—"}
           headlineExtra={
             hydrated && showRange ? (
               <p className="mt-2 text-sm text-brand-muted">
@@ -316,9 +327,9 @@ export default function PersonalInjuryClient() {
             <CardContent>
               <table className="w-full text-sm">
                 <tbody>
-                  <Row label="Medical expenses to date" value={hydrated ? medTo : "—"} />
-                  <Row label="Future medical expenses" value={hydrated ? medFuture : "—"} />
-                  <Row label="Total medical expenses" value={hydrated ? totalMedical : "—"} bold />
+                  <Row label="Medical expenses to date" value={hydrated && hasAny ? medTo : "—"} />
+                  <Row label="Future medical expenses" value={hydrated && hasAny ? medFuture : "—"} />
+                  <Row label="Total medical expenses" value={hydrated && hasAny ? totalMedical : "—"} bold />
                   <Separator />
                   <Row
                     label={
@@ -326,13 +337,13 @@ export default function PersonalInjuryClient() {
                         ? `Non-economic damages (${multiplier}× ${pastOnlyBase ? "past medical" : "medical"})`
                         : "Non-economic damages"
                     }
-                    value={hydrated ? painAndSuffering : "—"}
+                    value={hydrated && hasAny ? painAndSuffering : "—"}
                     bold
                   />
                   <Separator />
-                  <Row label="Lost earnings to date" value={hydrated ? earnTo : "—"} />
-                  <Row label="Future lost earnings" value={hydrated ? earnFuture : "—"} />
-                  <Row label="Property damage" value={hydrated ? prop : "—"} />
+                  <Row label="Lost earnings to date" value={hydrated && hasAny ? earnTo : "—"} />
+                  <Row label="Future lost earnings" value={hydrated && hasAny ? earnFuture : "—"} />
+                  <Row label="Property damage" value={hydrated && hasAny ? prop : "—"} />
                   {hydrated && faultPct > 0 && (
                     <>
                       <Separator />
@@ -345,14 +356,14 @@ export default function PersonalInjuryClient() {
                     </>
                   )}
                   <Separator />
-                  <TotalRow label="Total" value={hydrated ? fmt(total) : "—"} />
+                  <TotalRow label="Total" value={hydrated && hasAny ? fmt(total) : "—"} />
                 </tbody>
               </table>
             </CardContent>
           </Card>
         </ResultsShell>
       </div>
-      <MobileResultBar label="Total damages" value={hydrated ? fmt(total) : "—"} targetId="tool-headline-result" />
+      <MobileResultBar label="Total damages" value={hydrated && hasAny ? fmt(total) : "—"} />
     </div>
   );
 }

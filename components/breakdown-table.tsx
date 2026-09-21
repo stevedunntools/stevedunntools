@@ -53,7 +53,7 @@ export function TotalRow({ label, value }: { label: string; value: string }) {
   return (
     <tr>
       <td className="py-2 font-semibold text-brand-primary">{label}</td>
-      <td className="py-2 text-right font-semibold text-brand-accent">{value}</td>
+      <td className="py-2 text-right font-semibold text-brand-accent-text">{value}</td>
     </tr>
   );
 }

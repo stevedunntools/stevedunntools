@@ -1,5 +1,6 @@
 "use client";
 
+import PrintInputs from "@/components/print-inputs";
 import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
@@ -75,7 +76,7 @@ export default function SimpleInterestClient() {
                 id="simple-interest-principal"
                 value={principal}
                 onChange={setPrincipal}
-                placeholder="100,000"
+                placeholder="e.g. 100,000"
               />
             </div>
           </CardContent>
@@ -109,23 +110,25 @@ export default function SimpleInterestClient() {
           <CardContent>
             <div className="grid grid-cols-2 gap-3 max-w-[calc(66%)]">
               <div className="flex-1">
-                <label className="block text-sm font-medium text-brand-primary mb-1.5">
+                <label htmlFor="simple-interest-duration" className="block text-sm font-medium text-brand-primary mb-1.5">
                   Duration
                 </label>
                 <input
+                  id="simple-interest-duration"
                   type="text"
                   inputMode="numeric"
                   value={timePeriod}
                   onChange={(e) => setTimePeriod(e.target.value)}
-                  placeholder="12"
+                  placeholder="e.g. 12"
                   className={textFieldClass}
                 />
               </div>
               <div className="flex-1">
-                <label className="block text-sm font-medium text-brand-primary mb-1.5">
+                <label htmlFor="simple-interest-unit" className="block text-sm font-medium text-brand-primary mb-1.5">
                   Unit
                 </label>
                 <select
+                  id="simple-interest-unit"
                   value={timeUnit}
                   onChange={(e) => setTimeUnit(e.target.value as TimeUnit)}
                   className={selectFieldClass}
@@ -149,11 +152,16 @@ export default function SimpleInterestClient() {
         )}
       </div>
 
+      <PrintInputs items={[
+        { label: "Principal", value: principal ? "$" + principal : "" },
+        { label: "Annual rate", value: `${rate}%` },
+        { label: "Time", value: timePeriod ? `${timePeriod} ${timeUnit}` : "" },
+      ]} />
       {/* Results */}
       <div className="lg:col-span-2">
         <ResultsShell
           label="Total (Principal + Interest)"
-          value={hydrated ? fmt(total) : "—"}
+          value={hydrated && hasAny ? fmt(total) : "—"}
         >
           <Card className="bg-white border-brand-border">
             <CardHeader>
@@ -162,20 +170,20 @@ export default function SimpleInterestClient() {
             <CardContent>
               <table className="w-full text-sm">
                 <tbody>
-                  <Row label="Principal" value={hydrated ? p : "—"} />
-                  <Row label="Interest rate" value={hydrated ? `${rate}%` : "—"} />
+                  <Row label="Principal" value={hydrated && hasAny ? p : "—"} />
+                  <Row label="Interest rate" value={hydrated && hasAny ? `${rate}%` : "—"} />
                   <Row label="Time period" value={timeLabel} />
                   <Separator />
-                  <Row label="Interest earned" value={hydrated ? interest : "—"} />
+                  <Row label="Interest earned" value={hydrated && hasAny ? interest : "—"} />
                   <Separator />
-                  <TotalRow label="Total" value={hydrated ? fmt(total) : "—"} />
+                  <TotalRow label="Total" value={hydrated && hasAny ? fmt(total) : "—"} />
                 </tbody>
               </table>
             </CardContent>
           </Card>
         </ResultsShell>
       </div>
-      <MobileResultBar label="Total" value={hydrated ? fmt(total) : "—"} targetId="tool-headline-result" />
+      <MobileResultBar label="Total" value={hydrated && hasAny ? fmt(total) : "—"} />
     </div>
   );
 }

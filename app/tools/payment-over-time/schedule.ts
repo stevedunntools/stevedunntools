@@ -145,6 +145,9 @@ export function buildSchedule(input: ScheduleInput): ScheduleResult {
       } else {
         fixedPayment = balance / n;
       }
+      // Whole cents, as the payment would be written into an agreement; the
+      // last installment absorbs the rounding remainder.
+      fixedPayment = Math.round(fixedPayment * 100) / 100;
       calcPayment = fixedPayment;
       calcCount = n;
     } else if (mode === "amount" && fixedPayment > 0) {

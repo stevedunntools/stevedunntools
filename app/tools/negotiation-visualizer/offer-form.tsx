@@ -107,17 +107,18 @@ export default function OfferForm({
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Party toggle */}
-        <div>
-          <label className="block text-sm font-medium text-brand-primary mb-1.5">
+        <div role="group" aria-labelledby="neg-viz-party-label">
+          <p id="neg-viz-party-label" className="block text-sm font-medium text-brand-primary mb-1.5">
             Party
-          </label>
+          </p>
           <div className="flex gap-2">
             <button
               ref={plaintiffBtnRef}
+              aria-pressed={party === "plaintiff"}
               onClick={() => onPartyChange("plaintiff")}
               className={`flex-1 px-3 py-2 text-sm font-medium rounded-md border transition-colors ${
                 party === "plaintiff"
-                  ? "bg-[#4A90D9] text-white border-[#4A90D9]"
+                  ? "bg-brand-accent-hover text-white border-brand-accent-hover"
                   : "bg-white text-brand-muted border-brand-border hover:border-brand-accent"
               }`}
             >
@@ -125,10 +126,11 @@ export default function OfferForm({
             </button>
             <button
               ref={defendantBtnRef}
+              aria-pressed={party === "defendant"}
               onClick={() => onPartyChange("defendant")}
               className={`flex-1 px-3 py-2 text-sm font-medium rounded-md border transition-colors ${
                 party === "defendant"
-                  ? "bg-[#DC2626] text-white border-[#DC2626]"
+                  ? "bg-brand-error text-white border-brand-error"
                   : "bg-white text-brand-muted border-brand-border hover:border-brand-accent"
               }`}
             >
@@ -139,11 +141,12 @@ export default function OfferForm({
 
         {/* Unified input */}
         <div>
-          <label className="block text-sm font-medium text-brand-primary mb-1.5">
+          <label htmlFor="neg-viz-offer" className="block text-sm font-medium text-brand-primary mb-1.5">
             Offer
           </label>
           <div className="relative">
             <input
+              id="neg-viz-offer"
               ref={offerInputRef}
               type="text"
               value={input}
@@ -211,7 +214,7 @@ export default function OfferForm({
             id="neg-viz-settlement"
             value={settlementInput}
             onChange={onSettlementChange}
-            placeholder="450,000"
+            placeholder="e.g. 450,000"
           />
           <p className="mt-1.5 text-xs text-brand-muted">
             If the case settles, enter the settlement amount. It will be

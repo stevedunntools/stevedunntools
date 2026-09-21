@@ -4,7 +4,14 @@ export const metadata: Metadata = {
   title: "Privacy Policy",
   description: "Privacy policy for Steve Dunn Tools.",
   alternates: { canonical: "/privacy" },
-  openGraph: { url: "/privacy" },
+  openGraph: {
+    title: "Privacy Policy | Steve Dunn Tools",
+    description: "Privacy policy for Steve Dunn Tools.",
+    url: "/privacy",
+    siteName: "Steve Dunn Tools",
+    type: "website",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Steve Dunn Tools — Settlement tools built by a mediator" }],
+  },
 };
 
 export default function PrivacyPage() {

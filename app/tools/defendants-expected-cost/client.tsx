@@ -1,5 +1,6 @@
 "use client";
 
+import PrintInputs from "@/components/print-inputs";
 import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
 import {
@@ -76,7 +77,7 @@ export default function DefendantsExpectedCostClient() {
                 id="defendant-ec-damages"
                 value={damages}
                 onChange={setDamages}
-                placeholder="250,000"
+                placeholder="e.g. 250,000"
               />
             </div>
             <PercentSlider
@@ -109,7 +110,7 @@ export default function DefendantsExpectedCostClient() {
                 id="defendant-ec-plaintiff-fees"
                 value={plaintiffFees}
                 onChange={setPlaintiffFees}
-                placeholder="75,000"
+                placeholder="e.g. 75,000"
               />
             </div>
             <PercentSlider
@@ -142,7 +143,7 @@ export default function DefendantsExpectedCostClient() {
                 id="defendant-ec-attorneys-fees"
                 value={defendantFees}
                 onChange={setDefendantFees}
-                placeholder="100,000"
+                placeholder="e.g. 100,000"
               />
             </div>
             <div>
@@ -156,7 +157,7 @@ export default function DefendantsExpectedCostClient() {
                 id="defendant-ec-litigation-costs"
                 value={defendantCosts}
                 onChange={setDefendantCosts}
-                placeholder="25,000"
+                placeholder="e.g. 25,000"
               />
             </div>
             <div>
@@ -170,7 +171,7 @@ export default function DefendantsExpectedCostClient() {
                 id="defendant-ec-intangible-costs"
                 value={intangibleCosts}
                 onChange={setIntangibleCosts}
-                placeholder="10,000"
+                placeholder="e.g. 10,000"
               />
             </div>
           </CardContent>
@@ -183,11 +184,20 @@ export default function DefendantsExpectedCostClient() {
         )}
       </div>
 
+      <PrintInputs items={[
+        { label: "Potential damages", value: damages ? "$" + damages : "" },
+        { label: "Probability of damages", value: `${damagesProbability}%` },
+        { label: "Plaintiff's fees if shifted", value: plaintiffFees ? "$" + plaintiffFees : "" },
+        { label: "Probability of fee award", value: `${feeProbability}%` },
+        { label: "Defense fees", value: defendantFees ? "$" + defendantFees : "" },
+        { label: "Defense costs", value: defendantCosts ? "$" + defendantCosts : "" },
+        { label: "Intangible costs", value: intangibleCosts ? "$" + intangibleCosts : "" },
+      ]} />
       {/* Results */}
       <div className="lg:col-span-2">
         <ResultsShell
           label="Defendant&apos;s Total Expected Cost"
-          value={hydrated ? fmt(totalExpectedCost) : "—"}
+          value={hydrated && hasAny ? fmt(totalExpectedCost) : "—"}
         >
           <Card className="bg-white border-brand-border">
             <CardHeader>
@@ -196,21 +206,21 @@ export default function DefendantsExpectedCostClient() {
             <CardContent>
               <table className="w-full text-sm">
                 <tbody>
-                  <Row label="Plaintiff's damages" value={hydrated ? dmg : "—"} />
-                  <Row label="Probability" value={hydrated ? `${damagesProbability}%` : "—"} />
-                  <Row label="Expected damages" value={hydrated ? expectedDamages : "—"} bold />
+                  <Row label="Plaintiff's damages" value={hydrated && hasAny ? dmg : "—"} />
+                  <Row label="Probability" value={hydrated && hasAny ? `${damagesProbability}%` : "—"} />
+                  <Row label="Expected damages" value={hydrated && hasAny ? expectedDamages : "—"} bold />
                   <Separator />
-                  <Row label="Plaintiff's fees & costs" value={hydrated ? pFees : "—"} />
-                  <Row label="Fee shifting probability" value={hydrated ? `${feeProbability}%` : "—"} />
-                  <Row label="Expected fee exposure" value={hydrated ? expectedFeeExposure : "—"} bold />
+                  <Row label="Plaintiff's fees & costs" value={hydrated && hasAny ? pFees : "—"} />
+                  <Row label="Fee shifting probability" value={hydrated && hasAny ? `${feeProbability}%` : "—"} />
+                  <Row label="Expected fee exposure" value={hydrated && hasAny ? expectedFeeExposure : "—"} bold />
                   <Separator />
-                  <Row label="Defendant's attorneys fees" value={hydrated ? dFees : "—"} />
-                  <Row label="Defendant's litigation costs" value={hydrated ? dCosts : "—"} />
-                  <Row label="Intangible costs" value={hydrated ? intang : "—"} />
+                  <Row label="Defendant's attorneys fees" value={hydrated && hasAny ? dFees : "—"} />
+                  <Row label="Defendant's litigation costs" value={hydrated && hasAny ? dCosts : "—"} />
+                  <Row label="Intangible costs" value={hydrated && hasAny ? intang : "—"} />
                   <Separator />
                   <TotalRow
                     label="Total expected cost"
-                    value={hydrated ? fmt(totalExpectedCost) : "—"}
+                    value={hydrated && hasAny ? fmt(totalExpectedCost) : "—"}
                   />
                 </tbody>
               </table>
@@ -218,7 +228,7 @@ export default function DefendantsExpectedCostClient() {
           </Card>
         </ResultsShell>
       </div>
-      <MobileResultBar label="Expected cost" value={hydrated ? fmt(totalExpectedCost) : "—"} targetId="tool-headline-result" />
+      <MobileResultBar label="Expected cost" value={hydrated && hasAny ? fmt(totalExpectedCost) : "—"} />
     </div>
   );
 }

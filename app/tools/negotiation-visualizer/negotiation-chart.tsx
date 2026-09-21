@@ -206,9 +206,10 @@ export function NegotiationChart({
   }
 
   return (
+    <div className="overflow-x-auto">
     <svg
       viewBox={`0 0 ${CHART_W} ${CHART_H}`}
-      className="w-full h-auto"
+      className="w-full h-auto min-w-[640px] sm:min-w-0"
       role="img"
       aria-label="Negotiation chart showing offers and brackets from both parties"
     >
@@ -514,7 +515,7 @@ export function NegotiationChart({
           className="fill-brand-muted"
           fontSize="14"
         >
-          Add offers below to see the chart
+          Add offers above to see the chart
         </text>
       )}
 
@@ -580,5 +581,6 @@ export function NegotiationChart({
           );
         })()}
     </svg>
+    </div>
   );
 }

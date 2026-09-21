@@ -126,7 +126,7 @@ export default function BracketGeneratorClient() {
               onChange={(e) => handleChange("upper", e)}
               onBlur={() => handleCommit("upper")}
               onKeyDown={(e) => handleKeyDown("upper", e)}
-              placeholder="500,000"
+              placeholder="e.g. 500,000"
               className={`w-full pl-7 pr-3 py-2 text-base sm:text-sm border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent ${
                 autoField === "upper" ? "border-brand-accent/40 bg-brand-bg" : "border-brand-border"
               }`}
@@ -153,7 +153,7 @@ export default function BracketGeneratorClient() {
               onChange={(e) => handleChange("mid", e)}
               onBlur={() => handleCommit("mid")}
               onKeyDown={(e) => handleKeyDown("mid", e)}
-              placeholder="350,000"
+              placeholder="e.g. 350,000"
               className={`w-full pl-7 pr-3 py-2 text-base sm:text-sm border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent ${
                 autoField === "mid" ? "border-brand-accent/40 bg-brand-bg" : "border-brand-border"
               }`}
@@ -180,7 +180,7 @@ export default function BracketGeneratorClient() {
               onChange={(e) => handleChange("lower", e)}
               onBlur={() => handleCommit("lower")}
               onKeyDown={(e) => handleKeyDown("lower", e)}
-              placeholder="200,000"
+              placeholder="e.g. 200,000"
               className={`w-full pl-7 pr-3 py-2 text-base sm:text-sm border rounded-md bg-white text-brand-primary placeholder:text-brand-muted/50 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent ${
                 autoField === "lower" ? "border-brand-accent/40 bg-brand-bg" : "border-brand-border"
               }`}

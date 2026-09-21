@@ -1,5 +1,6 @@
 "use client";
 
+import PrintInputs from "@/components/print-inputs";
 import { useMemo } from "react";
 import { useSessionState, clearSessionKeys, dateSerializer, useHydrated } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
@@ -165,54 +166,58 @@ export default function AddSubtractDateClient() {
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div>
-                <label className="block text-xs font-medium text-brand-muted mb-1">
+                <label htmlFor="add-subtract-date-years" className="block text-xs font-medium text-brand-muted mb-1">
                   Years
                 </label>
                 <input
+                  id="add-subtract-date-years"
                   type="text"
                   inputMode="numeric"
                   value={years}
                   onChange={(e) => setYears(e.target.value)}
-                  placeholder="0"
+                  placeholder="e.g. 0"
                   className={inputClass}
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-brand-muted mb-1">
+                <label htmlFor="add-subtract-date-months" className="block text-xs font-medium text-brand-muted mb-1">
                   Months
                 </label>
                 <input
+                  id="add-subtract-date-months"
                   type="text"
                   inputMode="numeric"
                   value={months}
                   onChange={(e) => setMonths(e.target.value)}
-                  placeholder="0"
+                  placeholder="e.g. 0"
                   className={inputClass}
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-brand-muted mb-1">
+                <label htmlFor="add-subtract-date-weeks" className="block text-xs font-medium text-brand-muted mb-1">
                   Weeks
                 </label>
                 <input
+                  id="add-subtract-date-weeks"
                   type="text"
                   inputMode="numeric"
                   value={weeks}
                   onChange={(e) => setWeeks(e.target.value)}
-                  placeholder="0"
+                  placeholder="e.g. 0"
                   className={inputClass}
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-brand-muted mb-1">
+                <label htmlFor="add-subtract-date-days" className="block text-xs font-medium text-brand-muted mb-1">
                   Days
                 </label>
                 <input
+                  id="add-subtract-date-days"
                   type="text"
                   inputMode="numeric"
                   value={days}
                   onChange={(e) => setDays(e.target.value)}
-                  placeholder="0"
+                  placeholder="e.g. 0"
                   className={inputClass}
                 />
               </div>
@@ -244,10 +249,11 @@ export default function AddSubtractDateClient() {
             </p>
             {businessDays && (
               <div>
-                <label className="block text-xs font-medium text-brand-muted mb-1">
+                <label htmlFor="add-subtract-date-exclude" className="block text-xs font-medium text-brand-muted mb-1">
                   Exclude
                 </label>
                 <select
+                  id="add-subtract-date-exclude"
                   value={holidayMode}
                   onChange={(e) => setHolidayMode(e.target.value as HolidayMode)}
                   className={selectClass}
@@ -267,6 +273,15 @@ export default function AddSubtractDateClient() {
         )}
       </div>
 
+      <PrintInputs items={[
+        { label: "Start date", value: startDate?.toLocaleDateString() },
+        { label: "Direction", value: direction },
+        { label: "Years", value: years },
+        { label: "Months", value: months },
+        { label: "Weeks", value: weeks },
+        { label: "Days", value: days },
+        { label: "Business days", value: businessDays ? `yes (${holidayMode})` : "no" },
+      ]} />
       {/* Results */}
       <div className="lg:col-span-2">
         <div className="sticky top-20 space-y-6">
@@ -324,7 +339,7 @@ export default function AddSubtractDateClient() {
           )}
         </div>
       </div>
-      <MobileResultBar label="Result" value={displayResult && !displayResult.tooLarge ? formatDate(displayResult.date) : "\u2014"} targetId="tool-headline-result" />
+      <MobileResultBar label="Result" value={displayResult && !displayResult.tooLarge ? formatDate(displayResult.date) : "\u2014"} />
     </div>
   );
 }
