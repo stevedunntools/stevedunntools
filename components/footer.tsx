@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { navGroups } from "@/lib/navigation";
 import CurrentYear from "@/components/current-year";
+import BookingLink from "@/components/booking-link";
 
 const companyLinks = [
   { href: "/about", label: "About" },
@@ -21,6 +22,13 @@ export default function Footer() {
             <p className="mt-3 text-sm leading-relaxed">
               Mediation tools built by a mediator. Practical calculators and
               utilities for lawyers, mediators, and parties in dispute resolution.
+            </p>
+            <p className="mt-4 text-sm leading-relaxed">
+              Steve mediates disputes nationwide, in person or by video.{" "}
+              <BookingLink placement="footer" className="text-white underline underline-offset-2 hover:text-brand-accent transition-colors">
+                Schedule through Miles
+              </BookingLink>
+              .
             </p>
           </div>
 

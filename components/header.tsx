@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/sheet";
 
 import { navGroups } from "@/lib/navigation";
+import BookingLink from "@/components/booking-link";
 
 function Logo({ onClick }: { onClick?: () => void }) {
   return (
@@ -152,6 +153,12 @@ function DesktopNav() {
           </div>
         );
       })}
+      <BookingLink
+        placement="header"
+        className="ml-3 inline-flex items-center rounded-md bg-brand-accent px-3.5 py-2 text-sm font-semibold text-white hover:bg-brand-accent-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+      >
+        Book a mediation
+      </BookingLink>
     </nav>
   );
 }
@@ -184,6 +191,13 @@ function MobileNav() {
           </SheetClose>
         </div>
         <nav className="p-4 space-y-1">
+          <BookingLink
+            placement="menu"
+            onClick={() => setOpen(false)}
+            className="flex items-center justify-center rounded-md bg-brand-accent px-3 py-2.5 mb-3 text-sm font-semibold text-white hover:bg-brand-accent-hover transition-colors"
+          >
+            Book a mediation
+          </BookingLink>
           {navGroups.map((group) => (
             <div key={group.label}>
               <button
