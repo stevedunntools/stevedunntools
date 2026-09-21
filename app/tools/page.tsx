@@ -1,6 +1,7 @@
 import { toolMetadata } from "@/lib/tool-metadata";
 import { allToolLinks } from "@/lib/navigation";
 import ToolCardGrid from "@/components/tool-card-grid";
+import BookingPanel from "@/components/booking-panel";
 
 const description =
   "Browse every free settlement tool: negotiation charts, damages estimators, contingency fee calculators, payment schedules, interest, and date tools.";
@@ -46,6 +47,7 @@ export default function ToolsPage() {
         </p>
       </div>
       <ToolCardGrid />
+      <BookingPanel />
     </>
   );
 }

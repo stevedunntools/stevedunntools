@@ -106,7 +106,7 @@ export default function ToolCardGrid() {
       {toolCategories.map((group) => {
         const styles = categoryStyles[group.label];
         return (
-          <div key={group.label} className="mb-12 last:mb-0">
+          <div key={group.label} id={group.label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")} className="mb-12 last:mb-0 scroll-mt-24">
             <div className="mb-5">
               <h2 className="text-lg font-semibold tracking-tight text-brand-primary">
                 {group.label}

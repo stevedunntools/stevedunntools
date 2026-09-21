@@ -1,6 +1,3 @@
-import BookingPanel from "@/components/booking-panel";
-import RelatedTools from "@/components/related-tools";
-import ToolContent from "@/components/tool-content";
 
 export default function ToolLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -30,9 +27,6 @@ export default function ToolLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         {children}
-        <BookingPanel />
-        <ToolContent />
-        <RelatedTools />
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import { toolMetadata } from "@/lib/tool-metadata";
 import PersonalInjuryClient from "./client";
 import ToolPageHeader from "@/components/tool-page-header";
+import ToolPageFooter from "@/components/tool-page-footer";
 
 export const metadata = toolMetadata({
   title: "Personal Injury Damages Estimator",
@@ -19,6 +20,7 @@ export default function PersonalInjuryDamagesEstimatorPage() {
         description="Estimate personal injury damages. The non-economic damages multiplier applies to total medical expenses."
       />
       <PersonalInjuryClient />
+      <ToolPageFooter href="/tools/personal-injury-damages-estimator" />
     </>
   );
 }

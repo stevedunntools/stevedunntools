@@ -1,6 +1,7 @@
 import { toolMetadata } from "@/lib/tool-metadata";
 import NegotiationVisualizerClient from "./client";
 import ToolPageHeader from "@/components/tool-page-header";
+import ToolPageFooter from "@/components/tool-page-footer";
 
 export const metadata = toolMetadata({
   title: "Negotiation Visualizer",
@@ -19,6 +20,7 @@ export default function NegotiationVisualizerPage() {
         description="Chart offers and brackets from both parties to visualize convergence. Numerical offers appear as connected dots; brackets appear as shaded ranges. Overlapping bracket zones are highlighted in green."
       />
       <NegotiationVisualizerClient />
+      <ToolPageFooter href="/tools/negotiation-visualizer" />
     </>
   );
 }

@@ -1,6 +1,7 @@
 import { toolMetadata } from "@/lib/tool-metadata";
 import DaysBetweenDatesClient from "./client";
 import ToolPageHeader from "@/components/tool-page-header";
+import ToolPageFooter from "@/components/tool-page-footer";
 
 export const metadata = toolMetadata({
   title: "Days Between Dates",
@@ -19,6 +20,7 @@ export default function DaysBetweenDatesPage() {
         description="Calculate the duration between two dates, expressed in multiple formats."
       />
       <DaysBetweenDatesClient />
+      <ToolPageFooter href="/tools/days-between-dates" />
     </>
   );
 }

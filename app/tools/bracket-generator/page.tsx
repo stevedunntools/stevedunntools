@@ -1,6 +1,7 @@
 import { toolMetadata } from "@/lib/tool-metadata";
 import BracketGeneratorClient from "./client";
 import ToolPageHeader from "@/components/tool-page-header";
+import ToolPageFooter from "@/components/tool-page-footer";
 
 export const metadata = toolMetadata({
   title: "Bracket Generator",
@@ -19,6 +20,7 @@ export default function BracketGeneratorPage() {
         description="Enter any two of the three values and the third will calculate automatically. Changing an endpoint recalculates the midpoint. Changing the midpoint shifts both endpoints by equal amounts, keeping the spread the same."
       />
       <BracketGeneratorClient />
+      <ToolPageFooter href="/tools/bracket-generator" />
     </>
   );
 }

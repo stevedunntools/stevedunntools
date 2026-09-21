@@ -1,6 +1,7 @@
 import { toolMetadata } from "@/lib/tool-metadata";
 import SimpleInterestClient from "./client";
 import ToolPageHeader from "@/components/tool-page-header";
+import ToolPageFooter from "@/components/tool-page-footer";
 
 export const metadata = toolMetadata({
   title: "Simple Interest Calculator",
@@ -18,6 +19,7 @@ export default function SimpleInterestCalculatorPage() {
         description="Calculate simple interest on any principal amount over any time period."
       />
       <SimpleInterestClient />
+      <ToolPageFooter href="/tools/simple-interest-calculator" />
     </>
   );
 }

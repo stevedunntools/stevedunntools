@@ -1,6 +1,7 @@
 import { toolMetadata } from "@/lib/tool-metadata";
 import EmploymentContingencyClient from "./client";
 import ToolPageHeader from "@/components/tool-page-header";
+import ToolPageFooter from "@/components/tool-page-footer";
 
 export const metadata = toolMetadata({
   title: "W-2, 1099, and Attorney Fee Calculator",
@@ -19,6 +20,7 @@ export default function EmploymentContingencyCalculatorPage() {
         description="Calculate the plaintiff's net recovery under a contingency fee arrangement, with allocation between wages and non-wage income for tax purposes."
       />
       <EmploymentContingencyClient />
+      <ToolPageFooter href="/tools/employment-contingency-calculator" />
     </>
   );
 }

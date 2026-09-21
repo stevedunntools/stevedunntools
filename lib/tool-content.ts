@@ -22,7 +22,7 @@ export const toolContent: Record<string, ToolContent> = {
   "/tools/negotiation-visualizer": {
     howItWorks: [
       `Most negotiations are easier to understand as a picture than as a list of numbers. The Negotiation Visualizer charts a settlement negotiation round by round: enter each offer as it happens, and the chart plots the plaintiff's demands and the defendant's offers as two converging lines.`,
-      `The tool accepts two kinds of moves. A firm offer is a single number, like 500,000. A bracket is a range, entered like 200,000-400,000, which appears on the chart as a shaded band with a dotted line through its midpoint. When both sides have brackets on the table and the brackets overlap, the overlapping zone is highlighted in green — often the first visible sign of where a deal might land.`,
+      `The tool accepts two kinds of moves. A firm offer is a single number, like 500,000. A bracket is a range, entered like 200,000-400,000, which appears on the chart as a shaded band with a dotted line through its midpoint. When both sides have brackets on the table and the brackets overlap, the overlapping zone is highlighted in green.`,
       `Everything runs in your browser. No offer you enter is stored on a server or transmitted anywhere, and you can print or save the chart and offer history as a PDF for your file.`,
     ],
     example: [
@@ -126,7 +126,7 @@ export const toolContent: Record<string, ToolContent> = {
       },
       {
         q: `What are liquidated damages?`,
-        a: `Statutory damages some employment laws add on top of back pay — commonly an amount equal to the back-pay award (a “doubling”) under the FLSA, ADEA, and Equal Pay Act when the violation is willful, or under the FMLA absent good faith. The tool's options mirror those patterns; whether they apply is a legal question.`,
+        a: `Statutory damages some employment laws add on top of back pay — commonly an amount equal to the back-pay award (a “doubling”) which is the default under the FLSA and Equal Pay Act unless the employer shows it acted in good faith, applies under the ADEA when the violation was willful, and applies under the FMLA absent good faith. The tool's options mirror those patterns; whether they apply is a legal question.`,
       },
       {
         q: `Does the estimate account for caps on damages?`,

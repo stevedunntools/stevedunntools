@@ -63,7 +63,10 @@ export default function PrivacyPage() {
             Vercel Analytics is privacy-focused: it does not use cookies, does
             not collect personal information, and does not track individual
             users. It provides only aggregate data such as page views and
-            visitor counts.
+            visitor counts. We also use Vercel Speed Insights, which reports
+            anonymous page-load performance measurements, and we record an
+            anonymous count of clicks on the &ldquo;Book a mediation&rdquo; links
+            so we know which placement is useful. None of this identifies you.
           </p>
 
           <h2 className="text-lg font-semibold text-brand-primary pt-2">

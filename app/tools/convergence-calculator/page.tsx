@@ -1,6 +1,7 @@
 import { toolMetadata } from "@/lib/tool-metadata";
 import ConvergenceCalculatorClient from "./client";
 import ToolPageHeader from "@/components/tool-page-header";
+import ToolPageFooter from "@/components/tool-page-footer";
 
 export const metadata = toolMetadata({
   title: "Point of Intersection",
@@ -19,6 +20,7 @@ export default function ConvergenceCalculatorPage() {
         description="Enter two offers from each party. The tool shows where the lines would intersect if the pattern continued. You may also enter a desired settlement number to see how the parties' moves would need to adjust to reach that result."
       />
       <ConvergenceCalculatorClient />
+      <ToolPageFooter href="/tools/convergence-calculator" />
     </>
   );
 }

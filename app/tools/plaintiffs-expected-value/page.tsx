@@ -1,6 +1,7 @@
 import { toolMetadata } from "@/lib/tool-metadata";
 import PlaintiffsExpectedValueClient from "./client";
 import ToolPageHeader from "@/components/tool-page-header";
+import ToolPageFooter from "@/components/tool-page-footer";
 
 export const metadata = toolMetadata({
   title: "Plaintiff's Expected Value",
@@ -18,6 +19,7 @@ export default function PlaintiffsExpectedValuePage() {
         description="Calculate the expected value of a case adjusted for probability of success and time value of money, less fees and costs."
       />
       <PlaintiffsExpectedValueClient />
+      <ToolPageFooter href="/tools/plaintiffs-expected-value" />
     </>
   );
 }

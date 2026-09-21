@@ -1,6 +1,7 @@
 import { toolMetadata } from "@/lib/tool-metadata";
 import TakeHomeAfterTaxesClient from "./client";
 import ToolPageHeader from "@/components/tool-page-header";
+import ToolPageFooter from "@/components/tool-page-footer";
 
 export const metadata = toolMetadata({
   title: "Rough Guess After Taxes Estimator",
@@ -19,6 +20,7 @@ export default function TakeHomeAfterTaxesPage() {
         description="Enter wages, 1099 income, and any tax-free personal injury proceeds to see an estimate of after-tax take-home pay for tax year 2026. Useful for modeling settlement allocations."
       />
       <TakeHomeAfterTaxesClient />
+      <ToolPageFooter href="/tools/take-home-after-taxes" />
     </>
   );
 }

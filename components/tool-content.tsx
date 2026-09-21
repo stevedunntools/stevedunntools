@@ -1,8 +1,5 @@
-"use client";
-
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { usePathname } from "next/navigation";
 import { toolContent } from "@/lib/tool-content";
 
 /**
@@ -39,13 +36,11 @@ function stripLinks(text: string): string {
 
 /**
  * Long-form content rendered below each tool: How it works, a worked example,
- * when to use it, and an FAQ. Adds FAQPage structured data so the questions
- * are eligible for rich results. Looks the content up by route, so the tools
- * layout can render it once for every tool page.
+ * when to use it, and an FAQ. Adds FAQPage structured data. A server
+ * component: the prose is rendered into the HTML once and ships no JS.
  */
-export default function ToolContent() {
-  const pathname = usePathname();
-  const content = toolContent[pathname];
+export default function ToolContent({ href }: { href: string }) {
+  const content = toolContent[href];
   if (!content) return null;
 
   const faqJsonLd = {

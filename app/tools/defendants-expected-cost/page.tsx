@@ -1,6 +1,7 @@
 import { toolMetadata } from "@/lib/tool-metadata";
 import DefendantsExpectedCostClient from "./client";
 import ToolPageHeader from "@/components/tool-page-header";
+import ToolPageFooter from "@/components/tool-page-footer";
 
 export const metadata = toolMetadata({
   title: "Defendant's Expected Cost",
@@ -19,6 +20,7 @@ export default function DefendantsExpectedCostPage() {
         description="Estimate the defendant's total expected cost of litigation, including probability-adjusted damages and fee exposure, plus defense costs."
       />
       <DefendantsExpectedCostClient />
+      <ToolPageFooter href="/tools/defendants-expected-cost" />
     </>
   );
 }

@@ -1,6 +1,7 @@
 import { toolMetadata } from "@/lib/tool-metadata";
 import ContingencyCalculatorClient from "./client";
 import ToolPageHeader from "@/components/tool-page-header";
+import ToolPageFooter from "@/components/tool-page-footer";
 
 export const metadata = toolMetadata({
   title: "Contingency Calculator",
@@ -19,6 +20,7 @@ export default function ContingencyCalculatorPage() {
         description="Calculate attorney fees and the plaintiff's net recovery under a contingency fee arrangement."
       />
       <ContingencyCalculatorClient />
+      <ToolPageFooter href="/tools/contingency-calculator" />
     </>
   );
 }

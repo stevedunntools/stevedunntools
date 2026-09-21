@@ -1,6 +1,7 @@
 import { toolMetadata } from "@/lib/tool-metadata";
 import EmploymentDamagesClient from "./client";
 import ToolPageHeader from "@/components/tool-page-header";
+import ToolPageFooter from "@/components/tool-page-footer";
 
 export const metadata = toolMetadata({
   title: "Employment Damages Estimator",
@@ -18,6 +19,7 @@ export default function EmploymentDamagesEstimatorPage() {
         description="Estimate potential employment damages including back pay, mitigation, front pay, and additional damages."
       />
       <EmploymentDamagesClient />
+      <ToolPageFooter href="/tools/employment-damages-estimator" />
     </>
   );
 }

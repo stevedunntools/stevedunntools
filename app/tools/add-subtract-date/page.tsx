@@ -1,6 +1,7 @@
 import { toolMetadata } from "@/lib/tool-metadata";
 import AddSubtractDateClient from "./client";
 import ToolPageHeader from "@/components/tool-page-header";
+import ToolPageFooter from "@/components/tool-page-footer";
 
 export const metadata = toolMetadata({
   title: "Add/Subtract from Date",
@@ -19,6 +20,7 @@ export default function AddSubtractDatePage() {
         description="Add or subtract years, months, weeks, and/or days from a date. Enable business days to skip weekends and federal holidays."
       />
       <AddSubtractDateClient />
+      <ToolPageFooter href="/tools/add-subtract-date" />
     </>
   );
 }

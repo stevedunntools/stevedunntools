@@ -1,6 +1,7 @@
 import { toolMetadata } from "@/lib/tool-metadata";
 import PaymentOverTimeClient from "./client";
 import ToolPageHeader from "@/components/tool-page-header";
+import ToolPageFooter from "@/components/tool-page-footer";
 
 export const metadata = toolMetadata({
   title: "Payment Over Time Calculator",
@@ -18,6 +19,7 @@ export default function PaymentOverTimePage() {
         description="Build a complete payment schedule for a settlement paid with up-front payments and installments."
       />
       <PaymentOverTimeClient />
+      <ToolPageFooter href="/tools/payment-over-time" />
     </>
   );
 }

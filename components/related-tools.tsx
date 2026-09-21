@@ -1,7 +1,4 @@
-"use client";
-
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { navGroups, toolDescriptions } from "@/lib/navigation";
 import {
   Card,
@@ -11,15 +8,13 @@ import {
 } from "@/components/ui/card";
 
 /**
- * Links to the other tools in the current tool's category. Rendered by the
- * tools layout, so every tool page gets it automatically.
+ * Links to the other tools in this tool's category (server component).
  */
-export default function RelatedTools() {
-  const pathname = usePathname();
-  const group = navGroups.find((g) => g.links.some((l) => l.href === pathname));
+export default function RelatedTools({ href }: { href: string }) {
+  const group = navGroups.find((g) => g.links.some((l) => l.href === href));
   if (!group) return null;
 
-  const related = group.links.filter((l) => l.href !== pathname);
+  const related = group.links.filter((l) => l.href !== href);
   if (related.length === 0) return null;
 
   return (
