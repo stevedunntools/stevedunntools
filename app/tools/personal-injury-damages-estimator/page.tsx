@@ -1,26 +1,13 @@
-import { toolMetadata } from "@/lib/tool-metadata";
+import { toolPageMetadata } from "@/lib/tool-metadata";
+import ToolPage from "@/components/tool-page";
 import PersonalInjuryClient from "./client";
-import ToolPageHeader from "@/components/tool-page-header";
-import ToolPageFooter from "@/components/tool-page-footer";
 
-export const metadata = toolMetadata({
-  title: "Personal Injury Damages Estimator",
-  seoTitle: "Personal Injury Settlement Calculator",
-  description:
-    "Estimate personal injury damages including medical expenses, lost earnings, property damage, and non-economic damages.",
-  path: "/tools/personal-injury-damages-estimator",
-});
+export const metadata = toolPageMetadata("personal-injury-damages-estimator");
 
-export default function PersonalInjuryDamagesEstimatorPage() {
+export default function Page() {
   return (
-    <>
-      <ToolPageHeader
-        href="/tools/personal-injury-damages-estimator"
-        title="Personal Injury Damages Estimator"
-        description="Estimate personal injury damages. The non-economic damages multiplier applies to total medical expenses."
-      />
+    <ToolPage slug="personal-injury-damages-estimator">
       <PersonalInjuryClient />
-      <ToolPageFooter href="/tools/personal-injury-damages-estimator" />
-    </>
+    </ToolPage>
   );
 }

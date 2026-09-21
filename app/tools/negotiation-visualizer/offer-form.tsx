@@ -1,13 +1,8 @@
 "use client";
 
+import ToolCard from "@/components/tool-card";
 import { useState, useRef, useLayoutEffect } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
 import { commaFmt } from "@/lib/format";
 import { textFieldClass } from "@/lib/field-styles";
 import DollarInput from "@/components/dollar-input";
@@ -101,11 +96,7 @@ export default function OfferForm({
   }
 
   return (
-    <Card className="bg-white border-brand-border lg:col-span-2 print:hidden">
-      <CardHeader>
-        <CardTitle className="text-brand-primary text-base">Add Offer</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <ToolCard title="Add Offer" className="lg:col-span-2 print:hidden" contentClassName="space-y-4">
         {/* Party toggle */}
         <div role="group" aria-labelledby="neg-viz-party-label">
           <p id="neg-viz-party-label" className="block text-sm font-medium text-brand-primary mb-1.5">
@@ -221,7 +212,6 @@ export default function OfferForm({
             marked on the chart and included in the PDF export.
           </p>
         </div>
-      </CardContent>
-    </Card>
+      </ToolCard>
   );
 }

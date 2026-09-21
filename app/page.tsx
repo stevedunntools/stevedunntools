@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import ToolCardGrid from "@/components/tool-card-grid";
+import BookingPanel from "@/components/booking-panel";
 import { allToolLinks } from "@/lib/navigation";
 
 export const metadata: Metadata = {
@@ -66,6 +67,7 @@ export default function Home() {
       <section className="pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <ToolCardGrid />
+          <BookingPanel />
         </div>
       </section>
     </div>

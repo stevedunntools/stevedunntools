@@ -1,12 +1,12 @@
 import { OG_CONTENT_TYPE, OG_SIZE, renderToolOgImage } from "@/lib/tool-og-image";
+import { toolBySlug } from "@/lib/tools";
 
-export const alt = "Contingency Calculator — Steve Dunn Tools";
+const tool = toolBySlug("contingency-calculator");
+
+export const alt = `${tool.ogTitle ?? tool.label} — Steve Dunn Tools`;
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 
 export default function Image() {
-  return renderToolOgImage(
-    "Contingency Calculator",
-    "Attorney fees and net recovery under a contingency arrangement."
-  );
+  return renderToolOgImage(tool.ogTitle ?? tool.label, tool.tagline);
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { toolBySlug, toolHref } from "@/lib/tools";
 
 interface ToolMetadataOpts {
   /** Tool name as shown on the page. */
@@ -41,4 +42,10 @@ export function toolMetadata({ title, seoTitle, description, path }: ToolMetadat
       description,
     },
   };
+}
+
+/** Metadata for a registered tool page. */
+export function toolPageMetadata(slug: string): Metadata {
+  const t = toolBySlug(slug);
+  return toolMetadata({ title: t.label, seoTitle: t.seoTitle, description: t.metaDescription, path: toolHref(slug) });
 }

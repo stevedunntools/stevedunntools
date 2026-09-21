@@ -1,26 +1,13 @@
-import { toolMetadata } from "@/lib/tool-metadata";
+import { toolPageMetadata } from "@/lib/tool-metadata";
+import ToolPage from "@/components/tool-page";
 import AddSubtractDateClient from "./client";
-import ToolPageHeader from "@/components/tool-page-header";
-import ToolPageFooter from "@/components/tool-page-footer";
 
-export const metadata = toolMetadata({
-  title: "Add/Subtract from Date",
-  seoTitle: "Add or Subtract from a Date Calculator",
-  description:
-    "Add or subtract years, months, weeks, and days from a date, with business day support.",
-  path: "/tools/add-subtract-date",
-});
+export const metadata = toolPageMetadata("add-subtract-date");
 
-export default function AddSubtractDatePage() {
+export default function Page() {
   return (
-    <>
-      <ToolPageHeader
-        href="/tools/add-subtract-date"
-        title="Add/Subtract from Date"
-        description="Add or subtract years, months, weeks, and/or days from a date. Enable business days to skip weekends and federal holidays."
-      />
+    <ToolPage slug="add-subtract-date">
       <AddSubtractDateClient />
-      <ToolPageFooter href="/tools/add-subtract-date" />
-    </>
+    </ToolPage>
   );
 }

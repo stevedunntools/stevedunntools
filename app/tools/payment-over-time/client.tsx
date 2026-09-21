@@ -1,15 +1,12 @@
 "use client";
 
+import ClearAllButton from "@/components/clear-all-button";
+import ToolCard from "@/components/tool-card";
 import PrintInputs from "@/components/print-inputs";
 import { useMemo, useEffect } from "react";
 import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Trash2 } from "lucide-react";
 import { fmt, parseNumNonNeg, commaFmtNum } from "@/lib/format";
 import DollarInput from "@/components/dollar-input";
@@ -143,13 +140,7 @@ export default function PaymentOverTimeClient() {
     <div className="space-y-6">
       {/* Settlement + Interest row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 print:hidden">
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Settlement
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <ToolCard title="Settlement">
             <label
               htmlFor="payment-time-total"
               className="block text-sm font-medium text-brand-primary mb-1.5"
@@ -162,16 +153,9 @@ export default function PaymentOverTimeClient() {
               onChange={setTotalSettlement}
               placeholder="e.g. 250,000"
             />
-          </CardContent>
-        </Card>
+          </ToolCard>
 
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Interest
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <ToolCard title="Interest" contentClassName="space-y-4">
             <div>
               <label htmlFor="payment-over-time-interest-applies-to" className="block text-sm font-medium text-brand-primary mb-1.5">
                   Interest applies to
@@ -199,18 +183,11 @@ export default function PaymentOverTimeClient() {
                 />
               </>
             )}
-          </CardContent>
-        </Card>
+          </ToolCard>
       </div>
 
       {/* Up-front payments */}
-      <Card className="bg-white border-brand-border print:hidden">
-        <CardHeader>
-          <CardTitle className="text-brand-primary text-base">
-            Up-Front Payments
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <ToolCard title="Up-Front Payments" className="print:hidden" contentClassName="space-y-4">
           {upfronts.map((u, idx) => (
             <div key={u.id} className="grid grid-cols-[1fr_1fr_auto] gap-3">
               <div>
@@ -252,17 +229,10 @@ export default function PaymentOverTimeClient() {
           <Button variant="outline" onClick={addUpfront} className="w-full">
             Add Up-Front Payment
           </Button>
-        </CardContent>
-      </Card>
+        </ToolCard>
 
       {/* Installments */}
-      <Card className="bg-white border-brand-border print:hidden">
-        <CardHeader>
-          <CardTitle className="text-brand-primary text-base">
-            Installments
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <ToolCard title="Installments" className="print:hidden" contentClassName="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label htmlFor="payment-over-time-number-of-payments" className="block text-sm font-medium text-brand-primary mb-1.5">
@@ -331,16 +301,9 @@ export default function PaymentOverTimeClient() {
               />
             </div>
           )}
-        </CardContent>
-      </Card>
+        </ToolCard>
 
-      {hasAny && (
-        <div className="print:hidden">
-          <Button variant="outline" onClick={clearAll}>
-            Clear All
-          </Button>
-        </div>
-      )}
+      <ClearAllButton show={hasAny} onClick={clearAll} />
 
       {warnings.length > 0 && (
         <div className="space-y-2 print:hidden">

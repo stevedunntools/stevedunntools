@@ -1,15 +1,11 @@
 "use client";
 
+import ClearAllButton from "@/components/clear-all-button";
+import ToolCard from "@/components/tool-card";
 import PrintInputs from "@/components/print-inputs";
 import { useMemo } from "react";
 import { useSessionState, clearSessionKeys, dateSerializer, useHydrated } from "@/lib/use-session-state";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import DateInput from "@/components/date-input";
 import { addBusinessDays, addMonthsClamped, countBusinessDays, MONTHS } from "@/lib/date-utils";
 import { textFieldClass as inputClass, selectFieldClass as selectClass } from "@/lib/field-styles";
@@ -119,28 +115,15 @@ export default function AddSubtractDateClient() {
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
       {/* Inputs */}
       <div className="lg:col-span-3 space-y-6">
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Start Date
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <ToolCard title="Start Date">
             <DateInput
               value={startDate}
               onChange={setStartDate}
               aria-label="Start date"
             />
-          </CardContent>
-        </Card>
+          </ToolCard>
 
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Operation
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <ToolCard title="Operation" contentClassName="space-y-4">
             <div className="flex gap-2">
               <button
                 onClick={() => setDirection("add")}
@@ -222,16 +205,9 @@ export default function AddSubtractDateClient() {
                 />
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </ToolCard>
 
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Business Days
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        <ToolCard title="Business Days" contentClassName="space-y-3">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -263,14 +239,9 @@ export default function AddSubtractDateClient() {
                 </select>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </ToolCard>
 
-        {hasAny && (
-          <Button variant="outline" onClick={clearAll}>
-            Clear All
-          </Button>
-        )}
+        <ClearAllButton show={hasAny} onClick={clearAll} />
       </div>
 
       <PrintInputs items={[
@@ -311,13 +282,7 @@ export default function AddSubtractDateClient() {
           </Card>
 
           {displayResult && !displayResult.tooLarge && (
-            <Card className="bg-white border-brand-border">
-              <CardHeader>
-                <CardTitle className="text-brand-primary text-base">
-                  Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+            <ToolCard title="Summary">
                 <table className="w-full text-sm">
                   <tbody>
                     <tr className="border-b border-brand-border/50">
@@ -334,8 +299,7 @@ export default function AddSubtractDateClient() {
                     </tr>
                   </tbody>
                 </table>
-              </CardContent>
-            </Card>
+              </ToolCard>
           )}
         </div>
       </div>

@@ -1,9 +1,4 @@
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
+import ToolCard from "@/components/tool-card";
 import { Trash2 } from "lucide-react";
 import { fmt } from "@/lib/format";
 import { Offer } from "./logic";
@@ -15,11 +10,7 @@ interface OfferHistoryProps {
 
 export default function OfferHistory({ offers, onRemove }: OfferHistoryProps) {
   return (
-    <Card className="bg-white border-brand-border lg:col-span-3 print:col-span-full">
-      <CardHeader>
-        <CardTitle className="text-brand-primary text-base">Offer History</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <ToolCard title="Offer History" className="lg:col-span-3 print:col-span-full">
         {offers.length === 0 ? (
           <p className="text-sm text-brand-muted py-4 text-center">
             No offers yet. Add your first offer to get started.
@@ -68,7 +59,6 @@ export default function OfferHistory({ offers, onRemove }: OfferHistoryProps) {
             </table>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </ToolCard>
   );
 }

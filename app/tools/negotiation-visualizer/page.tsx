@@ -1,26 +1,13 @@
-import { toolMetadata } from "@/lib/tool-metadata";
+import { toolPageMetadata } from "@/lib/tool-metadata";
+import ToolPage from "@/components/tool-page";
 import NegotiationVisualizerClient from "./client";
-import ToolPageHeader from "@/components/tool-page-header";
-import ToolPageFooter from "@/components/tool-page-footer";
 
-export const metadata = toolMetadata({
-  title: "Negotiation Visualizer",
-  seoTitle: "Settlement Negotiation Visualizer",
-  description:
-    "Visualize the negotiation process with an interactive chart of offers, counteroffers, and convergence patterns.",
-  path: "/tools/negotiation-visualizer",
-});
+export const metadata = toolPageMetadata("negotiation-visualizer");
 
-export default function NegotiationVisualizerPage() {
+export default function Page() {
   return (
-    <>
-      <ToolPageHeader
-        href="/tools/negotiation-visualizer"
-        title="Negotiation Visualizer"
-        description="Chart offers and brackets from both parties to visualize convergence. Numerical offers appear as connected dots; brackets appear as shaded ranges. Overlapping bracket zones are highlighted in green."
-      />
+    <ToolPage slug="negotiation-visualizer">
       <NegotiationVisualizerClient />
-      <ToolPageFooter href="/tools/negotiation-visualizer" />
-    </>
+    </ToolPage>
   );
 }

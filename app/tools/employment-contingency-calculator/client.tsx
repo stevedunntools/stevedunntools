@@ -1,14 +1,10 @@
 "use client";
 
+import ClearAllButton from "@/components/clear-all-button";
+import ToolCard from "@/components/tool-card";
+import { calculateEmploymentContingency } from "./calculate";
 import PrintInputs from "@/components/print-inputs";
 import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
 import { fmt, parseNumNonNeg } from "@/lib/format";
 import { Row, Separator } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
@@ -38,15 +34,7 @@ export default function EmploymentContingencyClient() {
   const s = parseNumNonNeg(settlement);
   const c = parseNumNonNeg(costs);
   const nc = hasNotCovered ? parseNumNonNeg(notCovered) : 0;
-  const covered = Math.max(0, s - nc);
-  // Round the fee and the wage split to cents at each step so every breakdown
-  // row sums exactly to the row above it (independent rounding of each row
-  // could otherwise drift by a penny).
-  const attorneyFee = Math.round(covered * contingencyPct) / 100;
-  const feeAndCosts = attorneyFee + c;
-  const netToPlaintiff = s - feeAndCosts;
-  const wages = Math.round(netToPlaintiff * wagesPct) / 100;
-  const nonWage = netToPlaintiff - wages;
+  const { covered, attorneyFee, netToPlaintiff, wages, nonWage } = calculateEmploymentContingency({ settlement: s, feePct: contingencyPct, costs: c, wagesPct, notCovered: nc });
 
   const hasAny = settlement !== "" || costs !== "" || notCovered !== "" || hasNotCovered;
 
@@ -54,13 +42,7 @@ export default function EmploymentContingencyClient() {
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
       {/* Inputs */}
       <div className="lg:col-span-3 space-y-6 print:hidden">
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Settlement
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <ToolCard title="Settlement" contentClassName="space-y-4">
             <div className="max-w-[calc(50%-0.5rem)]">
               <label
                 htmlFor="emp-contingency-settlement"
@@ -102,16 +84,9 @@ export default function EmploymentContingencyClient() {
                 />
               </div>
             )}
-          </CardContent>
-        </Card>
+          </ToolCard>
 
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Contingency Fee
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <ToolCard title="Contingency Fee">
             <PercentSlider
               value={contingencyPct}
               onChange={setContingencyPct}
@@ -120,16 +95,9 @@ export default function EmploymentContingencyClient() {
               label="Use slider or type exact percentage (ex. 33.333%)"
               aria-label="Contingency fee percentage"
             />
-          </CardContent>
-        </Card>
+          </ToolCard>
 
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Costs
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <ToolCard title="Costs">
             <div className="max-w-[calc(50%-0.5rem)]">
               <label
                 htmlFor="emp-contingency-costs"
@@ -144,16 +112,9 @@ export default function EmploymentContingencyClient() {
                 placeholder="e.g. 10,000"
               />
             </div>
-          </CardContent>
-        </Card>
+          </ToolCard>
 
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Allocated to Wages
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <ToolCard title="Allocated to Wages">
             <PercentSlider
               value={wagesPct}
               onChange={setWagesPct}
@@ -162,14 +123,9 @@ export default function EmploymentContingencyClient() {
               label="Percentage of plaintiff's net recovery allocated to wages"
               aria-label="Percentage of net recovery allocated to wages"
             />
-          </CardContent>
-        </Card>
+          </ToolCard>
 
-        {hasAny && (
-          <Button variant="outline" onClick={clearAll}>
-            Clear All
-          </Button>
-        )}
+        <ClearAllButton show={hasAny} onClick={clearAll} />
       </div>
 
       <PrintInputs items={[
@@ -185,11 +141,7 @@ export default function EmploymentContingencyClient() {
           label="Net to Plaintiff"
           value={hydrated && hasAny ? fmt(netToPlaintiff) : "—"}
         >
-          <Card className="bg-white border-brand-border">
-            <CardHeader>
-              <CardTitle className="text-brand-primary text-base">Breakdown</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <ToolCard title="Breakdown">
               <table className="w-full text-sm">
                 <tbody>
                   <Row label="Settlement amount" value={hydrated && hasAny ? s : "—"} />
@@ -221,8 +173,7 @@ export default function EmploymentContingencyClient() {
                 The allocation splits the plaintiff&apos;s net recovery after
                 attorney fees and costs.
               </p>
-            </CardContent>
-          </Card>
+            </ToolCard>
         </ResultsShell>
       </div>
       <MobileResultBar label="Net to plaintiff" value={hydrated && hasAny ? fmt(netToPlaintiff) : "—"} />

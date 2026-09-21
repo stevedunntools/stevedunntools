@@ -1,14 +1,10 @@
 "use client";
 
+import ClearAllButton from "@/components/clear-all-button";
+import ToolCard from "@/components/tool-card";
+import { calculateExpectedCost } from "./calculate";
 import PrintInputs from "@/components/print-inputs";
 import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
 import { fmt, parseNumNonNeg } from "@/lib/format";
 import { Row, Separator, TotalRow } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
@@ -43,9 +39,7 @@ export default function DefendantsExpectedCostClient() {
   const dCosts = parseNumNonNeg(defendantCosts);
   const intang = parseNumNonNeg(intangibleCosts);
 
-  const expectedDamages = dmg * (damagesProbability / 100);
-  const expectedFeeExposure = pFees * (feeProbability / 100);
-  const totalExpectedCost = expectedDamages + expectedFeeExposure + dFees + dCosts + intang;
+  const { expectedDamages, expectedFeeExposure, totalExpectedCost } = calculateExpectedCost({ damages: dmg, damagesProbabilityPct: damagesProbability, plaintiffFees: pFees, feeProbabilityPct: feeProbability, defendantFees: dFees, defendantCosts: dCosts, intangibleCosts: intang });
 
   const hasAny =
     damages !== "" ||
@@ -59,13 +53,7 @@ export default function DefendantsExpectedCostClient() {
       {/* Inputs */}
       <div className="lg:col-span-3 space-y-6 print:hidden">
         {/* Plaintiff's Damages */}
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Plaintiff&apos;s Damages
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <ToolCard title="Plaintiff's Damages" contentClassName="space-y-4">
             <div className="max-w-[calc(50%-0.5rem)]">
               <label
                 htmlFor="defendant-ec-damages"
@@ -88,17 +76,10 @@ export default function DefendantsExpectedCostClient() {
               label="Probability of plaintiff prevailing on damages"
               aria-label="Probability of plaintiff prevailing on damages"
             />
-          </CardContent>
-        </Card>
+          </ToolCard>
 
         {/* Plaintiff's Costs & Fees */}
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Plaintiff&apos;s Costs &amp; Attorneys&apos; Fees (if recoverable)
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <ToolCard title="Plaintiff's Costs & Attorneys' Fees (if recoverable)" contentClassName="space-y-4">
             <div className="max-w-[calc(50%-0.5rem)]">
               <label
                 htmlFor="defendant-ec-plaintiff-fees"
@@ -121,17 +102,10 @@ export default function DefendantsExpectedCostClient() {
               label="Probability of fee shifting — use the same percentage as above if fee shifting is presumed"
               aria-label="Probability of fee shifting"
             />
-          </CardContent>
-        </Card>
+          </ToolCard>
 
         {/* Defendant's Costs */}
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Defendant&apos;s Costs
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <ToolCard title="Defendant's Costs" contentClassName="space-y-4">
             <div>
               <label
                 htmlFor="defendant-ec-attorneys-fees"
@@ -174,14 +148,9 @@ export default function DefendantsExpectedCostClient() {
                 placeholder="e.g. 10,000"
               />
             </div>
-          </CardContent>
-        </Card>
+          </ToolCard>
 
-        {hasAny && (
-          <Button variant="outline" onClick={clearAll}>
-            Clear All
-          </Button>
-        )}
+        <ClearAllButton show={hasAny} onClick={clearAll} />
       </div>
 
       <PrintInputs items={[
@@ -199,11 +168,7 @@ export default function DefendantsExpectedCostClient() {
           label="Defendant&apos;s Total Expected Cost"
           value={hydrated && hasAny ? fmt(totalExpectedCost) : "—"}
         >
-          <Card className="bg-white border-brand-border">
-            <CardHeader>
-              <CardTitle className="text-brand-primary text-base">Breakdown</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <ToolCard title="Breakdown">
               <table className="w-full text-sm">
                 <tbody>
                   <Row label="Plaintiff's damages" value={hydrated && hasAny ? dmg : "—"} />
@@ -224,8 +189,7 @@ export default function DefendantsExpectedCostClient() {
                   />
                 </tbody>
               </table>
-            </CardContent>
-          </Card>
+            </ToolCard>
         </ResultsShell>
       </div>
       <MobileResultBar label="Expected cost" value={hydrated && hasAny ? fmt(totalExpectedCost) : "—"} />

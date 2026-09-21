@@ -1,14 +1,10 @@
 "use client";
 
+import ClearAllButton from "@/components/clear-all-button";
+import ToolCard from "@/components/tool-card";
+import { calculateContingency } from "./calculate";
 import PrintInputs from "@/components/print-inputs";
 import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
 import { fmt, parseNumNonNeg } from "@/lib/format";
 import { Row, Separator, TotalRow } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
@@ -36,12 +32,7 @@ export default function ContingencyCalculatorClient() {
   const s = parseNumNonNeg(settlement);
   const c = parseNumNonNeg(costs);
   const nc = hasNotCovered ? parseNumNonNeg(notCovered) : 0;
-  const covered = Math.max(0, s - nc);
-  // Round the fee to cents before deriving the net so the breakdown rows
-  // always sum exactly to the settlement (a half-cent fee would otherwise
-  // round up in both the fee row and the net row).
-  const attorneyFee = Math.round(covered * contingencyPct) / 100;
-  const netToPlaintiff = s - attorneyFee - c;
+  const { covered, attorneyFee, netToPlaintiff } = calculateContingency({ settlement: s, feePct: contingencyPct, costs: c, notCovered: nc });
 
   const hasAny = settlement !== "" || costs !== "" || notCovered !== "" || hasNotCovered;
 
@@ -49,13 +40,7 @@ export default function ContingencyCalculatorClient() {
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
       {/* Inputs */}
       <div className="lg:col-span-3 space-y-6 print:hidden">
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Settlement
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <ToolCard title="Settlement" contentClassName="space-y-4">
             <div className="max-w-[calc(50%-0.5rem)]">
               <label
                 htmlFor="contingency-settlement"
@@ -97,16 +82,9 @@ export default function ContingencyCalculatorClient() {
                 />
               </div>
             )}
-          </CardContent>
-        </Card>
+          </ToolCard>
 
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Contingency Fee
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <ToolCard title="Contingency Fee">
             <PercentSlider
               value={contingencyPct}
               onChange={setContingencyPct}
@@ -115,16 +93,9 @@ export default function ContingencyCalculatorClient() {
               label="Use slider or type exact percentage (ex. 33.333%)"
               aria-label="Contingency fee percentage"
             />
-          </CardContent>
-        </Card>
+          </ToolCard>
 
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Costs
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <ToolCard title="Costs">
             <div className="max-w-[calc(50%-0.5rem)]">
               <label
                 htmlFor="contingency-costs"
@@ -139,14 +110,9 @@ export default function ContingencyCalculatorClient() {
                 placeholder="e.g. 10,000"
               />
             </div>
-          </CardContent>
-        </Card>
+          </ToolCard>
 
-        {hasAny && (
-          <Button variant="outline" onClick={clearAll}>
-            Clear All
-          </Button>
-        )}
+        <ClearAllButton show={hasAny} onClick={clearAll} />
       </div>
 
       <PrintInputs items={[
@@ -161,11 +127,7 @@ export default function ContingencyCalculatorClient() {
           label="Net to Plaintiff"
           value={hydrated && hasAny ? fmt(netToPlaintiff) : "—"}
         >
-          <Card className="bg-white border-brand-border">
-            <CardHeader>
-              <CardTitle className="text-brand-primary text-base">Breakdown</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <ToolCard title="Breakdown">
               <table className="w-full text-sm">
                 <tbody>
                   <Row label="Settlement amount" value={hydrated && hasAny ? s : "—"} />
@@ -188,8 +150,7 @@ export default function ContingencyCalculatorClient() {
                   />
                 </tbody>
               </table>
-            </CardContent>
-          </Card>
+            </ToolCard>
         </ResultsShell>
       </div>
       <MobileResultBar label="Net to plaintiff" value={hydrated && hasAny ? fmt(netToPlaintiff) : "—"} />

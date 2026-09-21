@@ -1,25 +1,13 @@
-import { toolMetadata } from "@/lib/tool-metadata";
+import { toolPageMetadata } from "@/lib/tool-metadata";
+import ToolPage from "@/components/tool-page";
 import SimpleInterestClient from "./client";
-import ToolPageHeader from "@/components/tool-page-header";
-import ToolPageFooter from "@/components/tool-page-footer";
 
-export const metadata = toolMetadata({
-  title: "Simple Interest Calculator",
-  description:
-    "Calculate simple interest on any amount over any time period at any rate.",
-  path: "/tools/simple-interest-calculator",
-});
+export const metadata = toolPageMetadata("simple-interest-calculator");
 
-export default function SimpleInterestCalculatorPage() {
+export default function Page() {
   return (
-    <>
-      <ToolPageHeader
-        href="/tools/simple-interest-calculator"
-        title="Simple Interest Calculator"
-        description="Calculate simple interest on any principal amount over any time period."
-      />
+    <ToolPage slug="simple-interest-calculator">
       <SimpleInterestClient />
-      <ToolPageFooter href="/tools/simple-interest-calculator" />
-    </>
+    </ToolPage>
   );
 }

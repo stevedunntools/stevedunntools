@@ -1,12 +1,12 @@
 import { OG_CONTENT_TYPE, OG_SIZE, renderToolOgImage } from "@/lib/tool-og-image";
+import { toolBySlug } from "@/lib/tools";
 
-export const alt = "Point of Intersection — Steve Dunn Tools";
+const tool = toolBySlug("convergence-calculator");
+
+export const alt = `${tool.ogTitle ?? tool.label} — Steve Dunn Tools`;
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 
 export default function Image() {
-  return renderToolOgImage(
-    "Point of Intersection",
-    "See where two negotiating parties would converge."
-  );
+  return renderToolOgImage(tool.ogTitle ?? tool.label, tool.tagline);
 }

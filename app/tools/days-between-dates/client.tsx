@@ -1,15 +1,11 @@
 "use client";
 
+import ClearAllButton from "@/components/clear-all-button";
+import ToolCard from "@/components/tool-card";
 import PrintInputs from "@/components/print-inputs";
 import { useMemo } from "react";
 import { useSessionState, clearSessionKeys, dateSerializer, useHydrated } from "@/lib/use-session-state";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import DateInput from "@/components/date-input";
 import { addMonthsClamped } from "@/lib/date-utils";
 import MobileResultBar from "@/components/mobile-result-bar";
@@ -106,13 +102,7 @@ export default function DaysBetweenDatesClient() {
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
       {/* Inputs */}
       <div className="lg:col-span-3 space-y-6">
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Dates
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <ToolCard title="Dates" contentClassName="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <DateInput
                 label="Start date"
@@ -136,14 +126,9 @@ export default function DaysBetweenDatesClient() {
                 Include end day (add 1 day)
               </span>
             </label>
-          </CardContent>
-        </Card>
+          </ToolCard>
 
-        {hasAny && (
-          <Button variant="outline" onClick={clearAll}>
-            Clear All
-          </Button>
-        )}
+        <ClearAllButton show={hasAny} onClick={clearAll} />
       </div>
 
       <PrintInputs items={[

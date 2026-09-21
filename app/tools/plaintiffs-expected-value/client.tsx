@@ -1,15 +1,11 @@
 "use client";
 
+import ClearAllButton from "@/components/clear-all-button";
+import ToolCard from "@/components/tool-card";
+import { calculateExpectedValue } from "./calculate";
 import PrintInputs from "@/components/print-inputs";
 import Link from "next/link";
 import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
 import { fmt, parseNumNonNeg } from "@/lib/format";
 import { Row, Separator, TotalRow } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
@@ -45,10 +41,7 @@ export default function PlaintiffsExpectedValueClient() {
   const intang = parseNumNonNeg(intangibleCosts);
   const years = parseNumNonNeg(yearsToPayment);
 
-  const probabilityAdjusted = dmg * (probability / 100);
-  const discountFactor = years > 0 ? 1 / Math.pow(1 + discountRate / 100, years) : 1;
-  const discountedValue = probabilityAdjusted * discountFactor;
-  const expectedValue = discountedValue - f - lit - intang;
+  const { probabilityAdjusted, discountedValue, expectedValue } = calculateExpectedValue({ damages: dmg, probabilityPct: probability, yearsToPayment: years, discountRatePct: discountRate, fees: f, litigationCosts: lit, intangibleCosts: intang });
 
   const hasAny =
     damages !== "" ||
@@ -62,13 +55,7 @@ export default function PlaintiffsExpectedValueClient() {
       {/* Inputs */}
       <div className="lg:col-span-3 space-y-6 print:hidden">
         {/* Damages */}
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Damages
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <ToolCard title="Damages">
             <div className="max-w-[calc(50%-0.5rem)]">
               <label
                 htmlFor="plaintiff-ev-damages"
@@ -83,17 +70,10 @@ export default function PlaintiffsExpectedValueClient() {
                 placeholder="e.g. 250,000"
               />
             </div>
-          </CardContent>
-        </Card>
+          </ToolCard>
 
         {/* Probability of Success */}
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Probability of Success
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <ToolCard title="Probability of Success">
             <PercentSlider
               value={probability}
               onChange={setProbability}
@@ -101,17 +81,10 @@ export default function PlaintiffsExpectedValueClient() {
               max={100}
               aria-label="Probability of success"
             />
-          </CardContent>
-        </Card>
+          </ToolCard>
 
         {/* Time Value Discount */}
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Time Value Discount
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <ToolCard title="Time Value Discount" contentClassName="space-y-4">
             <div className="max-w-[calc(50%-0.5rem)]">
               <label htmlFor="plaintiffs-expected-value-years-to-payment" className="block text-sm font-medium text-brand-primary mb-1.5">
                   Years to payment
@@ -136,17 +109,10 @@ export default function PlaintiffsExpectedValueClient() {
               label="Annual discount rate"
               aria-label="Annual discount rate"
             />
-          </CardContent>
-        </Card>
+          </ToolCard>
 
         {/* Fees & Costs */}
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Fees &amp; Costs
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <ToolCard title="Fees & Costs" contentClassName="space-y-4">
             <div>
               <label
                 htmlFor="plaintiff-ev-fees"
@@ -189,14 +155,9 @@ export default function PlaintiffsExpectedValueClient() {
                 placeholder="e.g. 5,000"
               />
             </div>
-          </CardContent>
-        </Card>
+          </ToolCard>
 
-        {hasAny && (
-          <Button variant="outline" onClick={clearAll}>
-            Clear All
-          </Button>
-        )}
+        <ClearAllButton show={hasAny} onClick={clearAll} />
       </div>
 
       <PrintInputs items={[
@@ -227,11 +188,7 @@ export default function PlaintiffsExpectedValueClient() {
           }
         >
           {/* Breakdown */}
-          <Card className="bg-white border-brand-border">
-            <CardHeader>
-              <CardTitle className="text-brand-primary text-base">Breakdown</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <ToolCard title="Breakdown">
               <table className="w-full text-sm">
                 <tbody>
                   <Row label="Total damages" value={hydrated && hasAny ? dmg : "—"} />
@@ -252,8 +209,7 @@ export default function PlaintiffsExpectedValueClient() {
                   />
                 </tbody>
               </table>
-            </CardContent>
-          </Card>
+            </ToolCard>
         </ResultsShell>
       </div>
       <MobileResultBar label="Expected value" value={hydrated && hasAny ? fmt(expectedValue) : "—"} />

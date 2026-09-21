@@ -1,12 +1,12 @@
 import { OG_CONTENT_TYPE, OG_SIZE, renderToolOgImage } from "@/lib/tool-og-image";
+import { toolBySlug } from "@/lib/tools";
 
-export const alt = "Defendant's Expected Cost — Steve Dunn Tools";
+const tool = toolBySlug("defendants-expected-cost");
+
+export const alt = `${tool.ogTitle ?? tool.label} — Steve Dunn Tools`;
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 
 export default function Image() {
-  return renderToolOgImage(
-    "Defendant's Expected Cost",
-    "Liability risk, damages exposure, and defense costs."
-  );
+  return renderToolOgImage(tool.ogTitle ?? tool.label, tool.tagline);
 }

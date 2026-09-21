@@ -1,22 +1,6 @@
 import Link from "next/link";
-import {
-  Brackets,
-  Briefcase,
-  CalendarClock,
-  CalendarPlus,
-  CalendarRange,
-  Coins,
-  Gavel,
-  GitMerge,
-  HandCoins,
-  LineChart,
-  Percent,
-  Receipt,
-  Shield,
-  Stethoscope,
-  type LucideIcon,
-} from "lucide-react";
 import { navGroups, toolDescriptions } from "@/lib/navigation";
+import { CATEGORIES, TOOLS, toolHref } from "@/lib/tools";
 import {
   Card,
   CardHeader,
@@ -24,35 +8,9 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 
-const toolIcons: Record<string, LucideIcon> = {
-  "/tools/negotiation-visualizer": LineChart,
-  "/tools/bracket-generator": Brackets,
-  "/tools/convergence-calculator": GitMerge,
+const toolIcons = Object.fromEntries(TOOLS.map((t) => [toolHref(t.slug), t.icon]));
 
-  "/tools/employment-damages-estimator": Briefcase,
-  "/tools/personal-injury-damages-estimator": Stethoscope,
-  "/tools/plaintiffs-expected-value": Gavel,
-  "/tools/defendants-expected-cost": Shield,
-
-  "/tools/contingency-calculator": Percent,
-  "/tools/employment-contingency-calculator": HandCoins,
-  "/tools/simple-interest-calculator": Coins,
-  "/tools/payment-over-time": CalendarClock,
-  "/tools/take-home-after-taxes": Receipt,
-
-  "/tools/days-between-dates": CalendarRange,
-  "/tools/add-subtract-date": CalendarPlus,
-};
-
-const categoryDescriptions: Record<string, string> = {
-  "Negotiation Tools":
-    "Visualize offers, build brackets, and project where talks are heading.",
-  "Damages & Case Value":
-    "Estimate what a case is worth from both sides.",
-  "Money Math":
-    "Fees, interest, payment schedules, and taxes on settlements.",
-  "Date Tools": "Quick calendar arithmetic.",
-};
+const categoryDescriptions = Object.fromEntries(CATEGORIES.map((c) => [c.label, c.description]));
 
 interface CategoryStyle {
   card: string;

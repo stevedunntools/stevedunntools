@@ -1,26 +1,13 @@
-import { toolMetadata } from "@/lib/tool-metadata";
+import { toolPageMetadata } from "@/lib/tool-metadata";
+import ToolPage from "@/components/tool-page";
 import DaysBetweenDatesClient from "./client";
-import ToolPageHeader from "@/components/tool-page-header";
-import ToolPageFooter from "@/components/tool-page-footer";
 
-export const metadata = toolMetadata({
-  title: "Days Between Dates",
-  seoTitle: "Days Between Dates Calculator",
-  description:
-    "Calculate the number of years, months, weeks, and days between two dates.",
-  path: "/tools/days-between-dates",
-});
+export const metadata = toolPageMetadata("days-between-dates");
 
-export default function DaysBetweenDatesPage() {
+export default function Page() {
   return (
-    <>
-      <ToolPageHeader
-        href="/tools/days-between-dates"
-        title="Days Between Dates"
-        description="Calculate the duration between two dates, expressed in multiple formats."
-      />
+    <ToolPage slug="days-between-dates">
       <DaysBetweenDatesClient />
-      <ToolPageFooter href="/tools/days-between-dates" />
-    </>
+    </ToolPage>
   );
 }

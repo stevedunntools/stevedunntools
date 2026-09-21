@@ -1,14 +1,10 @@
 "use client";
 
+import ClearAllButton from "@/components/clear-all-button";
+import ToolCard from "@/components/tool-card";
+import { calculateSimpleInterest } from "./calculate";
 import PrintInputs from "@/components/print-inputs";
 import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
 import { fmt, parseNumNonNeg } from "@/lib/format";
 import { Row, Separator, TotalRow } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
@@ -43,13 +39,7 @@ export default function SimpleInterestClient() {
   const p = parseNumNonNeg(principal);
   const t = parseNumNonNeg(timePeriod);
 
-  let timeInYears = 0;
-  if (timeUnit === "years") timeInYears = t;
-  else if (timeUnit === "months") timeInYears = t / 12;
-  else timeInYears = t / 365;
-
-  const interest = p * (rate / 100) * timeInYears;
-  const total = p + interest;
+  const { interest, total } = calculateSimpleInterest(p, rate, t, timeUnit);
 
   const hasAny = principal !== "" || timePeriod !== "";
   const timeLabel = !hydrated || t === 0 ? "—" : `${t} ${timeUnit}`;
@@ -58,13 +48,7 @@ export default function SimpleInterestClient() {
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
       {/* Inputs */}
       <div className="lg:col-span-3 space-y-6 print:hidden">
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Principal
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <ToolCard title="Principal">
             <div className="max-w-[calc(50%-0.5rem)]">
               <label
                 htmlFor="simple-interest-principal"
@@ -79,16 +63,9 @@ export default function SimpleInterestClient() {
                 placeholder="e.g. 100,000"
               />
             </div>
-          </CardContent>
-        </Card>
+          </ToolCard>
 
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Interest Rate
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <ToolCard title="Interest Rate">
             <PercentSlider
               value={rate}
               onChange={setRate}
@@ -98,16 +75,9 @@ export default function SimpleInterestClient() {
               label="Annual interest rate (type a value for rates above 20%)"
               aria-label="Annual interest rate"
             />
-          </CardContent>
-        </Card>
+          </ToolCard>
 
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Time Period
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <ToolCard title="Time Period">
             <div className="grid grid-cols-2 gap-3 max-w-[calc(66%)]">
               <div className="flex-1">
                 <label htmlFor="simple-interest-duration" className="block text-sm font-medium text-brand-primary mb-1.5">
@@ -142,14 +112,9 @@ export default function SimpleInterestClient() {
               </div>
             </div>
             <p className="mt-2 text-xs text-brand-muted">Uses a 365-day year</p>
-          </CardContent>
-        </Card>
+          </ToolCard>
 
-        {hasAny && (
-          <Button variant="outline" onClick={clearAll}>
-            Clear All
-          </Button>
-        )}
+        <ClearAllButton show={hasAny} onClick={clearAll} />
       </div>
 
       <PrintInputs items={[
@@ -163,11 +128,7 @@ export default function SimpleInterestClient() {
           label="Total (Principal + Interest)"
           value={hydrated && hasAny ? fmt(total) : "—"}
         >
-          <Card className="bg-white border-brand-border">
-            <CardHeader>
-              <CardTitle className="text-brand-primary text-base">Breakdown</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <ToolCard title="Breakdown">
               <table className="w-full text-sm">
                 <tbody>
                   <Row label="Principal" value={hydrated && hasAny ? p : "—"} />
@@ -179,8 +140,7 @@ export default function SimpleInterestClient() {
                   <TotalRow label="Total" value={hydrated && hasAny ? fmt(total) : "—"} />
                 </tbody>
               </table>
-            </CardContent>
-          </Card>
+            </ToolCard>
         </ResultsShell>
       </div>
       <MobileResultBar label="Total" value={hydrated && hasAny ? fmt(total) : "—"} />

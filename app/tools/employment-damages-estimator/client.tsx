@@ -1,14 +1,11 @@
 "use client";
 
+import ClearAllButton from "@/components/clear-all-button";
+import ToolCard from "@/components/tool-card";
+import { calculateEmploymentDamages, type LiquidatedType } from "./calculate";
 import PrintInputs from "@/components/print-inputs";
 import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
 import { Trash2 } from "lucide-react";
 import { fmt, parseNumNonNeg } from "@/lib/format";
 import { Row, Separator, TotalRow } from "@/components/breakdown-table";
@@ -20,8 +17,6 @@ import MobileResultBar from "@/components/mobile-result-bar";
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-type LiquidatedType = "none" | "2x-wages" | "2x-wages-benefits" | "3x-wages";
 
 const liquidatedOptions: { value: LiquidatedType; label: string }[] = [
   { value: "none", label: "None" },
@@ -100,40 +95,11 @@ export default function EmploymentDamagesClient() {
   const pun = parseNumNonNeg(punitive);
   const other = parseNumNonNeg(otherDamages);
 
-  // Back pay = (compensation + benefits) × months since termination
-  const backPayComp = comp * bpMonths;
-  const backPayBenefits = benefits * bpMonths;
-  const backPay = backPayComp + backPayBenefits;
-
-  // Mitigation = sum of all earnings from all jobs
-  const totalMitigation = jobs.reduce(
-    (sum, j) => sum + parseNumNonNeg(j.months) * (parseNumNonNeg(j.monthlyComp) + parseNumNonNeg(j.monthlyBenefits ?? "")),
-    0
-  );
-
-  const netBackPay = Math.max(0, backPay - totalMitigation);
-
-  // Front pay = months × (comp + benefits at termination - current job comp
-  // if currently employed). Benefits are included, matching back pay.
-  const currentJob = jobs.find((j) => j.current);
-  const currentJobComp = currentJob ? parseNumNonNeg(currentJob.monthlyComp) + parseNumNonNeg(currentJob.monthlyBenefits ?? "") : 0;
-  const frontPay = Math.max(0, comp + benefits - currentJobComp) * fpMonths;
-
-  // Liquidated damages, computed on net (post-mitigation) back pay so the
-  // multiplier reflects what is actually owed. Mitigation is allocated
-  // proportionally between the wage and benefit components.
-  const mitigationRatio = backPay > 0 ? netBackPay / backPay : 0;
-  const netBackPayComp = backPayComp * mitigationRatio;
-  let liquidated = 0;
-  if (liquidatedType === "2x-wages") {
-    liquidated = netBackPayComp;
-  } else if (liquidatedType === "2x-wages-benefits") {
-    liquidated = netBackPay;
-  } else if (liquidatedType === "3x-wages") {
-    liquidated = netBackPayComp * 2;
-  }
-
-  const grossTotal = netBackPay + frontPay + compDamages + liquidated + pun + other;
+  const { backPayComp, backPayBenefits, backPay, totalMitigation, netBackPay, frontPay, liquidated, grossTotal } = calculateEmploymentDamages({
+    monthlyComp: comp, monthlyBenefits: benefits, monthsSinceTermination: bpMonths,
+    jobs: jobs.map((j) => ({ months: parseNumNonNeg(j.months), monthlyComp: parseNumNonNeg(j.monthlyComp), monthlyBenefits: parseNumNonNeg(j.monthlyBenefits ?? ""), current: j.current })),
+    frontPayMonths: fpMonths, compensatory: compDamages, liquidatedType, punitive: pun, otherDamages: other,
+  });
 
   const hasAny =
     monthlyComp !== "" ||
@@ -150,13 +116,7 @@ export default function EmploymentDamagesClient() {
       {/* Inputs */}
       <div className="lg:col-span-3 space-y-6 print:hidden">
         {/* Back Pay */}
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Back Pay
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <ToolCard title="Back Pay" contentClassName="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label
@@ -201,17 +161,10 @@ export default function EmploymentDamagesClient() {
                 className={textFieldClass}
               />
             </div>
-          </CardContent>
-        </Card>
+          </ToolCard>
 
         {/* Mitigation */}
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Mitigation
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <ToolCard title="Mitigation" contentClassName="space-y-4">
             {jobs.map((job, idx) => (
               <div key={job.id} className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -288,17 +241,10 @@ export default function EmploymentDamagesClient() {
             <Button variant="outline" onClick={addJob} className="w-full">
               Add Job
             </Button>
-          </CardContent>
-        </Card>
+          </ToolCard>
 
         {/* Front Pay */}
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Front Pay
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <ToolCard title="Front Pay" contentClassName="space-y-4">
             <div className="max-w-[calc(50%-0.5rem)]">
               <label htmlFor="employment-damages-months-of-front-pay" className="block text-sm font-medium text-brand-primary mb-1.5">
                   Months of front pay
@@ -316,17 +262,10 @@ export default function EmploymentDamagesClient() {
                 Offset by current compensation if applicable
               </p>
             </div>
-          </CardContent>
-        </Card>
+          </ToolCard>
 
         {/* Additional Damages */}
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Additional Damages
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <ToolCard title="Additional Damages" contentClassName="space-y-4">
             <div>
               <label
                 htmlFor="emp-damages-compensatory"
@@ -389,14 +328,9 @@ export default function EmploymentDamagesClient() {
                 placeholder="e.g. 0"
               />
             </div>
-          </CardContent>
-        </Card>
+          </ToolCard>
 
-        {hasAny && (
-          <Button variant="outline" onClick={clearAll}>
-            Clear All
-          </Button>
-        )}
+        <ClearAllButton show={hasAny} onClick={clearAll} />
       </div>
 
       <PrintInputs items={[
@@ -417,11 +351,7 @@ export default function EmploymentDamagesClient() {
           value={hydrated && hasAny ? fmt(grossTotal) : "—"}
         >
           {/* Breakdown */}
-          <Card className="bg-white border-brand-border">
-            <CardHeader>
-              <CardTitle className="text-brand-primary text-base">Breakdown</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <ToolCard title="Breakdown">
               <table className="w-full text-sm">
                 <tbody>
                   <Row label="Back pay (compensation)" value={hydrated && hasAny ? backPayComp : "—"} />
@@ -449,8 +379,7 @@ export default function EmploymentDamagesClient() {
                   <TotalRow label="Total" value={hydrated && hasAny ? fmt(grossTotal) : "—"} />
                 </tbody>
               </table>
-            </CardContent>
-          </Card>
+            </ToolCard>
         </ResultsShell>
       </div>
       <MobileResultBar label="Total damages" value={hydrated && hasAny ? fmt(grossTotal) : "—"} />

@@ -1,15 +1,11 @@
 "use client";
 
+import ClearAllButton from "@/components/clear-all-button";
+import ToolCard from "@/components/tool-card";
 import PrintInputs from "@/components/print-inputs";
 import { useMemo } from "react";
 import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { fmt, parseNumNonNeg } from "@/lib/format";
 import { Row, Separator } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
@@ -74,11 +70,7 @@ export default function TakeHomeAfterTaxesClient() {
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
       {/* Inputs */}
       <div className="lg:col-span-3 space-y-6 print:hidden">
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">Filing Status & State</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <ToolCard title="Filing Status & State" contentClassName="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="take-home-after-taxes-filing-status" className="block text-sm font-medium text-brand-primary mb-1.5">
@@ -113,14 +105,9 @@ export default function TakeHomeAfterTaxesClient() {
                 </select>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </ToolCard>
 
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">Income</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <ToolCard title="Income" contentClassName="space-y-4">
             <div>
               <label
                 htmlFor="take-home-w2"
@@ -186,14 +173,9 @@ export default function TakeHomeAfterTaxesClient() {
                 excluded — don&apos;t enter those here.
               </p>
             </div>
-          </CardContent>
-        </Card>
+          </ToolCard>
 
-        {hasAny && (
-          <Button variant="outline" onClick={clearAll}>
-            Clear All
-          </Button>
-        )}
+        <ClearAllButton show={hasAny} onClick={clearAll} />
       </div>
 
       <PrintInputs items={[
@@ -224,11 +206,7 @@ export default function TakeHomeAfterTaxesClient() {
           {hasResults && (
             <>
               {/* By category */}
-              <Card className="bg-white border-brand-border">
-                <CardHeader>
-                  <CardTitle className="text-brand-primary text-base">By income category</CardTitle>
-                </CardHeader>
-                <CardContent>
+              <ToolCard title="By income category">
                   <table className="w-full text-sm">
                     <tbody>
                       {result.categories.map((cat, i) => (
@@ -242,15 +220,10 @@ export default function TakeHomeAfterTaxesClient() {
                       </tr>
                     </tbody>
                   </table>
-                </CardContent>
-              </Card>
+                </ToolCard>
 
               {/* By tax type */}
-              <Card className="bg-white border-brand-border">
-                <CardHeader>
-                  <CardTitle className="text-brand-primary text-base">By tax type</CardTitle>
-                </CardHeader>
-                <CardContent>
+              <ToolCard title="By tax type">
                   <table className="w-full text-sm">
                     <tbody>
                       <Row label="Federal income tax" value={result.totals.federalIncomeTax} />
@@ -277,8 +250,7 @@ export default function TakeHomeAfterTaxesClient() {
                       <Row label="Total taxes" value={result.totals.totalTax} bold />
                     </tbody>
                   </table>
-                </CardContent>
-              </Card>
+                </ToolCard>
             </>
           )}
 

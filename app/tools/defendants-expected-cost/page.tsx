@@ -1,26 +1,13 @@
-import { toolMetadata } from "@/lib/tool-metadata";
+import { toolPageMetadata } from "@/lib/tool-metadata";
+import ToolPage from "@/components/tool-page";
 import DefendantsExpectedCostClient from "./client";
-import ToolPageHeader from "@/components/tool-page-header";
-import ToolPageFooter from "@/components/tool-page-footer";
 
-export const metadata = toolMetadata({
-  title: "Defendant's Expected Cost",
-  seoTitle: "Defendant's Expected Cost Calculator",
-  description:
-    "Estimate the defendant's total expected cost including liability risk, damages exposure, and defense costs.",
-  path: "/tools/defendants-expected-cost",
-});
+export const metadata = toolPageMetadata("defendants-expected-cost");
 
-export default function DefendantsExpectedCostPage() {
+export default function Page() {
   return (
-    <>
-      <ToolPageHeader
-        href="/tools/defendants-expected-cost"
-        title="Defendant's Expected Cost"
-        description="Estimate the defendant's total expected cost of litigation, including probability-adjusted damages and fee exposure, plus defense costs."
-      />
+    <ToolPage slug="defendants-expected-cost">
       <DefendantsExpectedCostClient />
-      <ToolPageFooter href="/tools/defendants-expected-cost" />
-    </>
+    </ToolPage>
   );
 }

@@ -1,26 +1,13 @@
-import { toolMetadata } from "@/lib/tool-metadata";
+import { toolPageMetadata } from "@/lib/tool-metadata";
+import ToolPage from "@/components/tool-page";
 import EmploymentContingencyClient from "./client";
-import ToolPageHeader from "@/components/tool-page-header";
-import ToolPageFooter from "@/components/tool-page-footer";
 
-export const metadata = toolMetadata({
-  title: "W-2, 1099, and Attorney Fee Calculator",
-  seoTitle: "Employment Settlement Fee Calculator",
-  description:
-    "Calculate attorney fees, net recovery, and wage vs. non-wage allocation for employment settlements.",
-  path: "/tools/employment-contingency-calculator",
-});
+export const metadata = toolPageMetadata("employment-contingency-calculator");
 
-export default function EmploymentContingencyCalculatorPage() {
+export default function Page() {
   return (
-    <>
-      <ToolPageHeader
-        href="/tools/employment-contingency-calculator"
-        title="W-2, 1099, and Attorney Fee Calculator"
-        description="Calculate the plaintiff's net recovery under a contingency fee arrangement, with allocation between wages and non-wage income for tax purposes."
-      />
+    <ToolPage slug="employment-contingency-calculator">
       <EmploymentContingencyClient />
-      <ToolPageFooter href="/tools/employment-contingency-calculator" />
-    </>
+    </ToolPage>
   );
 }

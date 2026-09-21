@@ -1,12 +1,12 @@
 import { OG_CONTENT_TYPE, OG_SIZE, renderToolOgImage } from "@/lib/tool-og-image";
+import { toolBySlug } from "@/lib/tools";
 
-export const alt = "Personal Injury Damages Estimator — Steve Dunn Tools";
+const tool = toolBySlug("personal-injury-damages-estimator");
+
+export const alt = `${tool.ogTitle ?? tool.label} — Steve Dunn Tools`;
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 
 export default function Image() {
-  return renderToolOgImage(
-    "Personal Injury Damages Estimator",
-    "Medical costs, lost earnings, and non-economic damages."
-  );
+  return renderToolOgImage(tool.ogTitle ?? tool.label, tool.tagline);
 }

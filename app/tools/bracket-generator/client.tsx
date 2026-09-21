@@ -1,5 +1,6 @@
 "use client";
 
+import { solveBracket, type Field } from "./logic";
 import { useState, useRef, useLayoutEffect } from "react";
 import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,6 @@ import {
 } from "@/components/ui/card";
 import { fmt, commaFmtNum, commaFmtWithCursor, parseNumOrNull } from "@/lib/format";
 
-type Field = "upper" | "lower" | "mid";
 
 export default function BracketGeneratorClient() {
   const hydrated = useHydrated();
@@ -30,41 +30,16 @@ export default function BracketGeneratorClient() {
   });
 
   function recalc(field: Field) {
-    const u = parseNumOrNull(upperStr);
-    const l = parseNumOrNull(lowerStr);
-    const m = parseNumOrNull(midStr);
-
-    if (field === "upper") {
-      if (u !== null && l !== null) {
-        setMidStr(commaFmtNum(((u + l) / 2)));
-        setAutoField("mid");
-      } else if (u !== null && m !== null) {
-        setLowerStr(commaFmtNum((2 * m - u)));
-        setAutoField("lower");
-      }
-    } else if (field === "lower") {
-      if (u !== null && l !== null) {
-        setMidStr(commaFmtNum(((u + l) / 2)));
-        setAutoField("mid");
-      } else if (l !== null && m !== null) {
-        setUpperStr(commaFmtNum((2 * m - l)));
-        setAutoField("upper");
-      }
-    } else if (field === "mid") {
-      if (u !== null && l !== null && m !== null) {
-        const currentMid = (u + l) / 2;
-        const delta = m - currentMid;
-        setUpperStr(commaFmtNum((u + delta)));
-        setLowerStr(commaFmtNum((l + delta)));
-        setAutoField(null);
-      } else if (m !== null && u !== null) {
-        setLowerStr(commaFmtNum((2 * m - u)));
-        setAutoField("lower");
-      } else if (m !== null && l !== null) {
-        setUpperStr(commaFmtNum((2 * m - l)));
-        setAutoField("upper");
-      }
+    const parsed = { upper: parseNumOrNull(upperStr), lower: parseNumOrNull(lowerStr), mid: parseNumOrNull(midStr) };
+    const r = solveBracket(field, parsed);
+    if (!r) return;
+    const setters = { upper: setUpperStr, lower: setLowerStr, mid: setMidStr } as const;
+    for (const f of ["upper", "lower", "mid"] as const) {
+      const v = r.values[f];
+      // Leave the field being typed in alone, and don't reformat unchanged ones.
+      if (f !== field && v !== null && v !== parsed[f]) setters[f](commaFmtNum(v));
     }
+    setAutoField(r.autoField);
   }
 
   function handleChange(field: Field, e: React.ChangeEvent<HTMLInputElement>) {

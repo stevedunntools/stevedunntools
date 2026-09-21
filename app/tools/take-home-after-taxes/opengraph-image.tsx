@@ -1,12 +1,12 @@
 import { OG_CONTENT_TYPE, OG_SIZE, renderToolOgImage } from "@/lib/tool-og-image";
+import { toolBySlug } from "@/lib/tools";
 
-export const alt = "Settlement Take-Home After Taxes — Steve Dunn Tools";
+const tool = toolBySlug("take-home-after-taxes");
+
+export const alt = `${tool.ogTitle ?? tool.label} — Steve Dunn Tools`;
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 
 export default function Image() {
-  return renderToolOgImage(
-    "Settlement Take-Home After Taxes",
-    "A rough guess at take-home pay after federal and state taxes."
-  );
+  return renderToolOgImage(tool.ogTitle ?? tool.label, tool.tagline);
 }

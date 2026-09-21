@@ -1,12 +1,12 @@
 "use client";
 
+import ClearAllButton from "@/components/clear-all-button";
 import { useMemo } from "react";
 import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
 import {
   Card,
   CardContent,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { fmt, parseNumOrNull } from "@/lib/format";
 import {
   CHART_W,
@@ -148,7 +148,7 @@ function TrendChart({ data, desired }: { data: ChartData; desired?: DesiredPoint
   return (
     <svg
       viewBox={`0 0 ${CHART_W} ${CHART_H}`}
-      className="w-full h-auto min-w-[640px] sm:min-w-0"
+      className="w-full h-auto min-w-[800px] lg:min-w-0"
       role="img"
       aria-label="Trend analysis chart showing projected intersection of offers"
     >
@@ -460,11 +460,7 @@ export default function ConvergenceCalculatorClient() {
         </Card>
       </div>
 
-      {hasAny && (
-        <Button variant="outline" onClick={clearAll}>
-          Clear All
-        </Button>
-      )}
+      <ClearAllButton show={hasAny} onClick={clearAll} />
 
       {/* Desired settlement number */}
       {analysis.ready && analysis.converges && (

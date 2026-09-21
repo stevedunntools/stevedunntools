@@ -1,14 +1,10 @@
 "use client";
 
+import ClearAllButton from "@/components/clear-all-button";
+import ToolCard from "@/components/tool-card";
+import { calculatePersonalInjury } from "./calculate";
 import PrintInputs from "@/components/print-inputs";
 import { useSessionState, clearSessionKeys, useHydrated } from "@/lib/use-session-state";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
 import { fmt, parseNumNonNeg } from "@/lib/format";
 import { Row, Separator, TotalRow } from "@/components/breakdown-table";
 import DollarInput from "@/components/dollar-input";
@@ -57,24 +53,7 @@ export default function PersonalInjuryClient() {
   const earnFuture = parseNumNonNeg(futureLostEarnings);
   const prop = parseNumNonNeg(propertyDamage);
 
-  const totalMedical = medTo + medFuture;
-  const multiplierBase = pastOnlyBase ? medTo : totalMedical;
-
-  // Total at a given multiplier, after the comparative-fault reduction —
-  // used for the headline and for the ±1× range around the chosen value.
-  function totalAt(m: number) {
-    const gross = totalMedical + multiplierBase * m + earnTo + earnFuture + prop;
-    return gross - Math.round(gross * faultPct) / 100;
-  }
-
-  const painAndSuffering = multiplierBase * multiplier;
-  const grossTotal = totalMedical + painAndSuffering + earnTo + earnFuture + prop;
-  const faultReduction = Math.round(grossTotal * faultPct) / 100;
-  const total = grossTotal - faultReduction;
-
-  const rangeLowMult = Math.max(1, multiplier - 1);
-  const rangeHighMult = Math.min(5, multiplier + 1);
-  const showRange = multiplierBase > 0;
+  const { totalMedical, painAndSuffering, grossTotal, faultReduction, total, rangeLowMult, rangeHighMult, rangeLow, rangeHigh, showRange } = calculatePersonalInjury({ medicalToDate: medTo, futureMedical: medFuture, lostEarningsToDate: earnTo, futureLostEarnings: earnFuture, propertyDamage: prop, multiplier, pastOnlyBase, faultPct });
 
   const hasAny =
     medicalToDate !== "" ||
@@ -90,13 +69,7 @@ export default function PersonalInjuryClient() {
       {/* Inputs */}
       <div className="lg:col-span-3 space-y-6 print:hidden">
         {/* Medical Expenses */}
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Medical Expenses
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <ToolCard title="Medical Expenses" contentClassName="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label
@@ -127,17 +100,10 @@ export default function PersonalInjuryClient() {
                 />
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </ToolCard>
 
         {/* Pain & Suffering Multiplier */}
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Non-Economic Damages Multiple of Medical Expenses
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        <ToolCard title="Non-Economic Damages Multiple of Medical Expenses" contentClassName="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-brand-muted">1×</span>
               <span className="text-lg font-semibold text-brand-accent-text">{multiplier}×</span>
@@ -193,17 +159,10 @@ export default function PersonalInjuryClient() {
                 </span>
               </span>
             </label>
-          </CardContent>
-        </Card>
+          </ToolCard>
 
         {/* Lost Earnings */}
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Lost Earnings
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <ToolCard title="Lost Earnings" contentClassName="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label
@@ -234,17 +193,10 @@ export default function PersonalInjuryClient() {
                 />
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </ToolCard>
 
         {/* Property Damage */}
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Property Damage
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <ToolCard title="Property Damage">
             <div className="max-w-[calc(50%-0.5rem)]">
               <label
                 htmlFor="pi-damages-property-damage"
@@ -259,17 +211,10 @@ export default function PersonalInjuryClient() {
                 placeholder="e.g. 5,000"
               />
             </div>
-          </CardContent>
-        </Card>
+          </ToolCard>
 
         {/* Comparative Fault */}
-        <Card className="bg-white border-brand-border">
-          <CardHeader>
-            <CardTitle className="text-brand-primary text-base">
-              Plaintiff&apos;s Share of Fault
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
+        <ToolCard title="Plaintiff's Share of Fault" contentClassName="space-y-2">
             <PercentSlider
               value={faultPct}
               onChange={setFaultPct}
@@ -284,14 +229,9 @@ export default function PersonalInjuryClient() {
                 — this estimate applies a proportional reduction only.
               </p>
             )}
-          </CardContent>
-        </Card>
+          </ToolCard>
 
-        {hasAny && (
-          <Button variant="outline" onClick={clearAll}>
-            Clear All
-          </Button>
-        )}
+        <ClearAllButton show={hasAny} onClick={clearAll} />
       </div>
 
       <PrintInputs items={[
@@ -312,19 +252,15 @@ export default function PersonalInjuryClient() {
           headlineExtra={
             hydrated && showRange ? (
               <p className="mt-2 text-sm text-brand-muted">
-                Range at &plusmn;1&times;: {fmt(totalAt(rangeLowMult))} (
-                {rangeLowMult}&times;) &ndash; {fmt(totalAt(rangeHighMult))} (
+                Range at &plusmn;1&times;: {fmt(rangeLow)} (
+                {rangeLowMult}&times;) &ndash; {fmt(rangeHigh)} (
                 {rangeHighMult}&times;)
               </p>
             ) : undefined
           }
         >
           {/* Breakdown */}
-          <Card className="bg-white border-brand-border">
-            <CardHeader>
-              <CardTitle className="text-brand-primary text-base">Breakdown</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <ToolCard title="Breakdown">
               <table className="w-full text-sm">
                 <tbody>
                   <Row label="Medical expenses to date" value={hydrated && hasAny ? medTo : "—"} />
@@ -359,8 +295,7 @@ export default function PersonalInjuryClient() {
                   <TotalRow label="Total" value={hydrated && hasAny ? fmt(total) : "—"} />
                 </tbody>
               </table>
-            </CardContent>
-          </Card>
+            </ToolCard>
         </ResultsShell>
       </div>
       <MobileResultBar label="Total damages" value={hydrated && hasAny ? fmt(total) : "—"} />

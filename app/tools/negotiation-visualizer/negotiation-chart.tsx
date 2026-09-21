@@ -209,7 +209,7 @@ export function NegotiationChart({
     <div className="overflow-x-auto">
     <svg
       viewBox={`0 0 ${CHART_W} ${CHART_H}`}
-      className="w-full h-auto min-w-[640px] sm:min-w-0"
+      className="w-full h-auto min-w-[800px] lg:min-w-0"
       role="img"
       aria-label="Negotiation chart showing offers and brackets from both parties"
     >

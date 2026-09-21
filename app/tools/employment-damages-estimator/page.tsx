@@ -1,25 +1,13 @@
-import { toolMetadata } from "@/lib/tool-metadata";
+import { toolPageMetadata } from "@/lib/tool-metadata";
+import ToolPage from "@/components/tool-page";
 import EmploymentDamagesClient from "./client";
-import ToolPageHeader from "@/components/tool-page-header";
-import ToolPageFooter from "@/components/tool-page-footer";
 
-export const metadata = toolMetadata({
-  title: "Employment Damages Estimator",
-  description:
-    "Estimate employment damages including back pay, front pay, benefits, liquidated damages, and more.",
-  path: "/tools/employment-damages-estimator",
-});
+export const metadata = toolPageMetadata("employment-damages-estimator");
 
-export default function EmploymentDamagesEstimatorPage() {
+export default function Page() {
   return (
-    <>
-      <ToolPageHeader
-        href="/tools/employment-damages-estimator"
-        title="Employment Damages Estimator"
-        description="Estimate potential employment damages including back pay, mitigation, front pay, and additional damages."
-      />
+    <ToolPage slug="employment-damages-estimator">
       <EmploymentDamagesClient />
-      <ToolPageFooter href="/tools/employment-damages-estimator" />
-    </>
+    </ToolPage>
   );
 }
