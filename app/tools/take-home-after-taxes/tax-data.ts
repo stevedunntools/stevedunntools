@@ -217,10 +217,10 @@ export const STATES: StateConfig[] = [
       mfj:    [{ from: 0, rate: 0.044 }],
     },
     baseDeduction: { single: 16100, mfj: 32200 }, // ties to federal std ded
-    // CO FAMLI: 0.45% employee share (of 0.9% total premium), capped at SS wage base
+    // CO FAMLI 2026: 0.44% employee share (of 0.88% total premium), capped at SS wage base
     // https://famli.colorado.gov/employers
     payrollTaxes: [
-      { name: "FAMLI", rate: 0.0045, wageBase: SS_WAGE_BASE_2026 },
+      { name: "FAMLI", rate: 0.0044, wageBase: SS_WAGE_BASE_2026 },
     ],
   },
   { code: "CT", name: "Connecticut", hasIncomeTax: true,
@@ -299,7 +299,9 @@ export const STATES: StateConfig[] = [
         { from: 550000, rate: 0.10 }, { from: 650000, rate: 0.11 },
       ],
     },
-    baseDeduction: { single: 5544, mfj: 11088 }, // $4,400 std + $1,144 pers exempt
+    // Act 46 (2024) phase-in: tax year 2026 standard deduction $8,000 single / $16,000 joint
+    // (brackets unchanged from 2025). DOTAX Announcement 2024-03, files.hawaii.gov/tax/news/announce/ann24-03.pdf
+    baseDeduction: { single: 9144, mfj: 18288 }, // $8,000 std + $1,144 pers exempt (×2 joint)
     // HI TDI: 0.5% of weekly wages, capped at $1,500.21/week (~$78,011/yr)
     // https://labor.hawaii.gov/dcd/home/about-tdi/
     payrollTaxes: [
@@ -587,8 +589,12 @@ export const STATES: StateConfig[] = [
     baseDeduction: { single: 2910, mfj: 5820 },
     // Paid Leave Oregon: 0.6% employee share, capped at SS wage base
     // https://paidleave.oregon.gov/
+    // Statewide transit tax: 0.1% of all wages, withheld from employees, no cap
+    // (a 2026 doubling was rejected by voters in May 2026, so 0.1% stands)
+    // https://www.oregon.gov/dor/programs/businesses/pages/statewide-transit-tax.aspx
     payrollTaxes: [
       { name: "Paid Leave", rate: 0.006, wageBase: SS_WAGE_BASE_2026 },
+      { name: "Transit tax", rate: 0.001, wageBase: null },
     ],
   },
   { code: "PA", name: "Pennsylvania", hasIncomeTax: true,
@@ -610,8 +616,8 @@ export const STATES: StateConfig[] = [
       ],
     },
     baseDeduction: { single: 16450, mfj: 32900 }, // $11,200 std + $5,250 pers exempt
-    // RI TDI/TCI: 1.1% capped at $100,000
-    // https://dlt.ri.gov/individuals/temporary-disability-caregiver-insurance
+    // RI TDI/TCI 2026: 1.1% (down from 1.3%) on wages up to $100,000 (verified 2026-09-20)
+    // https://dlt.ri.gov/press-releases/2026-tax-rates-unemployment-insurance-and-temporary-disability-insurance
     payrollTaxes: [
       { name: "TDI/TCI", rate: 0.011, wageBase: 100000 },
     ],
@@ -667,10 +673,13 @@ export const STATES: StateConfig[] = [
   },
   { code: "WA", name: "Washington", hasIncomeTax: false,
     // WA has a 7% capital gains tax above $278k — does not apply to wages.
-    // WA PFML: 1.13% premium × employees pay ~71.43% share = ~0.807%
-    // https://paidleave.wa.gov/employers/
+    // WA PFML 2026: 1.13% premium × 71.43% employee share = 0.80716%, up to the SS wage base
+    // https://esd.wa.gov/about-us/news-release/2025/paid-family-medical-leave-premium-rate-increases-113-2026
+    // WA Cares (long-term care) 2026: 0.58% of all wages, employee-paid, no wage cap
+    // https://wacaresfund.wa.gov/
     payrollTaxes: [
-      { name: "PFML", rate: 0.00807, wageBase: SS_WAGE_BASE_2026 },
+      { name: "PFML", rate: 0.0080716, wageBase: SS_WAGE_BASE_2026 },
+      { name: "WA Cares", rate: 0.0058, wageBase: null },
     ],
   },
   { code: "WV", name: "West Virginia", hasIncomeTax: true,

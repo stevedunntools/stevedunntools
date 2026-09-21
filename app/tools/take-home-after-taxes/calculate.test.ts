@@ -195,3 +195,25 @@ describe("calculate — state income tax", () => {
     ).toThrow();
   });
 });
+
+describe("calculate — state payroll programs (2026)", () => {
+  const base = { filingStatus: "single" as const, income1099: 0, income1099Type: "se" as const, piIncome: 0 };
+
+  it("Washington: PFML stops at the SS wage base; WA Cares has no cap", () => {
+    const r = calculate({ ...base, stateCode: "WA", w2Wages: 250000 });
+    const pfml = r.notes.statePayrollBreakdown.find((p) => p.name === "PFML")!.amount;
+    const cares = r.notes.statePayrollBreakdown.find((p) => p.name === "WA Cares")!.amount;
+    expect(pfml).toBeCloseTo(SS_WAGE_BASE_2026 * 0.0080716, 0);
+    expect(cares).toBeCloseTo(250000 * 0.0058, 0);
+  });
+
+  it("Colorado: FAMLI employee share is 0.44% in 2026", () => {
+    const r = calculate({ ...base, stateCode: "CO", w2Wages: 100000 });
+    expect(r.categories[0].statePayrollTax).toBeCloseTo(440, 0);
+  });
+
+  it("Oregon: paid leave plus the 0.1% transit tax", () => {
+    const r = calculate({ ...base, stateCode: "OR", w2Wages: 100000 });
+    expect(r.categories[0].statePayrollTax).toBeCloseTo(700, 0);
+  });
+});

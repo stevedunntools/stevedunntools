@@ -52,21 +52,23 @@ export default function TakeHomeAfterTaxesClient() {
     clearSessionKeys("tool:take-home:");
   }
 
+  // A state code saved by an older version that no longer exists must not crash the page.
+  const safeStateCode = STATES.some((s) => s.code === stateCode) ? stateCode : "NC";
   const result = useMemo(() => {
     return calculate({
       filingStatus,
-      stateCode,
+      stateCode: safeStateCode,
       w2Wages: parseNumNonNeg(w2),
       income1099: parseNumNonNeg(income1099),
       income1099Type,
       piIncome: parseNumNonNeg(pi),
     });
-  }, [filingStatus, stateCode, income1099Type, w2, income1099, pi]);
+  }, [filingStatus, safeStateCode, income1099Type, w2, income1099, pi]);
 
   const hasAny =
     w2 !== "" || income1099 !== "" || pi !== "";
   const hasResults = hydrated && result.totals.gross > 0;
-  const state = STATES.find((s) => s.code === stateCode)!;
+  const state = STATES.find((s) => s.code === safeStateCode)!;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
