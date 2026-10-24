@@ -95,10 +95,12 @@ describe("buildSchedule — up-front payments", () => {
     expect(upfront.interest).toBeCloseTo(expectedInterest, 6);
     expect(upfront.principal).toBeCloseTo(25000 - expectedInterest, 6);
 
-    // Month 1 then accrues only for the rest of that month, on the reduced balance.
+    // Month 1 falls one month after the up-front, so it carries a full month
+    // of interest on the reduced balance.
     const month1 = result.schedule[1];
     expect(month1.label).toBe("Month 1");
-    expect(month1.interest).toBeCloseTo(upfront.balance * 0.01 * (1 - 15 / periodDays), 6);
+    expect(month1.interest).toBeCloseTo(upfront.balance * 0.01, 6);
+    expect(result.installmentsAnchorDay).toBe(15);
 
     // And the level payment still retires the balance on the last installment.
     expect(result.schedule).toHaveLength(4);
@@ -106,36 +108,68 @@ describe("buildSchedule — up-front payments", () => {
     expect(result.summary.totalPaid).toBeCloseTo(100000 + result.summary.totalInterest, 5);
   });
 
-  it("orders a mid-schedule upfront chronologically and solves around it", () => {
+  it("starts installments after the last upfront, in chronological order", () => {
+    // $25,000 in 30 days and $25,000 in 60 days: Month 1 must follow both.
     const result = buildSchedule(
       input({
         totalSettlement: 100000,
-        upfronts: [{ amount: 40000, days: 45 }],
-        numPayments: 4,
+        upfronts: [
+          { amount: 25000, days: 60 },
+          { amount: 25000, days: 30 },
+        ],
+        numPayments: 2,
       })
     );
     expect(result.schedule.map((r) => r.label)).toEqual([
+      "Day 30",
+      "Day 60",
       "Month 1",
-      "Day 45",
       "Month 2",
-      "Month 3",
-      "Month 4",
     ]);
-    expect(result.calculatedPayment).toBeCloseTo(15000, 5);
-    expect(result.schedule[4].balance).toBeCloseTo(0, 5);
+    expect(result.installmentsAnchorDay).toBe(60);
+    expect(result.calculatedPayment).toBeCloseTo(25000, 5);
+    expect(result.schedule[3].balance).toBeCloseTo(0, 5);
   });
 
-  it("warns about an upfront dated after the schedule ends", () => {
+  it("accrues interest through the upfront period before installments begin", () => {
+    // 12%: 0→30 days on $100k, 30→60 on $75k, then a full month on $50k.
+    const periodDays = 365 / 12;
     const result = buildSchedule(
       input({
         totalSettlement: 100000,
-        upfronts: [{ amount: 10000, days: 400 }],
-        numPayments: 3,
+        upfronts: [
+          { amount: 25000, days: 30 },
+          { amount: 25000, days: 60 },
+        ],
+        numPayments: 2,
+        interestScope: "installments",
+        annualRate: 12,
       })
     );
-    expect(result.schedule).toHaveLength(3);
-    expect(result.calculatedPayment).toBeCloseTo(100000 / 3, 2);
-    expect(result.warnings.some((w) => w.includes("after the schedule ends"))).toBe(true);
+    const [u1, u2, m1] = result.schedule;
+    expect(u1.interest).toBeCloseTo(100000 * 0.01 * (30 / periodDays), 6);
+    expect(u2.interest).toBeCloseTo(u1.balance * 0.01 * (30 / periodDays), 6);
+    expect(m1.interest).toBeCloseTo(u2.balance * 0.01, 6);
+    expect(result.schedule[3].balance).toBeCloseTo(0, 5);
+    expect(result.summary.totalPaid).toBeCloseTo(100000 + result.summary.totalInterest, 5);
+  });
+
+  it("measures the first-installment interest start from the last upfront", () => {
+    const result = buildSchedule(
+      input({
+        totalSettlement: 100000,
+        upfronts: [{ amount: 20000, days: 60 }],
+        numPayments: 3,
+        interestScope: "installments",
+        annualRate: 12,
+        interestStart: "first-installment",
+      })
+    );
+    expect(result.interestBeginsDay).toBeCloseTo(60 + 365 / 12, 9);
+    // Neither the upfront nor Month 1 carries interest; Month 2 does.
+    expect(result.schedule[0].interest).toBe(0);
+    expect(result.schedule[1].interest).toBe(0);
+    expect(result.schedule[2].interest).toBeGreaterThan(0);
   });
 });
 

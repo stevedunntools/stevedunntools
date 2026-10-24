@@ -111,7 +111,7 @@ export default function PaymentOverTimeClient() {
   // Calculation — driven directly by live state. No deferred-commit layer.
   // ---------------------------------------------------------------------------
 
-  const { schedule, summary, calculatedPayment, calculatedCount, periodDays, interestBeginsDay, warnings } = useMemo(
+  const { schedule, summary, calculatedPayment, calculatedCount, periodDays, interestBeginsDay, installmentsAnchorDay, warnings } = useMemo(
     () =>
       buildSchedule({
         totalSettlement: parseNumNonNeg(totalSettlement),
@@ -172,7 +172,11 @@ export default function PaymentOverTimeClient() {
     }
     interestNote = ` Interest at ${annualRate}% per year accrues on the unpaid balance ${begins}; each payment covers the interest accrued since the previous payment before it reduces principal.`;
   }
-  const conventionNote = `Installments fall at the end of each ${words.each}, the first ${words.one} after the agreement date. Up-front payments fall on the day shown.${interestNote}`;
+  const anchorPhrase =
+    installmentsAnchorDay > 0
+      ? `after the last up-front payment (day ${Math.round(installmentsAnchorDay).toLocaleString()})`
+      : "after the agreement date";
+  const conventionNote = `Up-front payments fall on the day shown. Installments then fall at the end of each ${words.each}, the first ${words.one} ${anchorPhrase}.${interestNote}`;
 
   const interestStartLabel =
     interestStart === "first-installment"
@@ -391,7 +395,7 @@ export default function PaymentOverTimeClient() {
             </div>
           )}
           <p className="text-xs text-brand-muted">
-            The first installment is due {words.one} after the agreement date.
+            The first installment is due {words.one} {anchorPhrase}.
           </p>
         </ToolCard>
 

@@ -2,8 +2,9 @@
 // of React so the amortization logic can be unit-tested directly.
 //
 // Model: a timeline measured in installment periods from the agreement date
-// (day 0). Installment i falls at the end of period i. Up-front payments fall
-// wherever the user puts them (day 0 = at signing). Interest accrues daily on
+// (day 0). Up-front payments fall wherever the user puts them (day 0 = at
+// signing); installments begin one period after the last up-front payment
+// (or after the agreement date when there are none). Interest accrues daily on
 // the unpaid balance from a chosen start day, and every payment covers the
 // interest accrued since the previous payment before it reduces principal.
 // With interest starting at the agreement date and all up-fronts at signing
@@ -64,6 +65,8 @@ export interface ScheduleResult {
   periodDays: number;
   /** Day on which interest starts accruing, or null when no interest applies. */
   interestBeginsDay: number | null;
+  /** Day of the latest up-front payment; installment 1 falls one period after it. */
+  installmentsAnchorDay: number;
   warnings: string[];
 }
 
@@ -101,7 +104,8 @@ function finalBalanceLinear(
   n: number,
   payment: number,
   periodRate: number,
-  startT: number
+  startT: number,
+  anchorT: number
 ): number {
   let balance = total;
   let accruedFrom = startT;
@@ -113,12 +117,13 @@ function finalBalanceLinear(
     }
   };
   for (let i = 1; i <= n; i++) {
-    while (ui < upfronts.length && upfronts[ui].t <= i) {
+    const ti = anchorT + i;
+    while (ui < upfronts.length && upfronts[ui].t <= ti) {
       accrue(upfronts[ui].t);
       balance -= upfronts[ui].amount;
       ui++;
     }
-    accrue(i);
+    accrue(ti);
     balance -= payment;
   }
   return balance;
@@ -140,11 +145,24 @@ export function buildSchedule(input: ScheduleInput): ScheduleResult {
   if (freq === "quarterly") periodLabel = "Quarter";
   else if (freq === "custom") periodLabel = "Payment";
 
+  // Up-fronts on the timeline, chronological; ties keep input order.
+  const upfronts: TimedUpfront[] = input.upfronts
+    .filter((u) => u.amount > 0)
+    .map((u) => {
+      const days = Math.max(0, u.days);
+      return { amount: u.amount, days, t: days / periodDays };
+    })
+    .sort((a, b) => a.t - b.t);
+
+  // Installments begin one period after the last up-front payment.
+  const installmentsAnchorDay = upfronts.reduce((max, u) => Math.max(max, u.days), 0);
+  const anchorT = installmentsAnchorDay / periodDays;
+
   // Interest start, in days and in periods.
   let interestBeginsDay: number | null = null;
   if (periodRate > 0) {
     if (input.interestStart === "days") interestBeginsDay = Math.max(0, input.interestStartDays);
-    else if (input.interestStart === "first-installment") interestBeginsDay = periodDays;
+    else if (input.interestStart === "first-installment") interestBeginsDay = installmentsAnchorDay + periodDays;
     else interestBeginsDay = 0;
   }
   const startT = interestBeginsDay === null ? 0 : interestBeginsDay / periodDays;
@@ -157,6 +175,7 @@ export function buildSchedule(input: ScheduleInput): ScheduleResult {
     calculatedCount: 0,
     periodDays,
     interestBeginsDay,
+    installmentsAnchorDay,
     warnings,
   });
 
@@ -166,15 +185,6 @@ export function buildSchedule(input: ScheduleInput): ScheduleResult {
     warnings.push("Enter an interval in days for the custom frequency.");
     return empty();
   }
-
-  // Up-fronts on the timeline, chronological; ties keep input order.
-  const upfronts: TimedUpfront[] = input.upfronts
-    .filter((u) => u.amount > 0)
-    .map((u) => {
-      const days = Math.max(0, u.days);
-      return { amount: u.amount, days, t: days / periodDays };
-    })
-    .sort((a, b) => a.t - b.t);
 
   // Flag (but still process) upfronts whose total exceeds the settlement
   const upfrontTotal = upfronts.reduce((sum, u) => sum + u.amount, 0);
@@ -191,7 +201,6 @@ export function buildSchedule(input: ScheduleInput): ScheduleResult {
   // ---------------------------------------------------------------------
   let n = Math.round(input.numPayments);
   let fixedPayment = 0;
-  let truncated = false; // amount mode ran past the cap: no balloon on the last row
 
   if (mode === "count" && n > 0) {
     if (n > MAX_INSTALLMENTS) {
@@ -202,8 +211,8 @@ export function buildSchedule(input: ScheduleInput): ScheduleResult {
     }
     // The final balance is affine in the payment, so two evaluations solve
     // for the level payment that lands exactly on zero.
-    const f0 = finalBalanceLinear(total, upfronts, n, 0, periodRate, startT);
-    const f1 = finalBalanceLinear(total, upfronts, n, 1, periodRate, startT);
+    const f0 = finalBalanceLinear(total, upfronts, n, 0, periodRate, startT, anchorT);
+    const f1 = finalBalanceLinear(total, upfronts, n, 1, periodRate, startT, anchorT);
     fixedPayment = f0 <= 0 ? 0 : f0 / (f0 - f1);
     // Whole cents, as the payment would be written into an agreement; the
     // last installment absorbs the rounding remainder.
@@ -248,10 +257,11 @@ export function buildSchedule(input: ScheduleInput): ScheduleResult {
 
   if (fixedPayment > 0) {
     for (let i = 1; i <= n; i++) {
-      while (ui < upfronts.length && upfronts[ui].t <= i) applyUpfront(upfronts[ui++]);
+      const ti = anchorT + i;
+      while (ui < upfronts.length && upfronts[ui].t <= ti) applyUpfront(upfronts[ui++]);
       if (balance <= 0) break;
 
-      const interest = accrueTo(i);
+      const interest = accrueTo(ti);
       let payment: number;
       let principal: number;
 
@@ -289,7 +299,6 @@ export function buildSchedule(input: ScheduleInput): ScheduleResult {
     }
 
     if (mode === "amount" && balance > 0) {
-      truncated = true;
       warnings.push(
         `At ${fmt(fixedPayment)} per payment the schedule would run past ${MAX_INSTALLMENTS.toLocaleString()} payments — only the first ${MAX_INSTALLMENTS.toLocaleString()} are shown, and a balance will remain.`
       );
@@ -299,15 +308,8 @@ export function buildSchedule(input: ScheduleInput): ScheduleResult {
     while (ui < upfronts.length) applyUpfront(upfronts[ui++]);
   }
 
-  // Up-fronts dated after the schedule ended never got applied.
-  if (!truncated) {
-    for (; ui < upfronts.length; ui++) {
-      const u = upfronts[ui];
-      warnings.push(
-        `The up-front payment of ${fmt(u.amount)} on day ${Math.round(u.days).toLocaleString()} falls after the schedule ends and was not applied.`
-      );
-    }
-  }
+  // Every up-front precedes installment 1, so by here all have been applied
+  // (those arriving after a zero balance are covered by the "exceed" warning).
 
   if (periodRate > 0 && rows.length > 0 && totalInterest === 0) {
     warnings.push("Interest begins on or after the final payment, so no interest accrues.");
@@ -320,6 +322,7 @@ export function buildSchedule(input: ScheduleInput): ScheduleResult {
     calculatedCount: installmentCount,
     periodDays,
     interestBeginsDay,
+    installmentsAnchorDay,
     warnings,
   };
 }

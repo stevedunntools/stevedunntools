@@ -333,7 +333,7 @@ export const toolContent: Record<string, ToolContent> = {
   "/tools/payment-over-time": {
     howItWorks: [
       `When a settlement is paid over time rather than in one check, the structure has more moving parts than people expect: up-front payments, installment amounts, frequency, whether the unpaid balance bears interest, and when that interest starts. This calculator builds the complete payment schedule.`,
-      `Enter the total settlement, any up-front payments (each dated by the number of days after the agreement it will be paid — 0 means at signing), and the installment terms. The calculator works in either direction: fix the number of payments and it computes the payment amount, or fix the payment amount and it computes how many payments are needed. Frequency can be monthly, quarterly, or any custom interval in days, and the first installment falls one period after the agreement date.`,
+      `Enter the total settlement, any up-front payments (each dated by the number of days after the agreement it will be paid — 0 means at signing), and the installment terms. The calculator works in either direction: fix the number of payments and it computes the payment amount, or fix the payment amount and it computes how many payments are needed. Frequency can be monthly, quarterly, or any custom interval in days. Installments begin after the up-front payments are done: the first one falls one period after the last up-front payment, or one period after the agreement date if there are none.`,
       `If interest applies, it accrues on the unpaid balance from a start date you choose: the date of the agreement, a set number of days later, or the date of the first installment. Each payment covers the interest accrued since the previous payment before it reduces principal, so the level installment is computed the way a loan payment is. The schedule shows every payment broken into principal, interest, and remaining balance, the summary totals what the payor ultimately pays, and a note under the schedule states the timing conventions used so they travel with the printed exhibit.`,
     ],
     example: [
@@ -365,7 +365,7 @@ export const toolContent: Record<string, ToolContent> = {
       },
       {
         q: `Can I model an up-front payment plus installments?`,
-        a: `Yes — that's the typical structure. List as many up-front payments as the deal has, each dated by days after the agreement, and they are applied to the balance in order before and between the installments.`,
+        a: `Yes — that's the typical structure. List as many up-front payments as the deal has, each dated by days after the agreement. They are applied to the balance in date order, and the installments start one period after the last of them.`,
       },
     ],
   },
