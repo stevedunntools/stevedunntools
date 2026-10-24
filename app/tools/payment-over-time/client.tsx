@@ -18,6 +18,7 @@ import {
   buildSchedule,
   Frequency,
   InterestScope,
+  InterestStart,
   InstallmentMode,
 } from "./schedule";
 
@@ -28,7 +29,10 @@ import {
 interface UpfrontPayment {
   id: string;
   amount: string;
-  timing: string;
+  /** Days after the agreement date; "" or "0" = at signing. */
+  days?: string;
+  /** Legacy free-text label from sessions saved before timing became numeric. */
+  timing?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -39,6 +43,17 @@ function makeId() {
   return crypto.randomUUID();
 }
 
+const defaultUpfront = (): UpfrontPayment => ({ id: makeId(), amount: "", days: "" });
+
+function digitsOnly(s: string) {
+  return s.replace(/[^0-9]/g, "");
+}
+
+function periodWord(frequency: Frequency, intervalDays: number) {
+  if (frequency === "monthly") return { one: "one month", each: "month" };
+  if (frequency === "quarterly") return { one: "one quarter", each: "quarter" };
+  return { one: `${intervalDays} days`, each: `${intervalDays}-day interval` };
+}
 
 // ---------------------------------------------------------------------------
 // Component
@@ -47,15 +62,15 @@ function makeId() {
 export default function PaymentOverTimeClient() {
   const hydrated = useHydrated();
   const [totalSettlement, setTotalSettlement] = useSessionState("tool:payment-time:totalSettlement", "");
-  const [upfronts, setUpfronts] = useSessionState<UpfrontPayment[]>("tool:payment-time:upfronts", [
-    { id: makeId(), amount: "", timing: "At signing" },
-  ]);
+  const [upfronts, setUpfronts] = useSessionState<UpfrontPayment[]>("tool:payment-time:upfronts", [defaultUpfront()]);
   const [numPayments, setNumPayments] = useSessionState("tool:payment-time:numPayments", "");
   const [installmentAmount, setInstallmentAmount] = useSessionState("tool:payment-time:installmentAmount", "");
   const [frequency, setFrequency] = useSessionState<Frequency>("tool:payment-time:frequency", "monthly");
   const [customIntervalDays, setCustomIntervalDays] = useSessionState("tool:payment-time:customIntervalDays", "");
   const [interestScope, setInterestScope] = useSessionState<InterestScope>("tool:payment-time:interestScope", "none");
   const [annualRate, setAnnualRate] = useSessionState("tool:payment-time:annualRate", 5);
+  const [interestStart, setInterestStart] = useSessionState<InterestStart>("tool:payment-time:interestStart", "agreement");
+  const [interestStartDays, setInterestStartDays] = useSessionState("tool:payment-time:interestStartDays", "");
 
   // Track which field the user last edited to determine calculation direction
   const [installmentMode, setInstallmentMode] = useSessionState<InstallmentMode>("tool:payment-time:installmentMode", "count");
@@ -66,10 +81,10 @@ export default function PaymentOverTimeClient() {
   }, [interestScope, setInterestScope]);
 
   function addUpfront() {
-    setUpfronts([...upfronts, { id: makeId(), amount: "", timing: "" }]);
+    setUpfronts([...upfronts, defaultUpfront()]);
   }
 
-  function updateUpfront(id: string, field: "amount" | "timing", value: string) {
+  function updateUpfront(id: string, field: "amount" | "days", value: string) {
     setUpfronts(upfronts.map((u) => (u.id === id ? { ...u, [field]: value } : u)));
   }
 
@@ -79,7 +94,7 @@ export default function PaymentOverTimeClient() {
 
   function clearAll() {
     setTotalSettlement("");
-    setUpfronts([{ id: makeId(), amount: "", timing: "At signing" }]);
+    setUpfronts([defaultUpfront()]);
     setNumPayments("");
     setInstallmentAmount("");
     setInstallmentMode("count");
@@ -87,6 +102,8 @@ export default function PaymentOverTimeClient() {
     setCustomIntervalDays("");
     setInterestScope("none");
     setAnnualRate(5);
+    setInterestStart("agreement");
+    setInterestStartDays("");
     clearSessionKeys("tool:payment-time:");
   }
 
@@ -94,11 +111,11 @@ export default function PaymentOverTimeClient() {
   // Calculation — driven directly by live state. No deferred-commit layer.
   // ---------------------------------------------------------------------------
 
-  const { schedule, summary, calculatedPayment, calculatedCount, warnings } = useMemo(
+  const { schedule, summary, calculatedPayment, calculatedCount, periodDays, interestBeginsDay, warnings } = useMemo(
     () =>
       buildSchedule({
         totalSettlement: parseNumNonNeg(totalSettlement),
-        upfronts: upfronts.map((u) => ({ amount: parseNumNonNeg(u.amount), timing: u.timing })),
+        upfronts: upfronts.map((u) => ({ amount: parseNumNonNeg(u.amount), days: parseNumNonNeg(u.days ?? "") })),
         numPayments: parseNumNonNeg(numPayments),
         installmentAmount: parseNumNonNeg(installmentAmount),
         installmentMode: installmentMode === "amount" && parseNumNonNeg(installmentAmount) <= 0 ? "count" : installmentMode,
@@ -106,6 +123,8 @@ export default function PaymentOverTimeClient() {
         customIntervalDays: parseNumNonNeg(customIntervalDays),
         interestScope,
         annualRate,
+        interestStart,
+        interestStartDays: parseNumNonNeg(interestStartDays),
       }),
     [
       totalSettlement,
@@ -117,14 +136,14 @@ export default function PaymentOverTimeClient() {
       customIntervalDays,
       interestScope,
       annualRate,
+      interestStart,
+      interestStartDays,
     ]
   );
 
   // Show Clear button whenever any persisted state differs from defaults
   const upfrontsAreDefault =
-    upfronts.length === 1 &&
-    upfronts[0].amount === "" &&
-    upfronts[0].timing === "At signing";
+    upfronts.length === 1 && upfronts[0].amount === "" && !upfronts[0].days;
   const hasAny =
     totalSettlement !== "" ||
     numPayments !== "" ||
@@ -134,7 +153,33 @@ export default function PaymentOverTimeClient() {
     frequency !== "monthly" ||
     interestScope !== "none" ||
     annualRate !== 5 ||
+    interestStart !== "agreement" ||
+    interestStartDays !== "" ||
     !upfrontsAreDefault;
+
+  // Plain-language statement of the timing conventions, shown with the
+  // schedule (and in print) so the assumptions travel with the numbers.
+  const words = periodWord(frequency, Math.round(periodDays));
+  let interestNote = "";
+  if (interestBeginsDay !== null) {
+    let begins: string;
+    if (interestStart === "first-installment") {
+      begins = "starting with the first installment, so that installment is all principal";
+    } else if (interestBeginsDay > 0) {
+      begins = `starting ${Math.round(interestBeginsDay).toLocaleString()} days after the agreement date`;
+    } else {
+      begins = "from the agreement date";
+    }
+    interestNote = ` Interest at ${annualRate}% per year accrues on the unpaid balance ${begins}; each payment covers the interest accrued since the previous payment before it reduces principal.`;
+  }
+  const conventionNote = `Installments fall at the end of each ${words.each}, the first ${words.one} after the agreement date. Up-front payments fall on the day shown.${interestNote}`;
+
+  const interestStartLabel =
+    interestStart === "first-installment"
+      ? "with the first installment"
+      : interestStart === "days"
+        ? `${interestStartDays || 0} days after agreement`
+        : "from the agreement date";
 
   return (
     <div className="space-y-6">
@@ -158,7 +203,7 @@ export default function PaymentOverTimeClient() {
         <ToolCard title="Interest" contentClassName="space-y-4">
             <div>
               <label htmlFor="payment-over-time-interest-applies-to" className="block text-sm font-medium text-brand-primary mb-1.5">
-                  Interest applies to
+                  Interest
                 </label>
               <select
                 id="payment-over-time-interest-applies-to"
@@ -167,8 +212,13 @@ export default function PaymentOverTimeClient() {
                 className={selectClass}
               >
                 <option value="none">None (0% interest)</option>
-                <option value="installments">Installments only</option>
+                <option value="installments">On the unpaid balance</option>
               </select>
+              {interestScope !== "none" && (
+                <p className="mt-1.5 text-xs text-brand-muted">
+                  Interest is charged on whatever is still owed. A payment made at signing carries none, because nothing was outstanding before it was paid.
+                </p>
+              )}
             </div>
             {interestScope !== "none" && (
               <>
@@ -181,6 +231,44 @@ export default function PaymentOverTimeClient() {
                   label="Annual interest rate"
                   aria-label="Annual interest rate"
                 />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="payment-over-time-interest-begins" className="block text-sm font-medium text-brand-primary mb-1.5">
+                      Interest begins
+                    </label>
+                    <select
+                      id="payment-over-time-interest-begins"
+                      value={interestStart}
+                      onChange={(e) => setInterestStart(e.target.value as InterestStart)}
+                      className={selectClass}
+                    >
+                      <option value="agreement">Date of agreement (today)</option>
+                      <option value="days">In a set number of days</option>
+                      <option value="first-installment">With the first installment</option>
+                    </select>
+                  </div>
+                  {interestStart === "days" && (
+                    <div>
+                      <label htmlFor="payment-over-time-interest-start-days" className="block text-sm font-medium text-brand-primary mb-1.5">
+                        Days until interest begins
+                      </label>
+                      <input
+                        id="payment-over-time-interest-start-days"
+                        type="text"
+                        inputMode="numeric"
+                        value={interestStartDays}
+                        onChange={(e) => setInterestStartDays(digitsOnly(e.target.value))}
+                        placeholder="e.g. 30"
+                        className={inputClass}
+                      />
+                    </div>
+                  )}
+                </div>
+                {interestStart === "days" && (
+                  <p className="text-xs text-brand-muted">
+                    Useful when today&rsquo;s deal is preliminary: interest starts on the deadline for signing the formal agreement.
+                  </p>
+                )}
               </>
             )}
           </ToolCard>
@@ -205,15 +293,16 @@ export default function PaymentOverTimeClient() {
                 />
               </div>
               <div>
-                <label htmlFor="payment-over-time-timing" className="block text-xs font-medium text-brand-muted mb-1">
-                  Timing
+                <label htmlFor={`payment-time-upfront-days-${u.id}`} className="block text-xs font-medium text-brand-muted mb-1">
+                  Days after agreement
                 </label>
                 <input
-                  id="payment-over-time-timing"
+                  id={`payment-time-upfront-days-${u.id}`}
                   type="text"
-                  value={u.timing}
-                  onChange={(e) => updateUpfront(u.id, "timing", e.target.value)}
-                  placeholder="At signing"
+                  inputMode="numeric"
+                  value={u.days ?? ""}
+                  onChange={(e) => updateUpfront(u.id, "days", digitsOnly(e.target.value))}
+                  placeholder="0 = at signing"
                   className={inputClass}
                 />
               </div>
@@ -244,7 +333,7 @@ export default function PaymentOverTimeClient() {
                 inputMode="numeric"
                 value={installmentMode === "amount" && calculatedCount > 0 ? calculatedCount.toString() : numPayments}
                 onChange={(e) => {
-                  setNumPayments(e.target.value.replace(/[^0-9]/g, ""));
+                  setNumPayments(digitsOnly(e.target.value));
                   setInstallmentMode("count");
                 }}
                 placeholder="e.g. 12"
@@ -295,12 +384,15 @@ export default function PaymentOverTimeClient() {
                 type="text"
                 inputMode="numeric"
                 value={customIntervalDays}
-                onChange={(e) => setCustomIntervalDays(e.target.value.replace(/[^0-9]/g, ""))}
+                onChange={(e) => setCustomIntervalDays(digitsOnly(e.target.value))}
                 placeholder="e.g. 60"
                 className={inputClass}
               />
             </div>
           )}
+          <p className="text-xs text-brand-muted">
+            The first installment is due {words.one} after the agreement date.
+          </p>
         </ToolCard>
 
       <ClearAllButton show={hasAny} onClick={clearAll} />
@@ -320,11 +412,17 @@ export default function PaymentOverTimeClient() {
 
       <PrintInputs items={[
         { label: "Settlement amount", value: totalSettlement ? "$" + totalSettlement : "" },
-        { label: "Up-front payments", value: upfronts.filter((u) => u.amount).map((u) => `$${u.amount}${u.timing ? ` (${u.timing})` : ""}`).join("; ") },
+        {
+          label: "Up-front payments",
+          value: upfronts
+            .filter((u) => u.amount)
+            .map((u) => `$${u.amount} (${parseNumNonNeg(u.days ?? "") > 0 ? `day ${u.days}` : "at signing"})`)
+            .join("; "),
+        },
         { label: "Number of payments", value: numPayments },
         { label: "Payment amount", value: installmentAmount ? "$" + installmentAmount : "" },
         { label: "Frequency", value: frequency === "custom" ? `every ${customIntervalDays} days` : frequency },
-        { label: "Interest", value: interestScope === "none" ? "none" : `${annualRate}% (${interestScope})` },
+        { label: "Interest", value: interestScope === "none" ? "none" : `${annualRate}% on the unpaid balance, ${interestStartLabel}` },
       ]} />
       {hydrated && schedule.length === 0 && (
         <Card id="tool-headline-result" className="bg-white border-brand-accent print:hidden">
@@ -403,6 +501,8 @@ export default function PaymentOverTimeClient() {
                 <p className="font-semibold text-brand-primary">{fmt(summary.totalSettlement)}</p>
               </div>
             </div>
+
+            <p className="mt-4 text-xs text-brand-muted">{conventionNote}</p>
           </CardContent>
         </Card>
       )}

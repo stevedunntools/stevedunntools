@@ -332,12 +332,12 @@ export const toolContent: Record<string, ToolContent> = {
   },
   "/tools/payment-over-time": {
     howItWorks: [
-      `When a settlement is paid over time rather than in one check, the structure has more moving parts than people expect: up-front payments, installment amounts, frequency, and whether the unpaid balance bears interest. This calculator builds the complete payment schedule.`,
-      `Enter the total settlement, any up-front payments (each with its own label — “at signing,” “30 days,” whatever fits the deal), and the installment terms. The calculator works in either direction: fix the number of payments and it computes the payment amount, or fix the payment amount and it computes how many payments are needed. Frequency can be monthly, quarterly, or any custom interval in days.`,
-      `If interest applies, the tool uses standard amortization — each level payment contains a declining interest component and a growing principal component, exactly like a loan. The schedule shows every payment broken into principal, interest, and remaining balance, and the summary totals what the payor ultimately pays.`,
+      `When a settlement is paid over time rather than in one check, the structure has more moving parts than people expect: up-front payments, installment amounts, frequency, whether the unpaid balance bears interest, and when that interest starts. This calculator builds the complete payment schedule.`,
+      `Enter the total settlement, any up-front payments (each dated by the number of days after the agreement it will be paid — 0 means at signing), and the installment terms. The calculator works in either direction: fix the number of payments and it computes the payment amount, or fix the payment amount and it computes how many payments are needed. Frequency can be monthly, quarterly, or any custom interval in days, and the first installment falls one period after the agreement date.`,
+      `If interest applies, it accrues on the unpaid balance from a start date you choose: the date of the agreement, a set number of days later, or the date of the first installment. Each payment covers the interest accrued since the previous payment before it reduces principal, so the level installment is computed the way a loan payment is. The schedule shows every payment broken into principal, interest, and remaining balance, the summary totals what the payor ultimately pays, and a note under the schedule states the timing conventions used so they travel with the printed exhibit.`,
     ],
     example: [
-      `A $120,000 settlement with $20,000 at signing leaves $100,000 to amortize. Paid over 12 monthly installments at 6% interest, each payment is $8,606.64, total interest is about $3,279.72, and the payor's all-in cost is $123,279.72. At 0% the same structure is twelve flat payments of $8,333.33.`,
+      `A $120,000 settlement with $20,000 at signing leaves $100,000 to amortize. Paid over 12 monthly installments at 6% interest running from the agreement date, each payment is $8,606.64, total interest is about $3,279.72, and the payor's all-in cost is $123,279.72. Start the interest clock with the first installment instead and the payment drops to $8,563.82 with about $2,765.89 of interest — the difference is one month of interest on the full balance. At 0% the same structure is twelve flat payments of $8,333.33.`,
     ],
     whenToUse: [
       `Use it while negotiating structure — it answers “what does $10,000 a month for two years actually total?” instantly — and when drafting, because the exported schedule can go straight into the settlement agreement as an exhibit.`,
@@ -348,8 +348,16 @@ export const toolContent: Record<string, ToolContent> = {
         a: `That's a negotiation point. Interest compensates the plaintiff for waiting and for credit risk; payors resist it. Even at modest rates it adds up — this tool shows both sides exactly what any rate costs, which usually shortens that part of the conversation.`,
       },
       {
+        q: `When does interest start accruing?`,
+        a: `You choose. “Date of agreement” is the loan convention: the clock starts today and the first installment already includes a full period of interest. “With the first installment” makes that installment all principal, with interest running on the remaining balance from then on — what many parties assume when an agreement says interest runs on the unpaid balance. “In a set number of days” fits a preliminary deal that will be papered later: interest starts on the deadline for signing the formal agreement, which gives everyone a reason to meet it.`,
+      },
+      {
+        q: `Does interest apply to the up-front payment?`,
+        a: `Only if it is paid late. A payment made at signing carries no interest because nothing was owed before it was paid, so “interest on everything” and “interest on the installments” are the same number. Date an up-front payment some days after the agreement and the tool charges interest on the full balance until that day, with the up-front payment covering that accrued interest first.`,
+      },
+      {
         q: `How is the installment payment calculated with interest?`,
-        a: `With the standard amortization formula used for loans: a level payment such that interest accrues on the unpaid balance each period and the balance reaches zero on the final payment. Early payments are interest-heavy; later payments are principal-heavy. The schedule shows the split for every payment.`,
+        a: `With the standard amortization approach used for loans: a level payment such that interest accrues on the unpaid balance and the balance reaches zero on the final payment. Early payments are interest-heavy; later payments are principal-heavy. The schedule shows the split for every payment.`,
       },
       {
         q: `What happens if the payment amount is too small to cover the interest?`,
@@ -357,7 +365,7 @@ export const toolContent: Record<string, ToolContent> = {
       },
       {
         q: `Can I model an up-front payment plus installments?`,
-        a: `Yes — that's the typical structure. Up-front payments are applied to the balance before installments begin, and you can list several with different labels and timing.`,
+        a: `Yes — that's the typical structure. List as many up-front payments as the deal has, each dated by days after the agreement, and they are applied to the balance in order before and between the installments.`,
       },
     ],
   },
